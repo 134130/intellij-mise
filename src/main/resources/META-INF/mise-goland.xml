@@ -1,0 +1,6 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.goide">
+        <runConfigurationExtension implementation="com.github.l34130.mise.runconfigs.GoLandRunConfigurationExtension"
+                                   id="miseGoLand"/>
+    </extensions>
+</idea-plugin>

@@ -1,18 +1,13 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
-<idea-plugin>
-    <id>com.github.134130.mise</id>
-    <name>mise</name>
+<idea-plugin url="https://github.com/l34130/mise">
+    <id>com.github.l34130.mise</id>
+    <name>Mise</name>
     <vendor>134130</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
-
-    <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.134130.mise.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-    </extensions>
-
-    <applicationListeners>
-        <listener class="com.github.134130.mise.listeners.MyApplicationActivationListener" topic="com.intellij.openapi.application.ApplicationActivationListener"/>
-    </applicationListeners>
+    <depends optional="true" config-file="mise-idea.xml">com.intellij.java</depends>
+    <depends optional="true" config-file="mise-gradle.xml">com.intellij.gradle</depends>
+    <depends optional="true" config-file="mise-goland.xml">org.jetbrains.plugins.go</depends>
+    <depends optional="true" config-file="mise-javascript.xml">JavaScript</depends>
 </idea-plugin>

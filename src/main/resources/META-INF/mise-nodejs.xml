@@ -1,0 +1,6 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="JavaScript">
+        <nodeRunConfigurationExtension implementation="com.github.l34130.mise.runconfigs.NodeRunConfigurationExtension"
+                                   id="miseNodeJS"/>
+    </extensions>
+</idea-plugin>

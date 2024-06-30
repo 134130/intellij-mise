@@ -1,5 +1,13 @@
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
-}
+include(
+    "modules/core",
+    "modules/products/idea",
+    "modules/products/gradle",
+    "modules/products/goland",
+    "modules/products/nodejs",
+)
 
 rootProject.name = "mise"
+
+rootProject.children.forEach {
+    it.name = (it.name.replaceFirst("modules/", "mise/").replace("/", "-"))
+}

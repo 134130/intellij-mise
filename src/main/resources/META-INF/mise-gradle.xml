@@ -1,0 +1,5 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
+        <executionEnvironmentProvider implementation="com.github.l34130.mise.runconfigs.GradleEnvironmentProvider" order="first"/>
+    </extensions>
+</idea-plugin>

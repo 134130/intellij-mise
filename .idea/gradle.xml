@@ -8,6 +8,11 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/modules/core" />
+            <option value="$PROJECT_DIR$/modules/products/goland" />
+            <option value="$PROJECT_DIR$/modules/products/gradle" />
+            <option value="$PROJECT_DIR$/modules/products/idea" />
+            <option value="$PROJECT_DIR$/modules/products/nodejs" />
           </set>
         </option>
       </GradleProjectSettings>
