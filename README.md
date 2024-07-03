@@ -1,6 +1,6 @@
 ![Build](https://github.com/134130/intellij-mise/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/24762-mise.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/24762-mise.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
+[![Version](https://img.shields.io/jetbrains/plugin/v/24762-mise.svg)](https://plugins.jetbrains.com/plugin/24762-mise)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/24762-mise.svg)](https://plugins.jetbrains.com/plugin/24762-mise)
 
 <!-- Plugin description -->
 # Mise
