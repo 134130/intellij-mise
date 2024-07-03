@@ -1,14 +1,21 @@
+![Build](https://github.com/134130/intellij-mise/workflows/Build/badge.svg)
+[![Version](https://img.shields.io/jetbrains/plugin/v/24762-mise.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/24762-mise.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
+
+<!-- Plugin description -->
 # Mise
-IntelliJ plugin for [mise-en-place](https://mise.jdx.dev)
 
-**Supports**
-- IntelliJ IDEA
-- GoLand
-- WebStorm
+**Mise** is a plugin for JetBrains IDEs that allows you to set environment variables for your run configurations
+from mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 
-![Build](https://github.com/134130/mise/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
+### Supported Platforms:
+- **IntelliJ IDEA**
+- **GoLand**
+- **WebStorm**
+- _Submit issue if you need other IDE_
+<!-- Plugin description end -->
+
+**[GitHub](https://github.com/134130/intellij-mise)** | **[Issue](https://github.com/134130/intellij-mise/issues)** 
 
 ## Installation
 
