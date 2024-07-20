@@ -1,6 +1,6 @@
 package com.github.l34130.mise.runconfigs
 
-import com.github.l34130.mise.commands.MiseEnvCmd
+import com.github.l34130.mise.commands.MiseCmd
 import com.github.l34130.mise.settings.ui.RunConfigurationSettingsEditor
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile
@@ -37,7 +37,7 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
         environment: ExecutionEnvironment,
     ): NodeRunConfigurationLaunchSession? {
         val config = configuration as NodeJsRunConfiguration
-        config.envs.putAll(MiseEnvCmd(config.workingDirectory).load())
+        config.envs.putAll(MiseCmd.loadEnv(config.workingDirectory))
         return null
     }
 

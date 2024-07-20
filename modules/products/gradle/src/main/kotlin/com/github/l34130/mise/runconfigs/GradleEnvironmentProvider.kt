@@ -1,6 +1,6 @@
 package com.github.l34130.mise.runconfigs
 
-import com.github.l34130.mise.commands.MiseEnvCmd
+import com.github.l34130.mise.commands.MiseCmd
 import com.intellij.execution.Executor
 import com.intellij.execution.application.ApplicationConfiguration
 import com.intellij.execution.runners.ExecutionEnvironment
@@ -27,7 +27,7 @@ class GradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
             val sourceConfig = task!!.runProfile as ApplicationConfiguration
             val gradleConfig = environment.runProfile as GradleRunConfiguration
 
-            gradleConfig.settings.env = MiseEnvCmd(sourceConfig.project.basePath).load() + sourceConfig.envs
+            gradleConfig.settings.env = MiseCmd.loadEnv(sourceConfig.project.basePath) + sourceConfig.envs
         }
 
         return environment

@@ -1,6 +1,6 @@
 package com.github.l34130.mise.runconfigs
 
-import com.github.l34130.mise.commands.MiseEnvCmd
+import com.github.l34130.mise.commands.MiseCmd
 import com.github.l34130.mise.settings.ui.RunConfigurationSettingsEditor
 import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -50,7 +50,7 @@ class IdeaRunConfigurationExtension : RunConfigurationExtension() {
         params.env.putAll(sourceEnv)
 
         if (RunConfigurationSettingsEditor.isMiseEnabled(configuration)) {
-            params.env.putAll(MiseEnvCmd(params.workingDirectory).load())
+            params.env.putAll(MiseCmd.loadEnv(params.workingDirectory))
         }
     }
 

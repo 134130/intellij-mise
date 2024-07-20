@@ -1,6 +1,6 @@
 package com.github.l34130.mise.runconfigs
 
-import com.github.l34130.mise.commands.MiseEnvCmd
+import com.github.l34130.mise.commands.MiseCmd
 import com.github.l34130.mise.settings.ui.RunConfigurationSettingsEditor
 import com.goide.execution.GoRunConfigurationBase
 import com.goide.execution.GoRunningState
@@ -41,7 +41,7 @@ class GoLandRunConfigurationExtension : GoRunConfigurationExtension() {
         commandLineType: GoRunningState.CommandLineType,
     ) {
         if (RunConfigurationSettingsEditor.isMiseEnabled(configuration)) {
-            MiseEnvCmd(configuration.getWorkingDirectory()).load().forEach { k, v ->
+            MiseCmd.loadEnv(configuration.getWorkingDirectory()).forEach { (k, v) ->
                 cmdLine.addEnvironmentVariable(k, v)
             }
         }
