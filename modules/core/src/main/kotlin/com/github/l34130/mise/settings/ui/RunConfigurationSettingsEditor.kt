@@ -4,12 +4,11 @@ import com.github.l34130.mise.settings.MiseSettings
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.options.ConfigurationException
 import com.intellij.openapi.options.SettingsEditor
-import com.intellij.openapi.ui.panel.ComponentPanelBuilder
 import com.intellij.openapi.util.Key
+import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.dsl.builder.panel
 import org.jdom.Element
 import java.awt.BorderLayout
-import javax.swing.BoxLayout
-import javax.swing.JCheckBox
 import javax.swing.JComponent
 import javax.swing.JPanel
 
@@ -62,25 +61,25 @@ class RunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     private class RunConfigurationSettingsPanel<T : RunConfigurationBase<*>>(
         private val configuration: T,
     ) : JPanel() {
-        private val useMiseCheckBox = JCheckBox("Enable Mise")
+        val enableMiseCheckBox = JBCheckBox("Enable mise")
 
         init {
-            val boxLayoutWrapper = JPanel()
-            val bl = BoxLayout(boxLayoutWrapper, BoxLayout.PAGE_AXIS)
-
-            boxLayoutWrapper.apply {
-                layout = bl
-                add(ComponentPanelBuilder(useMiseCheckBox).createPanel())
+            val p = panel {
+                row {
+                    cell(enableMiseCheckBox).comment(
+                        "Load environment variables from mise configuration file(s)",
+                    )
+                }
             }
 
             layout = BorderLayout()
-            add(boxLayoutWrapper, BorderLayout.NORTH)
+            add(p)
         }
 
         var state: MiseSettings
-            get() = MiseSettings(useMiseCheckBox.isSelected)
+            get() = MiseSettings(enableMiseCheckBox.isSelected)
             set(value) {
-                useMiseCheckBox.isSelected = value.miseEnabled
+                enableMiseCheckBox.isSelected = value.miseEnabled
             }
     }
 }
