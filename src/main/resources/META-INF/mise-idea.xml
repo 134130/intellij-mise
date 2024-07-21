@@ -7,12 +7,6 @@
     </extensions>
 
     <actions>
-        <group id="ch.mise.actions"
-               text="Mise"
-               popup="true"
-               icon="com.github.l34130.mise.icons.PluginIcons.Default">
-            <add-to-group group-id="ToolsMenu"/>
-        </group>
         <action id="com.github.l34130.mise.jdk.IdeaProjectJdkSetup"
                 class="com.github.l34130.mise.jdk.IdeaProjectJdkSetup"
                 text="Reload JDK"

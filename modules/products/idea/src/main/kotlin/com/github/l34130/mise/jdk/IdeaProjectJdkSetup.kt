@@ -1,6 +1,8 @@
 package com.github.l34130.mise.jdk
 
 import com.github.l34130.mise.commands.MiseCmd
+import com.github.l34130.mise.notifications.Notification
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.WriteAction
@@ -35,9 +37,14 @@ class IdeaProjectJdkSetup : AnAction(), StartupActivity {
                     ProjectJdkTable.getInstance().addJdk(newJdk)
                 }
 
-                if (javaTools.size == 1) {
+                if (javaTools.size == 1 && oldJdk?.name != newJdk.name) {
                     ProjectRootManager.getInstance(project).projectSdk = newJdk
+                    Notification.notify("JDK set to ${tool.version} from ${tool.source.type}", NotificationType.INFORMATION, project)
                 }
+            }
+
+            if (javaTools.size > 1) {
+                Notification.notify("Multiple JDKs found. Not setting any.", NotificationType.WARNING, project)
             }
         }
     }

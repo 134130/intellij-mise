@@ -3,4 +3,13 @@
         <runConfigurationExtension implementation="com.github.l34130.mise.runconfigs.GoLandRunConfigurationExtension"
                                    id="miseGoLand"/>
     </extensions>
+
+    <actions>
+        <action id="com.github.l34130.mise.go.GoLandProjectGoSdkSetup"
+                class="com.github.l34130.mise.go.GoLandProjectGoSdkSetup"
+                text="Reload Go SDK"
+        >
+            <add-to-group group-id="ch.mise.actions"/>
+        </action>
+    </actions>
 </idea-plugin>

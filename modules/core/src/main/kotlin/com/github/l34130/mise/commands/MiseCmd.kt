@@ -3,7 +3,6 @@ package com.github.l34130.mise.commands
 import com.github.l34130.mise.extensions.fromJson
 import com.github.l34130.mise.notifications.Notification
 import com.google.gson.FieldNamingPolicy
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.notification.NotificationType
