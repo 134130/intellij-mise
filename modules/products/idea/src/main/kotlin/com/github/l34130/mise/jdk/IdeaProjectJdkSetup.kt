@@ -20,7 +20,7 @@ class IdeaProjectJdkSetup : AnAction(), StartupActivity {
 
         WriteAction.runAndWait<Throwable> {
             for (tool in javaTools) {
-                val jdkName = createJdkName(project.name)
+                val jdkName = "JDK of project ${project.name} (${tool.source.type})"
                 val newJdk =
                     JavaSdk.getInstance().createJdk(
                         jdkName,
@@ -41,6 +41,4 @@ class IdeaProjectJdkSetup : AnAction(), StartupActivity {
             }
         }
     }
-
-    private fun createJdkName(name: String): String = "JDK of project $name (mise)"
 }
