@@ -4,6 +4,7 @@ include(
     "modules/products/gradle",
     "modules/products/goland",
     "modules/products/nodejs",
+    "modules/products/pythoncore",
 )
 
 rootProject.name = "mise"

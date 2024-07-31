@@ -14,6 +14,7 @@ from mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 - **IntelliJ IDEA**
 - **GoLand**
 - **WebStorm**
+- **PyCharm Community** & **PyCharm Professional** (Note, due to different Python plugins between Community/Professional, there are two different plugins for PyCharm)
 - _Submit issue if you need other IDE_
 
 ### Features

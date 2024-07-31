@@ -1,0 +1,7 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="PythonCore">
+        <runConfigurationExtension
+                implementation="com.github.l34130.mise.runconfigs.PythonCoreRunConfigurationExtension"
+                id="misePythonCore"/>
+    </extensions>
+</idea-plugin>

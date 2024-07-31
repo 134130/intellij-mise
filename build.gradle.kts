@@ -35,6 +35,7 @@ dependencies {
     implementation(project(":mise-products-gradle"))
     implementation(project(":mise-products-goland"))
     implementation(project(":mise-products-nodejs"))
+    implementation(project(":mise-products-pythoncore"))
 }
 
 // Set the JVM language level used to build the project.
