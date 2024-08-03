@@ -1,18 +1,29 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+
 fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
-    id("org.jetbrains.intellij")
+    id("org.jetbrains.gradle.plugin.idea-ext")
+    id("org.jetbrains.intellij.platform")
     alias(libs.plugins.kotlin) // Kotlin support
 }
 
-// Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-intellij {
-    version.set(properties("platformVersion"))
-
-    // Plugin Dependencies
-    plugins.set(listOf("com.intellij.java", "com.intellij.gradle"))
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
     implementation(project(":mise-core"))
+
+    // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
+    intellijPlatform {
+        create(IntelliJPlatformType.IntellijIdeaCommunity, properties("platformVersion"), false)
+
+        bundledPlugins("com.intellij.java", "com.intellij.gradle")
+
+        instrumentationTools()
+    }
 }

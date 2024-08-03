@@ -1,19 +1,28 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+
 fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
-    id("org.jetbrains.intellij")
+    id("org.jetbrains.intellij.platform")
     alias(libs.plugins.kotlin) // Kotlin support
 }
 
-// Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-intellij {
-    version.set(properties("platformVersion"))
-    type.set("IU")
-
-    // Plugin Dependencies
-    plugins.set(listOf("JavaScript", "NodeJS"))
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
     implementation(project(":mise-core"))
+
+    // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
+    intellijPlatform {
+        create(IntelliJPlatformType.WebStorm, properties("platformVersion"), false)
+
+        bundledPlugins("JavaScript", "NodeJS")
+
+        instrumentationTools()
+    }
 }
