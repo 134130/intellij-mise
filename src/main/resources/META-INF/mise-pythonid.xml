@@ -1,0 +1,7 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="Pythonid">
+        <runConfigurationExtension implementation="com.github.l34130.mise.runconfigs.PythonidRunConfigurationExtension"
+                                   id="misePythonid"/>
+        <pythonCommandLineTargetEnvironmentProvider implementation="com.github.l34130.mise.runconfigs.PythonidRunConfigurationExtension"/>
+    </extensions>
+</idea-plugin>

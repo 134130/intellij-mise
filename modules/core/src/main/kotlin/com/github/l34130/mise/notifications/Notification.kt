@@ -6,10 +6,16 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 
 object Notification {
-    fun notify(content :String, type: NotificationType, project: Project? = null) {
-        val notification = NotificationGroupManager.getInstance()
-            .getNotificationGroup(NOTIFICATION_GROUP_ID)
-            .createNotification(content, type)
+    fun notify(
+        content: String,
+        type: NotificationType,
+        project: Project? = null,
+    ) {
+        val notification =
+            NotificationGroupManager
+                .getInstance()
+                .getNotificationGroup(NOTIFICATION_GROUP_ID)
+                .createNotification(content, type)
 
         notification.icon = PluginIcons.Default
         notification.notify(project)
