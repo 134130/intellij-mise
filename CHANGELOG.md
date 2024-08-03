@@ -6,13 +6,19 @@
 
 ## [1.3.0] - 2024-08-03
 
-- Add support for the PyCharm Community & Professional
+### Added
+
+- Add environment variables (run configuration) support for the PyCharm Community & Professional
 
 ## [1.2.1] - 2024-07-24
+
+### Added
 
 - Remove screenshots from plugin.xml. (JetBrains Marketplace guidelines)
 
 ## [1.2.0] - 2024-07-21
+
+### Added
 
 - Add support for the Go SDK (GOROOT) integration from mise tools.
 
