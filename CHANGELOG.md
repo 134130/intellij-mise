@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2024-08-03
+
+- Add support for the PyCharm Community & Professional
+
 ## [1.2.1] - 2024-07-24
 
 - Remove screenshots from plugin.xml. (JetBrains Marketplace guidelines)

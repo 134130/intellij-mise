@@ -23,4 +23,6 @@
     <depends optional="true" config-file="mise-gradle.xml">com.intellij.gradle</depends>
     <depends optional="true" config-file="mise-goland.xml">org.jetbrains.plugins.go</depends>
     <depends optional="true" config-file="mise-javascript.xml">JavaScript</depends>
+    <depends optional="true" config-file="mise-pythonid.xml">Pythonid</depends>
+    <depends optional="true" config-file="mise-pythoncore.xml">PythonCore</depends>
 </idea-plugin>
