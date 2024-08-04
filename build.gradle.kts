@@ -1,6 +1,7 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.Constants.Constraints
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 
 plugins {
     id("java") // Java support
@@ -26,7 +27,7 @@ dependencies {
     testImplementation(libs.junit)
 
     intellijPlatform {
-        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"), false)
+        create(IntelliJPlatformType.IntellijIdeaCommunity, "2022.3.3", false)
 
         pluginModule(implementation(project(":mise-products-goland")))
         pluginModule(implementation(project(":mise-products-gradle")))
@@ -125,5 +126,27 @@ val runIdeForUnitTests by intellijPlatformTesting.runIde.registering {
 
     plugins {
         robotServerPlugin(Constraints.LATEST_VERSION)
+    }
+}
+
+val runIdePlatformTypes =
+    listOf(
+        IntelliJPlatformType.GoLand,
+        IntelliJPlatformType.IntellijIdeaCommunity,
+        IntelliJPlatformType.IntellijIdeaUltimate,
+        IntelliJPlatformType.WebStorm,
+        IntelliJPlatformType.PyCharmCommunity,
+        IntelliJPlatformType.PyCharmProfessional,
+    )
+
+runIdePlatformTypes.forEach { platformType ->
+    intellijPlatformTesting.runIde.register("run${platformType.name}") {
+        type = platformType
+        version = "2024.1"
+
+        plugins {
+//            plugin("pluginId", "1.0.0")
+            disablePlugin("bundledPluginId")
+        }
     }
 }
