@@ -73,8 +73,6 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
-
       # Build plugin
       - name: Build plugin
         run: ./gradlew buildPlugin
@@ -226,37 +224,37 @@ jobs:
 
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
-  releaseDraft:
-    name: Release draft
-    if: github.event_name != 'pull_request'
-    needs: [ build, test, inspectCode, verify ]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-
-      # Check out the current repository
-      - name: Fetch Sources
-        uses: actions/checkout@v4
-
-      # Remove old release drafts by using the curl request for the available releases with a draft flag
-      - name: Remove Old Release Drafts
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh api repos/{owner}/{repo}/releases \
-            --jq '.[] | select(.draft == true) | .id' \
-            | xargs -I '{}' gh api -X DELETE repos/{owner}/{repo}/releases/{}
-
-      # Create a new release draft which is not publicly visible and requires manual acceptance
-      - name: Create Release Draft
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "v${{ needs.build.outputs.version }}" \
-            --draft \
-            --title "v${{ needs.build.outputs.version }}" \
-            --notes "$(cat << 'EOM'
-          ${{ needs.build.outputs.changelog }}
-          EOM
-          )"
+#  releaseDraft:
+#    name: Release draft
+#    if: github.event_name != 'pull_request'
+#    needs: [ build, test, inspectCode, verify ]
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: write
+#    steps:
+#
+#      # Check out the current repository
+#      - name: Fetch Sources
+#        uses: actions/checkout@v4
+#
+#      # Remove old release drafts by using the curl request for the available releases with a draft flag
+#      - name: Remove Old Release Drafts
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          gh api repos/{owner}/{repo}/releases \
+#            --jq '.[] | select(.draft == true) | .id' \
+#            | xargs -I '{}' gh api -X DELETE repos/{owner}/{repo}/releases/{}
+##
+#      # Create a new release draft which is not publicly visible and requires manual acceptance
+#      - name: Create Release Draft
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          gh release create "v${{ needs.build.outputs.version }}" \
+#            --draft \
+#            --title "v${{ needs.build.outputs.version }}" \
+#            --notes "$(cat << 'EOM'
+#          ${{ needs.build.outputs.changelog }}
+#          EOM
+#          )"
