@@ -4,10 +4,10 @@ import org.jetbrains.intellij.platform.gradle.Constants.Constraints
 
 plugins {
     id("java") // Java support
+    id("org.jetbrains.intellij.platform") // IntelliJ Platform Gradle Plugin
 
     alias(libs.plugins.gradleIdeaExt) // IntelliJ Gradle IDEA Extension Plugin
     alias(libs.plugins.kotlin) // Kotlin support
-    alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
 //    alias(libs.plugins.qodana) // Gradle Qodana Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
@@ -21,29 +21,19 @@ kotlin {
     jvmToolchain(17)
 }
 
-// Configure project's dependencies
-repositories {
-    mavenCentral()
-
-    // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
-    intellijPlatform {
-        defaultRepositories()
-    }
-}
-
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     testImplementation(libs.junit)
 
-    implementation(project(":mise-products-idea"))
-    implementation(project(":mise-products-gradle"))
-    implementation(project(":mise-products-goland"))
-    implementation(project(":mise-products-nodejs"))
-    implementation(project(":mise-products-pythonid"))
-    implementation(project(":mise-products-pythoncore"))
-
     intellijPlatform {
         create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"), false)
+
+        pluginModule(implementation(project(":mise-products-goland")))
+        pluginModule(implementation(project(":mise-products-gradle")))
+        pluginModule(implementation(project(":mise-products-idea")))
+        pluginModule(implementation(project(":mise-products-nodejs")))
+        pluginModule(implementation(project(":mise-products-pythoncore")))
+        pluginModule(implementation(project(":mise-products-pythonid")))
 
         plugins(listOf())
 
@@ -92,30 +82,6 @@ intellijPlatform {
         name = providers.gradleProperty("pluginName")
     }
 }
-
-gradle.taskGraph.whenReady(
-    closureOf<TaskExecutionGraph> {
-        val ignoreSubprojectTasks =
-            listOf(
-                "buildSearchableOptions",
-                "listProductsReleases",
-                "patchPluginXml",
-                "publishPlugin",
-                "runIde",
-                "runPluginVerifier",
-                "verifyPlugin",
-            )
-
-        // Don't run some tasks for subprojects
-        for (task in allTasks) {
-            if (task.project != task.project.rootProject) {
-                when (task.name) {
-                    in ignoreSubprojectTasks -> task.enabled = false
-                }
-            }
-        }
-    },
-)
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
 changelog {
