@@ -4,15 +4,8 @@ fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("org.jetbrains.intellij.platform")
+    id("org.jetbrains.intellij.platform.module")
     alias(libs.plugins.kotlin) // Kotlin support
-}
-
-repositories {
-    mavenCentral()
-    intellijPlatform {
-        defaultRepositories()
-    }
 }
 
 dependencies {
