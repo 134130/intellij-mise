@@ -16,7 +16,7 @@ import com.jetbrains.python.run.target.HelpersAwareTargetEnvironmentRequest
 import com.jetbrains.python.run.target.PythonCommandLineTargetEnvironmentProvider
 import org.jdom.Element
 
-class PythonCoreRunConfigurationExtension :
+class PyCharmRunConfigurationExtension :
     PythonRunConfigurationExtension(),
     PythonCommandLineTargetEnvironmentProvider {
     override fun getEditorTitle(): String = RunConfigurationSettingsEditor.EDITOR_TITLE
@@ -71,7 +71,12 @@ class PythonCoreRunConfigurationExtension :
         if (runParams is AbstractPythonRunConfiguration<*> &&
             RunConfigurationSettingsEditor.isMiseEnabled(runParams)
         ) {
-            runParams.setEnvs(MiseCmd.loadEnv(runParams.workingDirectory))
+            MiseCmd.loadEnv(runParams.workingDirectory).forEach { (k, v) ->
+                pythonExecution.addEnvironmentVariable(k, v)
+            }
+            runParams.getEnvs().forEach { (k, v) ->
+                pythonExecution.addEnvironmentVariable(k, v)
+            }
         }
     }
 }

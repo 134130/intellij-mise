@@ -13,7 +13,7 @@
             <option value="$PROJECT_DIR$/modules/products/gradle" />
             <option value="$PROJECT_DIR$/modules/products/idea" />
             <option value="$PROJECT_DIR$/modules/products/nodejs" />
-            <option value="$PROJECT_DIR$/modules/products/pythoncore" />
+            <option value="$PROJECT_DIR$/modules/products/pycharm" />
           </set>
         </option>
       </GradleProjectSettings>
