@@ -14,6 +14,7 @@ from mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 - **IntelliJ IDEA**
 - **GoLand**
 - **WebStorm**
+- **PyCharm** Community & Professional
 - _Submit issue if you need other IDE_
 
 ### Features
