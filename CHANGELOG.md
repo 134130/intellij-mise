@@ -9,6 +9,7 @@
 ### Changed
 
 - Migrate to intellij-platform-gradle-plugin v2.0.0
+- Support JetBrains 2024.2+ IDEs
 
 ### Removed
 
