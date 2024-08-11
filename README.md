@@ -14,13 +14,13 @@ from mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 - **IntelliJ IDEA**
 - **GoLand**
 - **WebStorm**
-- **PyCharm** Community & Professional
 - _Submit issue if you need other IDE_
 
 ### Features
 - **Environment Variables**: Set environment variables for your run configurations from mise config files.
 - **JDK Integration**: Set JDK from mise config files.
 - **Go SDK Integration**: Set Go SDK (GOROOT) from mise config files.
+
 
 <!-- Plugin description end -->
 
