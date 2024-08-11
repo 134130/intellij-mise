@@ -1,3 +1,21 @@
+import org.jetbrains.intellij.platform.gradle.extensions.intellijPlatform
+
+plugins {
+    id("org.jetbrains.intellij.platform.settings") version "2.0.0"
+}
+
+dependencyResolutionManagement {
+    // Configure project's dependencies
+    repositories {
+        mavenCentral()
+
+        // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
+        intellijPlatform {
+            defaultRepositories()
+        }
+    }
+}
+
 include(
     "modules/core",
     "modules/products/idea",
