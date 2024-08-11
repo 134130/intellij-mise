@@ -43,7 +43,7 @@ dependencies {
 // Configure Gradle IntelliJ Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellijPlatform {
     pluginConfiguration {
-        version = providers.gradleProperty("platformVersion")
+        version = providers.gradleProperty("pluginVersion")
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         description =
