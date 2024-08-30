@@ -3,7 +3,7 @@
 junit = "4.13.2"
 
 # plugins
-kotlin = "2.0.10"
+kotlin = "2.0.20"
 changelog = "2.2.1"
 gradleIdeaExt = "1.1.8"
 qodana = "2024.1.9"
