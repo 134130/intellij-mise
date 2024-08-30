@@ -60,20 +60,20 @@ class RunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
 
     private class RunConfigurationSettingsPanel<T : RunConfigurationBase<*>>(
         private val configuration: T,
-    ) : JPanel() {
+    ) : JPanel(BorderLayout()) {
         val enableMiseCheckBox = JBCheckBox("Enable mise")
 
         init {
-            val p = panel {
-                row {
-                    cell(enableMiseCheckBox).comment(
-                        "Load environment variables from mise configuration file(s)",
-                    )
+            val p =
+                panel {
+                    row {
+                        cell(enableMiseCheckBox).comment(
+                            "Load environment variables from mise configuration file(s)",
+                        )
+                    }
                 }
-            }
 
-            layout = BorderLayout()
-            add(p)
+            add(p, BorderLayout.NORTH)
         }
 
         var state: MiseSettings
