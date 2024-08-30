@@ -13,7 +13,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.vfs.LocalFileSystem
 
-class GoLandProjectGoSdkSetup : AnAction(), StartupActivity {
+class GoLandProjectGoSdkSetup :
+    AnAction(),
+    StartupActivity {
     override fun actionPerformed(e: AnActionEvent) {
         e.project?.let { runActivity(it) }
     }

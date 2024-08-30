@@ -1,4 +1,7 @@
 <idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="com.github.l34130.mise.go.GoLandProjectGoSdkSetup"/>
+    </extensions>
     <extensions defaultExtensionNs="com.goide">
         <runConfigurationExtension implementation="com.github.l34130.mise.runconfigs.GoLandRunConfigurationExtension"
                                    id="miseGoLand"/>
