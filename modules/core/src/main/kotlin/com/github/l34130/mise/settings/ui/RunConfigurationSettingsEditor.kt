@@ -5,17 +5,13 @@ import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.options.ConfigurationException
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.util.Key
-import com.intellij.ui.components.JBCheckBox
-import com.intellij.ui.dsl.builder.panel
 import org.jdom.Element
-import java.awt.BorderLayout
 import javax.swing.JComponent
-import javax.swing.JPanel
 
 class RunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     configuration: T,
 ) : SettingsEditor<T>() {
-    private val editor = RunConfigurationSettingsPanel(configuration)
+    private val editor = RunConfigurationSettingsPanel()
 
     override fun resetEditorFrom(config: T) {
         config.getCopyableUserData(USER_DATA_KEY)?.let {
@@ -33,7 +29,7 @@ class RunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     companion object {
         const val EDITOR_TITLE = "Mise"
         const val SERIALIZATION_ID = "com.github.l34130.mise"
-        val USER_DATA_KEY: Key<MiseSettings> = Key("Mise Settings")
+        val USER_DATA_KEY: Key<MiseSettings.State> = Key("Mise Settings")
 
         private const val FIELD_MISE_ENABLED = "MISE_ENABLED"
 
@@ -41,8 +37,8 @@ class RunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
             runConfiguration: RunConfigurationBase<*>,
             element: Element,
         ) {
-            val miseEnabled = element.getAttributeValue(FIELD_MISE_ENABLED)?.toBoolean() ?: false
-            runConfiguration.putCopyableUserData(USER_DATA_KEY, MiseSettings(miseEnabled))
+            val isMiseEnabled = element.getAttributeValue(FIELD_MISE_ENABLED)?.toBoolean() ?: false
+            runConfiguration.putCopyableUserData(USER_DATA_KEY, MiseSettings.State(isMiseEnabled = isMiseEnabled))
         }
 
         fun writeExternal(
@@ -50,36 +46,11 @@ class RunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
             element: Element,
         ) {
             runConfiguration.getCopyableUserData(USER_DATA_KEY)?.let { settings ->
-                element.setAttribute(FIELD_MISE_ENABLED, settings.miseEnabled.toString())
+                element.setAttribute(FIELD_MISE_ENABLED, settings.isMiseEnabled.toString())
             }
         }
 
         fun isMiseEnabled(configuration: RunConfigurationBase<*>): Boolean =
-            configuration.getCopyableUserData(USER_DATA_KEY)?.miseEnabled ?: false
-    }
-
-    private class RunConfigurationSettingsPanel<T : RunConfigurationBase<*>>(
-        private val configuration: T,
-    ) : JPanel() {
-        val enableMiseCheckBox = JBCheckBox("Enable mise")
-
-        init {
-            val p = panel {
-                row {
-                    cell(enableMiseCheckBox).comment(
-                        "Load environment variables from mise configuration file(s)",
-                    )
-                }
-            }
-
-            layout = BorderLayout()
-            add(p)
-        }
-
-        var state: MiseSettings
-            get() = MiseSettings(enableMiseCheckBox.isSelected)
-            set(value) {
-                enableMiseCheckBox.isSelected = value.miseEnabled
-            }
+            configuration.getCopyableUserData(USER_DATA_KEY)?.isMiseEnabled ?: false
     }
 }

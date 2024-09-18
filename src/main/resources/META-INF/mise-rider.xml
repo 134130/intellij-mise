@@ -3,5 +3,9 @@
 <!--        <-->
 <!--        <nodeRunConfigurationExtension implementation="com.github.l34130.mise.runconfigs.NodeRunConfigurationExtension"-->
 <!--                                   id="miseRider"/>-->
+        <applicationService serviceImplementation="com.github.l34130.mise.settings.MiseSettings" />
+        <applicationConfigurable instance="com.github.l34130.mise.settings.MiseConfigurable" displayName="Mise" />
+
+        <rider.patchCommandLine implementation="com.github.l34130.mise.runconfig.RiderPatchCommandLineExtension" />
     </extensions>
 </idea-plugin>
