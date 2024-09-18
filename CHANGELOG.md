@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [2.1.0] - 2024-09-18
+
+### Added
+
+- Add run configurations support for Rider.
+- Rename from 'mise' to 'Mise'.
+
 ## [2.0.1] - 2024-08-31
 
 ### Added
@@ -47,7 +54,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.1.0...HEAD
+[2.0.1]: https://github.com/134130/intellij-mise/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/134130/intellij-mise/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/134130/intellij-mise/compare/v1.3.0...v2.0.0
 [1.3.0]: https://github.com/134130/intellij-mise/compare/v1.2.1...v1.3.0

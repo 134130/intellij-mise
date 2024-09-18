@@ -8,19 +8,19 @@
 **[GitHub](https://github.com/134130/intellij-mise)** | **[Issue](https://github.com/134130/intellij-mise/issues)** | **[Changelog](https://github.com/134130/intellij-mise/blob/main/CHANGELOG.md)**
 
 **Mise** is a plugin for JetBrains IDEs that allows you to set environment variables for your run configurations
-from mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
+from Mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 
 ### Supported Platforms:
 - **IntelliJ IDEA**
 - **GoLand**
 - **WebStorm**
-- **PyCharm** Community & Professional
+- **Rider**
 - _Submit issue if you need other IDE_
 
 ### Features
 - **Environment Variables**: Set environment variables for your run configurations from mise config files.
-- **JDK Integration**: Set JDK from mise config files.
-- **Go SDK Integration**: Set Go SDK (GOROOT) from mise config files.
+- **JDK Integration**: Set JDK from Mise config files.
+- **Go SDK Integration**: Set Go SDK (GOROOT) from Mise config files.
 
 
 <!-- Plugin description end -->
@@ -37,7 +37,7 @@ from mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 
 - Using the IDE built-in plugin system:
   
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "mise"</kbd> >
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Mise"</kbd> >
   <kbd>Install</kbd>
   
 - Manually:
