@@ -22,6 +22,7 @@ include(
     "modules/products/gradle",
     "modules/products/idea",
     "modules/products/nodejs",
+    "modules/products/rider",
 )
 
 rootProject.name = "mise"
