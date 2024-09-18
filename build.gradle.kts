@@ -34,6 +34,7 @@ dependencies {
         pluginModule(implementation(project(":mise-products-gradle")))
         pluginModule(implementation(project(":mise-products-idea")))
         pluginModule(implementation(project(":mise-products-nodejs")))
+        pluginModule(implementation(project(":mise-products-rider")))
 
         plugins(listOf())
 
@@ -160,6 +161,7 @@ val runIdePlatformTypes =
         IntelliJPlatformType.WebStorm,
         IntelliJPlatformType.PyCharmCommunity,
         IntelliJPlatformType.PyCharmProfessional,
+        IntelliJPlatformType.Rider,
     )
 
 runIdePlatformTypes.forEach { platformType ->

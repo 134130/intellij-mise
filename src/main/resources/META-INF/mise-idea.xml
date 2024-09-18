@@ -2,7 +2,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.github.l34130.mise.jdk.IdeaProjectJdkSetup"/>
         
-        <runConfigurationExtension implementation="com.github.l34130.mise.runconfigs.IdeaRunConfigurationExtension"
+        <runConfigurationExtension implementation="com.github.l34130.mise.runconfig.IdeaRunConfigurationExtension"
                                    id="miseIdea"/>
     </extensions>
 
