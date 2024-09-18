@@ -18,9 +18,9 @@ dependencyResolutionManagement {
 
 include(
     "modules/core",
-    "modules/products/idea",
-    "modules/products/gradle",
     "modules/products/goland",
+    "modules/products/gradle",
+    "modules/products/idea",
     "modules/products/nodejs",
 )
 

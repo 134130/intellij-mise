@@ -3,7 +3,7 @@
         <postStartupActivity implementation="com.github.l34130.mise.go.GoLandProjectGoSdkSetup"/>
     </extensions>
     <extensions defaultExtensionNs="com.goide">
-        <runConfigurationExtension implementation="com.github.l34130.mise.runconfigs.GoLandRunConfigurationExtension"
+        <runConfigurationExtension implementation="com.github.l34130.mise.runconfig.GoLandRunConfigurationExtension"
                                    id="miseGoLand"/>
     </extensions>
 
