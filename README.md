@@ -10,7 +10,7 @@
 **Mise** is a plugin for JetBrains IDEs that allows you to set environment variables for your run configurations
 from Mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 
-### Supported Platforms:
+### Supported Platforms
 - **IntelliJ IDEA**
 - **GoLand**
 - **WebStorm**
