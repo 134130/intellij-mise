@@ -1,7 +1,7 @@
 import org.jetbrains.intellij.platform.gradle.extensions.intellijPlatform
 
 plugins {
-    id("org.jetbrains.intellij.platform.settings") version "2.0.1"
+    id("org.jetbrains.intellij.platform.settings") version "2.1.0"
 }
 
 dependencyResolutionManagement {
