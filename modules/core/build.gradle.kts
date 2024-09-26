@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.1")
 
     intellijPlatform {
         create(IntelliJPlatformType.IntellijIdeaCommunity, properties("platformVersion"), false)
