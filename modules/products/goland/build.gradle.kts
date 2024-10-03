@@ -12,7 +12,7 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.GoLand, properties("platformVersion"), false)
+        create(IntelliJPlatformType.GoLand, properties("platformVersion"))
 
         bundledPlugin("org.jetbrains.plugins.go")
 

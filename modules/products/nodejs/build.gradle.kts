@@ -12,7 +12,7 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.WebStorm, properties("platformVersion"), false)
+        create(IntelliJPlatformType.WebStorm, properties("platformVersion"))
 
         bundledPlugins("JavaScript", "NodeJS")
 

@@ -12,7 +12,7 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.IntellijIdeaCommunity, properties("platformVersion"), false)
+        create(IntelliJPlatformType.IntellijIdeaCommunity, properties("platformVersion"))
 
         bundledPlugin("com.intellij.java")
 
