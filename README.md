@@ -18,20 +18,25 @@ from Mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 - _Submit issue if you need other IDE_
 
 ### Features
-- **Environment Variables**: Set environment variables for your run configurations from mise config files.
-- **JDK Integration**: Set JDK from Mise config files.
-- **Go SDK Integration**: Set Go SDK (GOROOT) from Mise config files.
 
+- **Environment Variables**: Set environment variables for your run configurations from Mise config files.
+- **Tool Integration**: Set project's SDK automatically from Mise config files.
+
+### `mise ls` supports
+
+- `java`
+- `go`
+- `node`
+- `deno`
+
+### `mise set` supports
+
+- IntelliJ IDEA
+- GoLand
+- WebStorm
+- Rider
 
 <!-- Plugin description end -->
-
-### Screenshots
-
-| -                     | Setup                                                                                     | Notification                                                                              |
-|-----------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| **IntelliJ IDEA**     | ![image](https://github.com/user-attachments/assets/913911fe-19ec-4754-b1e0-31650e14fff0) | ![image](https://github.com/user-attachments/assets/a406ae15-20da-4044-a8c6-3f5f938e16f7) |
-| **GoLand**            | ![image](https://github.com/user-attachments/assets/4a51b036-f2b3-48e9-b85d-eb114ea1af7c) | ![image](https://github.com/user-attachments/assets/e72fa0ac-4dc1-44ff-ac18-08883d0f9ede) |
-| **Run Configuration** | ![image](https://github.com/user-attachments/assets/2ad4239e-fd05-4291-8844-441dc47ffe11) |                                                                                           | 
 
 ## Installation
 
