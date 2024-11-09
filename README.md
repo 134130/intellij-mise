@@ -17,10 +17,9 @@ from Mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 - **Rider**
 - _Submit issue if you need other IDE_
 
-### Supported
-
 ### Features
-- **Environment Variables**: Set environment variables for your run configurations from mise config files.
+
+- **Environment Variables**: Set environment variables for your run configurations from Mise config files.
 - **Tool Integration**: Set project's SDK automatically from Mise config files.
 
 ### `mise ls` supports
@@ -36,11 +35,6 @@ from Mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 - GoLand
 - WebStorm
 - Rider
-
-- **JDK Integration**: Set JDK automatically from Mise config files.
-- **Go SDK Integration**: Set Go SDK (GOROOT) automatically from Mise config files.
-- **Node.js Integration**: Set Node.js interpreter automatically from Mise config files.
-- **Deno Integration**: Set Deno executable automatically from Mise config files.
 
 <!-- Plugin description end -->
 
