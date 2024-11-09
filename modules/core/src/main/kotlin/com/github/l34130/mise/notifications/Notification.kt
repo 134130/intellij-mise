@@ -13,29 +13,7 @@ object Notification {
     fun notify(content: String, type: NotificationType, project: Project? = null) {
         val notification = NotificationGroupManager.getInstance()
             .getNotificationGroup(NOTIFICATION_GROUP_ID)
-            .createNotification(content, type)
-
-        notification.icon = PluginIcons.Default
-        notification.notify(project)
-    }
-
-    fun notifyWithLinkToSettings(
-        content: String,
-        settingName: String,
-        type: NotificationType,
-        project: Project? = null
-    ) {
-        val notification = NotificationGroupManager.getInstance()
-            .getNotificationGroup(NOTIFICATION_GROUP_ID)
             .createNotification(content.replace("\n", "<br>"), type)
-            .addAction(
-                NotificationAction.createSimple("Configure") {
-                    ShowSettingsUtil.getInstance().showSettingsDialog(
-                        project,
-                        settingName
-                    )
-                }
-            )
 
         notification.icon = PluginIcons.Default
         notification.notify(project)
@@ -43,7 +21,7 @@ object Notification {
 
     fun <T : Configurable> notifyWithLinkToSettings(
         content: String,
-        configurableClass: KClass<T>,
+        configurableClass: KClass<out T>,
         type: NotificationType,
         project: Project? = null,
     ) {
@@ -56,7 +34,7 @@ object Notification {
                     NotificationAction.createSimple("Configure") {
                         ShowSettingsUtil.getInstance().showSettingsDialog(
                             project,
-                            configurableClass.java,
+                            configurableClass.javaObjectType,
                         )
                     },
                 )

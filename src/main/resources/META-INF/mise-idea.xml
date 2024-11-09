@@ -1,14 +1,14 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.github.l34130.mise.jdk.IdeaProjectJdkSetup"/>
+        <postStartupActivity implementation="com.github.l34130.mise.jdk.ProjectJdkSetup"/>
         
         <runConfigurationExtension implementation="com.github.l34130.mise.runconfig.IdeaRunConfigurationExtension"
                                    id="miseIdea"/>
     </extensions>
 
     <actions>
-        <action id="com.github.l34130.mise.jdk.IdeaProjectJdkSetup"
-                class="com.github.l34130.mise.jdk.IdeaProjectJdkSetup"
+        <action id="com.github.l34130.mise.jdk.ProjectJdkSetup"
+                class="com.github.l34130.mise.jdk.ProjectJdkSetup"
                 text="Reload JDK"
         >
             <add-to-group group-id="ch.mise.actions"/>

@@ -32,7 +32,10 @@ class RiderPatchCommandLineExtension : PatchCommandLineExtension {
         return null
     }
 
-    private fun patchCommandLine(commandLine: GeneralCommandLine, project: Project) {
+    private fun patchCommandLine(
+        commandLine: GeneralCommandLine,
+        project: Project,
+    ) {
         if (!MiseSettings.instance.state.isMiseEnabled) {
             return
         }
