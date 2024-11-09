@@ -1,0 +1,4 @@
+root = true
+
+[CHANGELOG.md]
+ij_formatter_enabled = false
