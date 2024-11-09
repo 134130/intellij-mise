@@ -1,58 +1,45 @@
 package com.github.l34130.mise.deno
 
-import com.github.l34130.mise.commands.MiseCmd
-import com.github.l34130.mise.notifications.Notification
+import com.github.l34130.mise.commands.MiseTool
+import com.github.l34130.mise.setups.AbstractProjectSdkSetup
+import com.github.l34130.mise.setups.MiseToolRequest
 import com.intellij.deno.DenoConfigurable
 import com.intellij.deno.DenoSettings
-import com.intellij.notification.NotificationType
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
+import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.io.FileUtil
 import kotlin.io.path.Path
+import kotlin.reflect.KClass
 
-class ProjectDenoSetup :
-    AnAction(),
-    StartupActivity {
-    override fun actionPerformed(e: AnActionEvent) {
-        e.project?.let { runActivity(it) }
-    }
+class ProjectDenoSetup : AbstractProjectSdkSetup() {
+    override fun getToolRequest(): MiseToolRequest =
+        MiseToolRequest(
+            name = "deno",
+            canonicalName = "Deno",
+        )
 
-    override fun runActivity(project: Project) {
-        val denoSettings = project.service<DenoSettings>()
-        val denoTools = MiseCmd.loadTools(project.basePath)["deno"] ?: return
+    override fun setupSdk(
+        tool: MiseTool,
+        project: Project,
+    ): Boolean {
+        val settings = project.service<DenoSettings>()
 
-        if (denoTools.size > 1) {
-            Notification.notify("Multiple Deno SDKs found. Not setting any.", NotificationType.WARNING, project)
-            return
-        }
-
-        val denoTool = denoTools.first()
-        val absolutePathDenoDir =
-            Path(FileUtil.expandUserHome(denoTool.installPath), "bin", "deno")
+        val oldDenoPath = settings.getDenoPath()
+        val newDenoPath =
+            Path(FileUtil.expandUserHome(tool.installPath), "bin", "deno")
                 .toAbsolutePath()
                 .normalize()
                 .toString()
 
-        WriteAction.runAndWait<Throwable> {
-            try {
-                denoSettings.setDenoPath(absolutePathDenoDir)
-                Notification.notifyWithLinkToSettings(
-                    "Deno SDK set to deno@${denoTool.version} from ${denoTool.source.type}",
-                    DenoConfigurable::class,
-                    NotificationType.INFORMATION,
-                    project,
-                )
-            } catch (e: Exception) {
-                Notification.notify(
-                    "Failed to set Deno SDK: ${e.message}",
-                    NotificationType.ERROR,
-                    project,
-                )
-            }
+        if (oldDenoPath == newDenoPath) {
+            return false
         }
+
+        settings.setDenoPath(newDenoPath)
+        return true
     }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : Configurable> getConfigurableClass(): KClass<out T> = DenoConfigurable::class as KClass<out T>
 }

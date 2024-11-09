@@ -1,7 +1,7 @@
 package com.github.l34130.mise.commands
 
-import com.github.l34130.mise.extensions.fromJson
 import com.github.l34130.mise.notifications.Notification
+import com.github.l34130.mise.utils.fromJson
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.intellij.execution.configurations.GeneralCommandLine

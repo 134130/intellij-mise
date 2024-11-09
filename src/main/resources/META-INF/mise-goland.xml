@@ -1,6 +1,6 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.github.l34130.mise.go.GoLandProjectGoSdkSetup"/>
+        <postStartupActivity implementation="com.github.l34130.mise.go.ProjectGoSdkSetup"/>
     </extensions>
     <extensions defaultExtensionNs="com.goide">
         <runConfigurationExtension implementation="com.github.l34130.mise.runconfig.GoLandRunConfigurationExtension"
@@ -8,9 +8,9 @@
     </extensions>
 
     <actions>
-        <action id="com.github.l34130.mise.go.GoLandProjectGoSdkSetup"
-                class="com.github.l34130.mise.go.GoLandProjectGoSdkSetup"
-                text="Reload Go SDK"
+        <action id="com.github.l34130.mise.go.ProjectGoSdkSetup"
+                class="com.github.l34130.mise.go.ProjectGoSdkSetup"
+                text="Reload GOROOT"
         >
             <add-to-group group-id="ch.mise.actions"/>
         </action>

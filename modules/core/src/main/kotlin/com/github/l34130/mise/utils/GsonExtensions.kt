@@ -1,4 +1,4 @@
-package com.github.l34130.mise.extensions
+package com.github.l34130.mise.utils
 
 import com.google.gson.Gson
 import com.google.gson.JsonElement
