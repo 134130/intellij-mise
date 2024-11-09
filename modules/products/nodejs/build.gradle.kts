@@ -15,6 +15,7 @@ dependencies {
         create(IntelliJPlatformType.WebStorm, properties("platformVersion"))
 
         bundledPlugins("JavaScript", "NodeJS")
+        plugins("deno:223.7571.4")
 
         instrumentationTools()
     }

@@ -1,3 +1,4 @@
 <idea-plugin>
     <depends optional="true" config-file="mise-nodejs.xml">NodeJS</depends>
+    <depends optional="false" config-file="mise-deno.xml">deno</depends>
 </idea-plugin>
