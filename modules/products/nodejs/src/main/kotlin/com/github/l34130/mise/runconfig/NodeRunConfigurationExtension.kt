@@ -37,7 +37,10 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
         environment: ExecutionEnvironment,
     ): NodeRunConfigurationLaunchSession? {
         val config = configuration as NodeJsRunConfiguration
-        config.envs.putAll(MiseCmd.loadEnv(config.workingDirectory))
+
+        val envs = config.envs.toMutableMap()
+        envs.putAll(MiseCmd.loadEnv(config.workingDirectory))
+        config.envs = envs
         return null
     }
 
