@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+## [2.2.0] - 2024-11-09
+
+### Added
+
+- Use `--offline` flag for `mise ls` if available.
+
+### Changed
+
+- Fix NodeJS's run configuration is not working on IDEA.
+
 ## [2.1.1] - 2024-10-03
 
 ### Changed
@@ -60,7 +70,9 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.1.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.2.0...HEAD
+
+[2.2.0]: https://github.com/134130/intellij-mise/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/134130/intellij-mise/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/134130/intellij-mise/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/134130/intellij-mise/compare/v2.0.0...v2.0.1
