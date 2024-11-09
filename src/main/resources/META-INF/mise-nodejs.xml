@@ -1,6 +1,17 @@
 <idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="com.github.l34130.mise.node.ProjectNodeSetup"/>
+    </extensions>
     <extensions defaultExtensionNs="JavaScript">
         <nodeRunConfigurationExtension implementation="com.github.l34130.mise.runconfig.NodeRunConfigurationExtension"
                                    id="miseNodeJS"/>
     </extensions>
+    <actions>
+        <action id="com.github.l34130.mise.node.ProjectNodeSetup"
+                class="com.github.l34130.mise.node.ProjectNodeSetup"
+                text="Reload NodeJS interpreter"
+        >
+            <add-to-group group-id="ch.mise.actions"/>
+        </action>
+    </actions>
 </idea-plugin>
