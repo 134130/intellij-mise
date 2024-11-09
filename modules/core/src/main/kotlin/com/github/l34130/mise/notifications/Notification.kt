@@ -25,7 +25,7 @@ object Notification {
     ) {
         val notification = NotificationGroupManager.getInstance()
             .getNotificationGroup(NOTIFICATION_GROUP_ID)
-            .createNotification(content, type)
+            .createNotification(content.replace("\n", "<br>"), type)
             .addAction(
                 NotificationAction.createSimpleExpiring("Configure") {
                     ShowSettingsUtil.getInstance().showSettingsDialog(

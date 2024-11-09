@@ -2,6 +2,7 @@ package com.github.l34130.mise.node
 
 import com.github.l34130.mise.commands.MiseCmd
 import com.github.l34130.mise.notifications.Notification
+import com.github.l34130.mise.utils.PathUtils
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterManager
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterRef
 import com.intellij.javascript.nodejs.interpreter.local.NodeJsLocalInterpreter
@@ -61,7 +62,10 @@ class ProjectNodeSetup : AnAction(), StartupActivity {
 
         if (currentPath != nodePath) {
             Notification.notifyWithLinkToSettings(
-                "Node SDK set to $version from $sourceType\n$packageManager detected\n\n($nodePath).",
+                """
+                Node SDK set to $packageManager@$version from $sourceType.
+                Path: ${PathUtils.abbrHomeDir(nodePath)}
+                """.trimIndent(),
                 settingName = "Settings | Languages & Frameworks | Node.js",
                 NotificationType.INFORMATION,
                 project
