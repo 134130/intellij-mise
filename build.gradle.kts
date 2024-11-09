@@ -106,6 +106,9 @@ intellijPlatform {
             recommended()
         }
     }
+
+    // https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html#intellijPlatform-buildSearchableOptions
+    buildSearchableOptions = false
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
