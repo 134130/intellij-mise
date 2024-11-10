@@ -11,6 +11,7 @@ class MiseSettings private constructor() : PersistentStateComponent<MiseSettings
 
     override fun loadState(state: MiseSettings.State) {
         STATE.isMiseEnabled = state.isMiseEnabled
+        STATE.miseProfile = state.miseProfile
     }
 
     companion object {
@@ -20,5 +21,6 @@ class MiseSettings private constructor() : PersistentStateComponent<MiseSettings
 
     data class State(
         var isMiseEnabled: Boolean = true,
+        var miseProfile: String = ""
     )
 }

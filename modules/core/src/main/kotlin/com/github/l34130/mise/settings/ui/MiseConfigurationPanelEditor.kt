@@ -8,15 +8,19 @@ import com.intellij.openapi.util.Key
 import org.jdom.Element
 import javax.swing.JComponent
 
-class RunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
+class MiseConfigurationPanelEditor<T : RunConfigurationBase<*>>(
     configuration: T,
 ) : SettingsEditor<T>() {
-    private val editor = RunConfigurationSettingsPanel()
+    private val editor = MiseRunConfigurationPanel()
 
     override fun resetEditorFrom(config: T) {
-        config.getCopyableUserData(USER_DATA_KEY)?.let {
-            editor.state = it
-        }
+        val defaultState = getDefaultState()
+        val isMiseEnabled = config.getCopyableUserData(USER_DATA_KEY)?.isMiseEnabled ?: defaultState.isMiseEnabled
+        val miseProfile = config.getCopyableUserData(USER_DATA_KEY)?.miseProfile ?: defaultState.miseProfile
+        editor.state = MiseSettings.State(
+            isMiseEnabled = isMiseEnabled,
+            miseProfile = miseProfile,
+        )
     }
 
     @Throws(ConfigurationException::class)
@@ -32,13 +36,19 @@ class RunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
         val USER_DATA_KEY: Key<MiseSettings.State> = Key("Mise Settings")
 
         private const val FIELD_MISE_ENABLED = "MISE_ENABLED"
+        private const val FIELD_MISE_PROFILE = "MISE_PROFILE"
 
         fun readExternal(
             runConfiguration: RunConfigurationBase<*>,
             element: Element,
         ) {
-            val isMiseEnabled = element.getAttributeValue(FIELD_MISE_ENABLED)?.toBoolean() ?: false
+            val defaultState = getDefaultState()
+            val isMiseEnabled =
+                element.getAttributeValue(FIELD_MISE_ENABLED)?.toBoolean() ?: defaultState.isMiseEnabled
+            val miseProfile = element.getAttributeValue(FIELD_MISE_PROFILE) ?: defaultState.miseProfile
+
             runConfiguration.putCopyableUserData(USER_DATA_KEY, MiseSettings.State(isMiseEnabled = isMiseEnabled))
+            runConfiguration.putCopyableUserData(USER_DATA_KEY, MiseSettings.State(miseProfile = miseProfile))
         }
 
         fun writeExternal(
@@ -47,10 +57,19 @@ class RunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
         ) {
             runConfiguration.getCopyableUserData(USER_DATA_KEY)?.let { settings ->
                 element.setAttribute(FIELD_MISE_ENABLED, settings.isMiseEnabled.toString())
+                element.setAttribute(FIELD_MISE_PROFILE, settings.miseProfile)
             }
         }
 
+        fun getDefaultState(): MiseSettings.State = MiseSettings.State(
+            isMiseEnabled = MiseSettings.instance.state.isMiseEnabled,
+            miseProfile = MiseSettings.instance.state.miseProfile,
+        )
+
         fun isMiseEnabled(configuration: RunConfigurationBase<*>): Boolean =
-            configuration.getCopyableUserData(USER_DATA_KEY)?.isMiseEnabled ?: false
+            configuration.getCopyableUserData(USER_DATA_KEY)?.isMiseEnabled ?: getDefaultState().isMiseEnabled
+
+        fun getMiseProfile(configuration: RunConfigurationBase<*>): String =
+            configuration.getCopyableUserData(USER_DATA_KEY)?.miseProfile ?: getDefaultState().miseProfile
     }
 }

@@ -3,6 +3,7 @@ package com.github.l34130.mise.setups
 import com.github.l34130.mise.commands.MiseCmd
 import com.github.l34130.mise.commands.MiseTool
 import com.github.l34130.mise.notifications.Notification
+import com.github.l34130.mise.settings.MiseSettings
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.WriteAction
@@ -53,7 +54,13 @@ abstract class AbstractProjectSdkSetup :
             }
         }
 
-        val tools = MiseCmd.loadTools(project.basePath)[toolRequest.name]
+        val profile = MiseSettings.instance.state.miseProfile
+        val loadedTools = MiseCmd.loadTools(
+            workDir = project.basePath,
+            miseProfile = profile,
+        )
+
+        val tools = loadedTools[toolRequest.name]
         if (tools.isNullOrEmpty() || tools.size > 1) {
             if (!isUserInteraction) return
 

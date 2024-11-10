@@ -8,10 +8,10 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.notification.NotificationType
 
 object MiseCmd {
-    fun loadEnv(workDir: String?): Map<String, String> {
+    fun loadEnv(workDir: String?, miseProfile: String = "."): Map<String, String> {
         try {
             val process =
-                GeneralCommandLine("mise", "env")
+                GeneralCommandLine("mise", "env", "--profile", miseProfile)
                     .withWorkDirectory(workDir)
                     .createProcess()
 
@@ -35,7 +35,7 @@ object MiseCmd {
         }
     }
 
-    fun loadTools(workDir: String?): Map<String, List<MiseTool>> {
+    fun loadTools(workDir: String?, miseProfile: String = "."): Map<String, List<MiseTool>> {
         try {
             val miseVersionStr =
                 runCommandLine(listOf("mise", "version"), workDir).getOrNull()
@@ -49,11 +49,13 @@ object MiseCmd {
 
             // https://github.com/jdx/mise/commit/6e7e4074989bda47e40900cb651b694c72d39f4d
             val supportsOfflineFlag = miseVersion >= MiseVersion(2024, 11, 4)
+            val commandLineArgs = listOf("mise", "ls", "--current", "--json", "--profile", miseProfile)
+
             val cliResult =
                 if (supportsOfflineFlag) {
-                    runCommandLine(listOf("mise", "ls", "--current", "--json", "--offline"), workDir)
+                    runCommandLine(commandLineArgs + "--offline", workDir)
                 } else {
-                    runCommandLine(listOf("mise", "ls", "--current", "--json"), workDir)
+                    runCommandLine(commandLineArgs, workDir)
                 }
 
             if (cliResult.isFailure) {
