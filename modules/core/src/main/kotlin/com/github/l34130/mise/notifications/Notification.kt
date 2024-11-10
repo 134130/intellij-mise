@@ -1,6 +1,6 @@
 package com.github.l34130.mise.notifications
 
-import com.github.l34130.mise.icons.PluginIcons
+import com.github.l34130.mise.icons.MiseIcons
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -15,7 +15,7 @@ object Notification {
             .getNotificationGroup(NOTIFICATION_GROUP_ID)
             .createNotification(content.replace("\n", "<br>"), type)
 
-        notification.icon = PluginIcons.Default
+        notification.icon = MiseIcons.DEFAULT
         notification.notify(project)
     }
 
@@ -39,7 +39,7 @@ object Notification {
                     },
                 )
 
-        notification.icon = PluginIcons.Default
+        notification.icon = MiseIcons.DEFAULT
         notification.notify(project)
     }
 
