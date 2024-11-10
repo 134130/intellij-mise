@@ -10,6 +10,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
@@ -36,6 +37,7 @@ class RefreshAction(private val panel: MisePanel) : AnAction(
     AllIcons.Actions.Refresh
 ) {
     override fun actionPerformed(e: AnActionEvent) {
+        FileDocumentManager.getInstance().saveAllDocuments()
         panel.refreshMiseConfiguration()
     }
 }
