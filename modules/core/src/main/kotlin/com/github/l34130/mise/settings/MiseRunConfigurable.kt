@@ -3,15 +3,16 @@ package com.github.l34130.mise.settings
 import com.github.l34130.mise.notifications.Notification
 import com.github.l34130.mise.settings.ui.MiseConfigurationPanelEditor
 import com.github.l34130.mise.settings.ui.MiseConfigurationPanel
+import com.github.l34130.mise.settings.ui.MiseRunConfigurationPanel
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.options.SearchableConfigurable
 import javax.swing.JComponent
 
-class MiseConfigurable : SearchableConfigurable {
-    private var component: MiseConfigurationPanel? = null
+class MiseRunConfigurable : SearchableConfigurable {
+    private var component: MiseRunConfigurationPanel? = null
 
     override fun createComponent(): JComponent {
-        component = component ?: MiseConfigurationPanel().also {
+        component = component ?: MiseRunConfigurationPanel().also {
             it.state = MiseSettings.instance.state
         }
         return component!!

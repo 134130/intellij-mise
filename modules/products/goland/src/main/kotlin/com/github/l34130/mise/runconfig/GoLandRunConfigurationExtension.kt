@@ -1,7 +1,7 @@
 package com.github.l34130.mise.runconfig
 
 import com.github.l34130.mise.commands.MiseCmd
-import com.github.l34130.mise.settings.ui.RunConfigurationSettingsEditor
+import com.github.l34130.mise.settings.ui.MiseConfigurationPanelEditor
 import com.goide.execution.GoRunConfigurationBase
 import com.goide.execution.GoRunningState
 import com.goide.execution.extension.GoRunConfigurationExtension
@@ -11,25 +11,25 @@ import com.intellij.openapi.options.SettingsEditor
 import org.jdom.Element
 
 class GoLandRunConfigurationExtension : GoRunConfigurationExtension() {
-    override fun getEditorTitle(): String = RunConfigurationSettingsEditor.EDITOR_TITLE
+    override fun getEditorTitle(): String = MiseConfigurationPanelEditor.EDITOR_TITLE
 
     override fun <P : GoRunConfigurationBase<*>> createEditor(configuration: P): SettingsEditor<P> =
-        RunConfigurationSettingsEditor(configuration)
+        MiseConfigurationPanelEditor(configuration)
 
-    override fun getSerializationId(): String = RunConfigurationSettingsEditor.SERIALIZATION_ID
+    override fun getSerializationId(): String = MiseConfigurationPanelEditor.SERIALIZATION_ID
 
     override fun readExternal(
         runConfiguration: GoRunConfigurationBase<*>,
         element: Element,
     ) {
-        RunConfigurationSettingsEditor.readExternal(runConfiguration, element)
+        MiseConfigurationPanelEditor.readExternal(runConfiguration, element)
     }
 
     override fun writeExternal(
         runConfiguration: GoRunConfigurationBase<*>,
         element: Element,
     ) {
-        RunConfigurationSettingsEditor.writeExternal(runConfiguration, element)
+        MiseConfigurationPanelEditor.writeExternal(runConfiguration, element)
     }
 
     override fun patchCommandLine(
@@ -40,8 +40,11 @@ class GoLandRunConfigurationExtension : GoRunConfigurationExtension() {
         state: GoRunningState<out GoRunConfigurationBase<*>>,
         commandLineType: GoRunningState.CommandLineType,
     ) {
-        if (RunConfigurationSettingsEditor.isMiseEnabled(configuration)) {
-            MiseCmd.loadEnv(configuration.getWorkingDirectory()).forEach { (k, v) ->
+        if (MiseConfigurationPanelEditor.isMiseEnabled(configuration)) {
+            MiseCmd.loadEnv(
+                workDir = configuration.getWorkingDirectory(),
+                miseProfile = MiseConfigurationPanelEditor.getMiseProfile(configuration)
+            ).forEach { (k, v) ->
                 cmdLine.addEnvironmentVariable(k, v)
             }
         }
