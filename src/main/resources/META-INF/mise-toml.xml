@@ -1,0 +1,19 @@
+<idea-plugin require-restart="false">
+    <depends>com.intellij.modules.json</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <completion.contributor language="TOML"
+                                implementationClass="com.github.l34130.mise.toml.completion.MiseConfigCompletionContributor"/>
+
+        <fileType name="mise"
+                  language="TOML"
+                  implementationClass="com.github.l34130.mise.toml.MiseFileType"
+                  fieldName="INSTANCE"
+                  patterns=".mise.toml;.mise.*.toml;mise.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
+        />
+    </extensions>
+
+    <extensions defaultExtensionNs="JavaScript.JsonSchema">
+        <ProviderFactory implementation="com.github.l34130.mise.toml.schema.MiseJsonSchemaProviderFactory"/>
+    </extensions>
+</idea-plugin>

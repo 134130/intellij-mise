@@ -35,6 +35,7 @@ dependencies {
         pluginModule(implementation(project(":mise-products-idea")))
         pluginModule(implementation(project(":mise-products-nodejs")))
         pluginModule(implementation(project(":mise-products-rider")))
+        pluginModule(implementation(project(":mise-products-toml")))
 
         plugins(listOf())
 

@@ -14,7 +14,7 @@
         <group id="ch.mise.actions"
                text="Mise"
                popup="true"
-               icon="com.github.l34130.mise.icons.PluginIcons.Default">
+               icon="com.github.l34130.mise.icons.MiseIcons.DEFAULT">
             <add-to-group group-id="ToolsMenu"/>
         </group>
     </actions>
@@ -24,4 +24,5 @@
     <depends optional="true" config-file="mise-idea.xml">com.intellij.java</depends>
     <depends optional="true" config-file="mise-javascript.xml">JavaScript</depends>
     <depends optional="true" config-file="mise-rider.xml">com.intellij.modules.rider</depends>
+    <depends optional="true" config-file="mise-toml.xml">org.toml.lang</depends>
 </idea-plugin>
