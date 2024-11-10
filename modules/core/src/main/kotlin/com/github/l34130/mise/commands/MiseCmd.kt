@@ -35,6 +35,28 @@ object MiseCmd {
         }
     }
 
+    fun loadTasks(workDir: String?, miseProfile: String = "."): List<MiseTask> {
+        try {
+            val cliResult = runCommandLine(listOf("mise", "tasks", "ls", "--json", "--profile", miseProfile), workDir)
+
+            if (cliResult.isFailure) {
+                Notification.notify(
+                    "Failed to import Mise tasks: ${cliResult.exceptionOrNull() ?: "Unknown exception"}",
+                    NotificationType.WARNING,
+                )
+                return emptyList()
+            }
+
+            return GsonBuilder()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create()
+                .fromJson<List<MiseTask>>(cliResult.getOrThrow())
+        } catch (e: Exception) {
+            Notification.notify("Failed to import Mise tasks: ${e.message}", NotificationType.ERROR)
+            return emptyList()
+        }
+    }
+
     fun loadTools(workDir: String?, miseProfile: String = "."): Map<String, List<MiseTool>> {
         try {
             val miseVersionStr =
