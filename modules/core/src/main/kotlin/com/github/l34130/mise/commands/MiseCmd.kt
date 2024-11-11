@@ -13,7 +13,6 @@ object MiseCmd {
         miseProfile: String,
     ): Map<String, String> {
         try {
-            Notification.notify("Importing Mise environment from profile: '$miseProfile'", NotificationType.INFORMATION)
             val cliResult = runCommandLine(listOf("mise", "env", "--profile", miseProfile), workDir)
 
             if (cliResult.isFailure) {
