@@ -6,11 +6,16 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.util.messages.Topic
 
+data class MiseState(
+    var isMiseEnabled: Boolean = true,
+    var miseProfile: String = "",
+)
+
 @State(name = "com.github.l34130.mise.settings.MiseSettings", storages = [Storage("mise.xml")])
-class MiseSettings private constructor() : PersistentStateComponent<MiseSettings.State> {
+class MiseSettings private constructor() : PersistentStateComponent<MiseState> {
     override fun getState() = STATE
 
-    override fun loadState(state: State) {
+    override fun loadState(state: MiseState) {
         val oldState = STATE.copy()
         STATE.isMiseEnabled = state.isMiseEnabled
         STATE.miseProfile = state.miseProfile
@@ -21,16 +26,13 @@ class MiseSettings private constructor() : PersistentStateComponent<MiseSettings
 
     companion object {
         val MISE_SETTINGS_TOPIC = Topic.create("Mise Settings", SettingsChangeListener::class.java)
-        private val STATE = State()
+        private val STATE = MiseState()
         val instance: MiseSettings = ApplicationManager.getApplication().getService(MiseSettings::class.java)
     }
 
-    data class State(
-        var isMiseEnabled: Boolean = true,
-        var miseProfile: String = ""
-    )
-
     interface SettingsChangeListener {
-        fun settingsChanged(oldState: State, newState: State)
+        fun settingsChanged(
+            oldState: MiseState,
+            newState: MiseState)
     }
 }

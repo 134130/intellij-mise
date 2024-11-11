@@ -1,6 +1,6 @@
 package com.github.l34130.mise.settings.ui
 
-import com.github.l34130.mise.settings.MiseSettings
+import com.github.l34130.mise.settings.MiseState
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
@@ -41,9 +41,10 @@ class MiseConfigurationPanel : JPanel() {
         add(p)
     }
 
-    var state: MiseSettings.State
-        get() = MiseSettings.State(
-            isMiseEnabled = enableMiseCheckBox.isSelected,
+    var state: MiseState
+        get() =
+            MiseState(
+                isMiseEnabled = enableMiseCheckBox.isSelected,
             miseProfile = miseProfileField.text.trim()
         )
         set(value) {
