@@ -2,7 +2,7 @@ package com.github.l34130.mise.runconfig
 
 import com.github.l34130.mise.commands.MiseCmd
 import com.github.l34130.mise.notifications.Notification
-import com.github.l34130.mise.settings.ui.MiseConfigurationPanelEditor
+import com.github.l34130.mise.run.MiseRunConfigurationSettingsEditor
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile
 import com.intellij.javascript.nodejs.execution.runConfiguration.AbstractNodeRunConfigurationExtension
@@ -18,32 +18,33 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
         private val LOG = Logger.getInstance(NodeRunConfigurationExtension::class.java)
     }
 
-    override fun getEditorTitle(): String = MiseConfigurationPanelEditor.EDITOR_TITLE
+    override fun getEditorTitle(): String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
     override fun <P : AbstractNodeTargetRunProfile> createEditor(configuration: P): SettingsEditor<P> =
-        MiseConfigurationPanelEditor(configuration)
+        MiseRunConfigurationSettingsEditor(configuration.project)
 
-    override fun getSerializationId(): String = MiseConfigurationPanelEditor.SERIALIZATION_ID
+    override fun getSerializationId(): String = MiseRunConfigurationSettingsEditor.SERIALIZATION_ID
 
     override fun readExternal(
         runConfiguration: AbstractNodeTargetRunProfile,
         element: Element,
     ) {
-        MiseConfigurationPanelEditor.readExternal(runConfiguration, element)
+        MiseRunConfigurationSettingsEditor.readExternal(runConfiguration, element)
     }
 
     override fun writeExternal(
         runConfiguration: AbstractNodeTargetRunProfile,
         element: Element,
     ) {
-        MiseConfigurationPanelEditor.writeExternal(runConfiguration, element)
+        MiseRunConfigurationSettingsEditor.writeExternal(runConfiguration, element)
     }
 
     override fun createLaunchSession(
         configuration: AbstractNodeTargetRunProfile,
         environment: ExecutionEnvironment,
     ): NodeRunConfigurationLaunchSession? {
-        if (!MiseConfigurationPanelEditor.isMiseEnabled(configuration)) {
+        val miseState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
+        if (miseState?.useMiseDirEnv != true) {
             return null
         }
 
@@ -54,8 +55,8 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
                     envs.putAll(
                         MiseCmd.loadEnv(
                             workDir = configuration.workingDirectory,
-                            miseProfile = MiseConfigurationPanelEditor.getMiseProfile(configuration),
-                        )
+                            miseProfile = miseState.miseProfile,
+                        ),
                     )
                     configuration.envs = envs
                 }
