@@ -1,16 +1,14 @@
 package com.github.l34130.mise.runconfig
 
 import com.github.l34130.mise.commands.MiseCmd
-import com.github.l34130.mise.notifications.Notification
 import com.github.l34130.mise.run.MiseRunConfigurationSettingsEditor
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile
+import com.intellij.javascript.nodejs.execution.NodeTargetRun
 import com.intellij.javascript.nodejs.execution.runConfiguration.AbstractNodeRunConfigurationExtension
 import com.intellij.javascript.nodejs.execution.runConfiguration.NodeRunConfigurationLaunchSession
-import com.intellij.notification.NotificationType
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.SettingsEditor
-import com.jetbrains.nodejs.run.NodeJsRunConfiguration
 import org.jdom.Element
 
 class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
@@ -48,28 +46,19 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
             return null
         }
 
-        try {
-            when (configuration) {
-                is NodeJsRunConfiguration -> {
-                    val envs = configuration.envs.toMutableMap()
-                    envs.putAll(
-                        MiseCmd.loadEnv(
-                            workDir = configuration.workingDirectory,
-                            miseProfile = miseState.miseProfile,
-                        ),
+        return object : NodeRunConfigurationLaunchSession() {
+            override fun addNodeOptionsTo(targetRun: NodeTargetRun) {
+                val envs =
+                    MiseCmd.loadEnv(
+                        workDir = configuration.project.basePath,
+                        miseProfile = miseState.miseProfile,
                     )
-                    configuration.envs = envs
-                }
 
-                else -> {
-                    LOG.warn("Unsupported configuration type: ${configuration.javaClass}")
+                for ((key, value) in envs) {
+                    targetRun.commandLineBuilder.addEnvironmentVariable(key, value)
                 }
             }
-        } catch (e: Exception) {
-            LOG.error("Failed to load Mise environment", e)
-            Notification.notify("Failed to load Mise environment: ${e.message}", NotificationType.ERROR)
         }
-        return null
     }
 
     override fun isApplicableFor(configuration: AbstractNodeTargetRunProfile): Boolean = true
