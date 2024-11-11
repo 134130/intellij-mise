@@ -2,7 +2,6 @@ package com.github.l34130.mise.settings
 
 import com.github.l34130.mise.notifications.Notification
 import com.github.l34130.mise.settings.ui.MiseConfigurationPanelEditor
-import com.github.l34130.mise.settings.ui.MiseRunConfigurationPanel
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.options.SearchableConfigurable
 import javax.swing.JComponent
