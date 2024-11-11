@@ -15,6 +15,11 @@
                 instance="com.github.l34130.mise.settings.MiseConfigurable"
                 id="com.github.l34130.mise.settings.MiseConfigurable"
                 displayName="Mise Settings"/>
+        <toolWindow id="Mise"
+                    secondary="true"
+                    icon="com.github.l34130.mise.icons.PluginIcons.Default"
+                    anchor="right"
+                    factoryClass="com.github.l34130.mise.toolWindow.MisePanelWindowFactory" />
     </extensions>
 
     <actions>
