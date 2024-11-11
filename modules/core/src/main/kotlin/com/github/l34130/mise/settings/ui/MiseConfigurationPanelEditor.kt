@@ -16,12 +16,12 @@ class MiseConfigurationPanelEditor<T : RunConfigurationBase<*>>(
 
     override fun resetEditorFrom(config: T) {
         val defaultState = getDefaultState()
-        val isMiseEnabled = config.getCopyableUserData(USER_DATA_KEY)?.isMiseEnabled ?: defaultState.isMiseEnabled
+        val isMiseEnabled = config.getCopyableUserData(USER_DATA_KEY)?.useMiseDirEnv ?: defaultState.useMiseDirEnv
         val miseProfile = config.getCopyableUserData(USER_DATA_KEY)?.miseProfile ?: defaultState.miseProfile
         editor.state =
             MiseState(
-                isMiseEnabled = isMiseEnabled,
-            miseProfile = miseProfile,
+                useMiseDirEnv = isMiseEnabled,
+                miseProfile = miseProfile,
         )
     }
 
@@ -46,10 +46,10 @@ class MiseConfigurationPanelEditor<T : RunConfigurationBase<*>>(
         ) {
             val defaultState = getDefaultState()
             val isMiseEnabled =
-                element.getAttributeValue(FIELD_MISE_ENABLED)?.toBoolean() ?: defaultState.isMiseEnabled
+                element.getAttributeValue(FIELD_MISE_ENABLED)?.toBoolean() ?: defaultState.useMiseDirEnv
             val miseProfile = element.getAttributeValue(FIELD_MISE_PROFILE) ?: defaultState.miseProfile
 
-            runConfiguration.putCopyableUserData(USER_DATA_KEY, MiseState(isMiseEnabled = isMiseEnabled))
+            runConfiguration.putCopyableUserData(USER_DATA_KEY, MiseState(useMiseDirEnv = isMiseEnabled))
             runConfiguration.putCopyableUserData(USER_DATA_KEY, MiseState(miseProfile = miseProfile))
         }
 
@@ -58,19 +58,19 @@ class MiseConfigurationPanelEditor<T : RunConfigurationBase<*>>(
             element: Element,
         ) {
             runConfiguration.getCopyableUserData(USER_DATA_KEY)?.let { settings ->
-                element.setAttribute(FIELD_MISE_ENABLED, settings.isMiseEnabled.toString())
+                element.setAttribute(FIELD_MISE_ENABLED, settings.useMiseDirEnv.toString())
                 element.setAttribute(FIELD_MISE_PROFILE, settings.miseProfile)
             }
         }
 
         fun getDefaultState(): MiseState =
             MiseState(
-            isMiseEnabled = MiseSettings.instance.state.isMiseEnabled,
-            miseProfile = MiseSettings.instance.state.miseProfile,
+                useMiseDirEnv = MiseSettings.instance.state.useMiseDirEnv,
+                miseProfile = MiseSettings.instance.state.miseProfile,
         )
 
         fun isMiseEnabled(configuration: RunConfigurationBase<*>): Boolean =
-            configuration.getCopyableUserData(USER_DATA_KEY)?.isMiseEnabled ?: getDefaultState().isMiseEnabled
+            configuration.getCopyableUserData(USER_DATA_KEY)?.useMiseDirEnv ?: getDefaultState().useMiseDirEnv
 
         fun getMiseProfile(configuration: RunConfigurationBase<*>): String =
             configuration.getCopyableUserData(USER_DATA_KEY)?.miseProfile ?: getDefaultState().miseProfile

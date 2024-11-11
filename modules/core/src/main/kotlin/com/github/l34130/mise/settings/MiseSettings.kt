@@ -10,12 +10,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.messages.Topic
 
 data class MiseState(
-    var isMiseEnabled: Boolean = true,
+    var useMiseDirEnv: Boolean = true,
     var miseProfile: String = ".",
 ) : Cloneable {
     public override fun clone(): MiseState =
         MiseState(
-            isMiseEnabled = isMiseEnabled,
+            useMiseDirEnv = useMiseDirEnv,
             miseProfile = miseProfile,
         )
 }

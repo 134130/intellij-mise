@@ -37,11 +37,11 @@ class MiseRunConfigurationPanel : JPanel() {
     var state: MiseState
         get() =
             MiseState(
-                isMiseEnabled = enableMiseCheckBox.isSelected,
-            miseProfile = miseProfileField.text.trim()
+                useMiseDirEnv = enableMiseCheckBox.isSelected,
+                miseProfile = miseProfileField.text.trim()
         )
         set(value) {
-            enableMiseCheckBox.isSelected = value.isMiseEnabled
+            enableMiseCheckBox.isSelected = value.useMiseDirEnv
             miseProfileField.text = value.miseProfile
         }
 

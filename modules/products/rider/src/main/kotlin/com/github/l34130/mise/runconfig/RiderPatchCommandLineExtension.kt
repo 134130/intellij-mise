@@ -36,7 +36,7 @@ class RiderPatchCommandLineExtension : PatchCommandLineExtension {
         commandLine: GeneralCommandLine,
         project: Project,
     ) {
-        if (!MiseSettings.instance.state.isMiseEnabled) {
+        if (!MiseSettings.instance.state.useMiseDirEnv) {
             return
         }
 

@@ -2,7 +2,6 @@ package com.github.l34130.mise.settings
 
 import com.github.l34130.mise.notifications.Notification
 import com.github.l34130.mise.settings.ui.MiseConfigurationPanelEditor
-import com.github.l34130.mise.settings.ui.MiseConfigurationPanel
 import com.github.l34130.mise.settings.ui.MiseRunConfigurationPanel
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.options.SearchableConfigurable
@@ -20,8 +19,8 @@ class MiseRunConfigurable : SearchableConfigurable {
 
     override fun isModified(): Boolean {
         return component?.let {
-            it.enableMiseCheckBox.isSelected != MiseSettings.instance.state.isMiseEnabled
-                    || it.miseProfileField.text != MiseSettings.instance.state.miseProfile
+            it.enableMiseCheckBox.isSelected != MiseSettings.instance.state.useMiseDirEnv ||
+                it.miseProfileField.text != MiseSettings.instance.state.miseProfile
         } ?: false
     }
 
@@ -29,7 +28,7 @@ class MiseRunConfigurable : SearchableConfigurable {
         Notification.notify("apply()", NotificationType.INFORMATION)
 
         component?.let {
-            MiseSettings.instance.state.isMiseEnabled = it.enableMiseCheckBox.isSelected
+            MiseSettings.instance.state.useMiseDirEnv = it.enableMiseCheckBox.isSelected
             MiseSettings.instance.state.miseProfile = it.miseProfileField.text
         }
     }

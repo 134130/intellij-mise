@@ -25,7 +25,9 @@ class GradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
                     provider != this && provider.isApplicable(task)
                 }?.createExecutionEnvironment(project, task, executor)
 
-        if (MiseSettings.instance.state.isMiseEnabled.not()) {
+        if (MiseSettings.instance.state.useMiseDirEnv
+                .not()
+        ) {
             return environment
         }
 
