@@ -55,6 +55,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
             USER_DATA_KEY,
             MiseRunConfigurationState(
                 useMiseDirEnv = myMiseDirEnvCb.isSelected,
+                miseProfile = myMiseProfileTf.text,
             ),
         )
     }
@@ -63,6 +64,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
         val userData = config.getCopyableUserData(USER_DATA_KEY) ?: return
 
         myMiseDirEnvCb.isSelected = userData.useMiseDirEnv
+        myMiseProfileTf.text = userData.miseProfile
     }
 
     companion object {
@@ -74,7 +76,12 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
             element: Element,
         ) {
             val miseDirEnvCb = element.getAttributeValue("myMiseDirEnvCb")?.toBoolean() ?: false
-            val state = MiseRunConfigurationState(useMiseDirEnv = miseDirEnvCb)
+            val miseProfile = element.getAttributeValue("myMiseProfileTf") ?: ""
+            val state =
+                MiseRunConfigurationState(
+                    useMiseDirEnv = miseDirEnvCb,
+                    miseProfile = miseProfile,
+                )
             runConfiguration.putCopyableUserData(USER_DATA_KEY, state)
         }
 
@@ -85,6 +92,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
             val userData = runConfiguration.getCopyableUserData(USER_DATA_KEY) ?: return
 
             element.setAttribute("myMiseDirEnvCb", userData.useMiseDirEnv.toString())
+            element.setAttribute("myMiseProfileTf", userData.miseProfile)
         }
 
         fun getMiseRunConfigurationState(configuration: RunConfigurationBase<*>): MiseRunConfigurationState? =

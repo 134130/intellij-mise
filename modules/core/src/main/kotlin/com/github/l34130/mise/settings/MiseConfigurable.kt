@@ -3,7 +3,6 @@ package com.github.l34130.mise.settings
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBCheckBox
-import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.COLUMNS_LARGE
 import com.intellij.ui.dsl.builder.columns
@@ -41,11 +40,6 @@ class MiseConfigurable(
                             ).columns(COLUMNS_LARGE)
                             .focused()
                             .resizableColumn()
-                    }
-                    row {
-                        cell(
-                            JBLabel("These settings are used as default values and may be overridden by run configuration settings."),
-                        )
                     }
                 },
             )

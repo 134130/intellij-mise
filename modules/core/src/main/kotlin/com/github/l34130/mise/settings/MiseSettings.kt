@@ -21,9 +21,7 @@ data class MiseState(
 
 @Service(Service.Level.PROJECT)
 @State(name = "com.github.l34130.mise.settings.MiseSettings", storages = [Storage("mise.xml")])
-class MiseSettings(
-    private val project: Project,
-) : PersistentStateComponent<MiseState> {
+class MiseSettings : PersistentStateComponent<MiseState> {
     private var state = MiseState()
 
     override fun getState() = state

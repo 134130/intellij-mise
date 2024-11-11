@@ -8,22 +8,24 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.notification.NotificationType
 
 object MiseCmd {
-    fun loadEnv(workDir: String?, miseProfile: String = "."): Map<String, String> {
+    fun loadEnv(
+        workDir: String?,
+        miseProfile: String,
+    ): Map<String, String> {
         try {
-            val process =
-                GeneralCommandLine("mise", "env", "--profile", miseProfile)
-                    .withWorkDirectory(workDir)
-                    .createProcess()
+            Notification.notify("Importing Mise environment from profile: '$miseProfile'", NotificationType.INFORMATION)
+            val cliResult = runCommandLine(listOf("mise", "env", "--profile", miseProfile), workDir)
 
-            val exitCode = process.waitFor()
-            if (exitCode != 0) {
-                val stderr = process.errorReader().use { it.readText() }
-                Notification.notify("Failed to import Mise environment: $stderr", NotificationType.WARNING)
+            if (cliResult.isFailure) {
+                Notification.notify(
+                    "Failed to import Mise environment: ${cliResult.exceptionOrNull() ?: "Unknown exception"}",
+                    NotificationType.ERROR,
+                )
                 return emptyMap()
             }
 
-            val output = process.inputReader().use { it.readText() }
-            return output
+            return cliResult
+                .getOrThrow()
                 .split("\n")
                 .map { it.removePrefix("export ") }
                 .filter { it.isNotBlank() }
@@ -35,7 +37,10 @@ object MiseCmd {
         }
     }
 
-    fun loadTasks(workDir: String?, miseProfile: String = "."): List<MiseTask> {
+    fun loadTasks(
+        workDir: String?,
+        miseProfile: String,
+    ): List<MiseTask> {
         try {
             val cliResult = runCommandLine(listOf("mise", "tasks", "ls", "--json", "--profile", miseProfile), workDir)
 
@@ -57,7 +62,10 @@ object MiseCmd {
         }
     }
 
-    fun loadTools(workDir: String?, miseProfile: String = "."): Map<String, List<MiseTool>> {
+    fun loadTools(
+        workDir: String?,
+        miseProfile: String,
+    ): Map<String, List<MiseTool>> {
         try {
             val miseVersionStr =
                 runCommandLine(listOf("mise", "version"), workDir).getOrNull()
