@@ -25,16 +25,18 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
 
     override fun createEditor(): JComponent {
         val service = MiseSettings.getService(project)
-        myMiseDirEnvCb.isSelected = service.state.useMiseDirEnv
-        myMiseProfileTf.text = service.state.miseProfile
+        if (service.state.useMiseDirEnv) {
+            myMiseDirEnvCb.isSelected = true
+            myMiseProfileTf.text = service.state.miseProfile
+        }
 
         return JPanel(BorderLayout()).apply {
             add(
                 panel {
                     row {
-                        cell(myMiseDirEnvCb).comment(
-                            "Load environment variables from mise configuration file(s)",
-                        )
+                        cell(myMiseDirEnvCb)
+                            .comment("Load environment variables from mise configuration file(s)")
+                            .enabled(!service.state.useMiseDirEnv)
                     }
                     row("Profile: ") {
                         cell(myMiseProfileTf)
@@ -44,6 +46,12 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
                             ).columns(COLUMNS_LARGE)
                             .focused()
                             .resizableColumn()
+                            .enabled(!service.state.useMiseDirEnv)
+                    }
+                    row {
+                        cell(JPanel())
+                            .comment("<icon src='AllIcons.General.ShowWarning'> Using the configuration in Settings")
+                            .visible(service.state.useMiseDirEnv)
                     }
                 },
             )
@@ -55,6 +63,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
             USER_DATA_KEY,
             MiseRunConfigurationState(
                 useMiseDirEnv = myMiseDirEnvCb.isSelected,
+                miseProfile = myMiseProfileTf.text,
             ),
         )
     }
@@ -63,18 +72,24 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
         val userData = config.getCopyableUserData(USER_DATA_KEY) ?: return
 
         myMiseDirEnvCb.isSelected = userData.useMiseDirEnv
+        myMiseProfileTf.text = userData.miseProfile
     }
 
     companion object {
         const val EDITOR_TITLE: String = "Mise"
-        val SERIALIZATION_ID: String = Companion::class.qualifiedName!!
+        val SERIALIZATION_ID: String = MiseRunConfigurationSettingsEditor::class.java.name
 
         fun readExternal(
             runConfiguration: RunConfigurationBase<*>,
             element: Element,
         ) {
             val miseDirEnvCb = element.getAttributeValue("myMiseDirEnvCb")?.toBoolean() ?: false
-            val state = MiseRunConfigurationState(useMiseDirEnv = miseDirEnvCb)
+            val miseProfile = element.getAttributeValue("myMiseProfileTf") ?: ""
+            val state =
+                MiseRunConfigurationState(
+                    useMiseDirEnv = miseDirEnvCb,
+                    miseProfile = miseProfile,
+                )
             runConfiguration.putCopyableUserData(USER_DATA_KEY, state)
         }
 
@@ -85,6 +100,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
             val userData = runConfiguration.getCopyableUserData(USER_DATA_KEY) ?: return
 
             element.setAttribute("myMiseDirEnvCb", userData.useMiseDirEnv.toString())
+            element.setAttribute("myMiseProfileTf", userData.miseProfile)
         }
 
         fun getMiseRunConfigurationState(configuration: RunConfigurationBase<*>): MiseRunConfigurationState? =

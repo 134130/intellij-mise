@@ -3,7 +3,6 @@ package com.github.l34130.mise.settings
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBCheckBox
-import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.COLUMNS_LARGE
 import com.intellij.ui.dsl.builder.columns
@@ -24,6 +23,7 @@ class MiseConfigurable(
         val service = MiseSettings.getService(project)
 
         myMiseDirEnvCb.isSelected = service.state.useMiseDirEnv
+        myMiseProfileTf.text = service.state.miseProfile
 
         return JPanel(BorderLayout()).apply {
             add(
@@ -42,11 +42,6 @@ class MiseConfigurable(
                             .focused()
                             .resizableColumn()
                     }
-                    row {
-                        cell(
-                            JBLabel("These settings are used as default values and may be overridden by run configuration settings."),
-                        )
-                    }
                 },
             )
         }
@@ -62,6 +57,7 @@ class MiseConfigurable(
         if (isModified) {
             val service = MiseSettings.getService(project)
             service.state.useMiseDirEnv = myMiseDirEnvCb.isSelected
+            service.state.miseProfile = myMiseProfileTf.text
         }
     }
 
