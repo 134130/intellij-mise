@@ -18,7 +18,7 @@ class MiseConfigurable(
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
     private val myMiseProfileTf = JBTextField()
 
-    override fun getDisplayName(): String = "Mise"
+    override fun getDisplayName(): String = "Mise Settings"
 
     override fun createComponent(): JComponent {
         val service = MiseSettings.getService(project)
@@ -33,7 +33,7 @@ class MiseConfigurable(
                             "Load environment variables from mise configuration file(s)",
                         )
                     }
-                    row {
+                    row("Profile: ") {
                         cell(myMiseProfileTf)
                             .comment(
                                 "Specify the mise profile to use (leave empty for default)" +

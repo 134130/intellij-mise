@@ -54,7 +54,7 @@ abstract class AbstractProjectSdkSetup :
             }
         }
 
-        val profile = MiseSettings.instance.state.miseProfile
+        val profile = MiseSettings.getService(project).state.miseProfile
         val loadedTools = MiseCmd.loadTools(
             workDir = project.basePath,
             miseProfile = profile,

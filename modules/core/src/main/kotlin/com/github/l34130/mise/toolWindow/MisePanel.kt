@@ -310,7 +310,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
             val tasksNode = DefaultMutableTreeNode("Tasks")
             rootNode.add(tasksNode)
 
-            val miseProfile = MiseSettings.instance.state.miseProfile
+            val miseProfile = MiseSettings.getService(project).state.miseProfile
             val workDir = project.basePath ?: return
             val tasks = MiseCmd.loadTasks(workDir, miseProfile)
 
@@ -368,7 +368,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
         val terminalToolWindow = toolWindowManager.getToolWindow("Terminal")
 
         terminalToolWindow?.show {
-            val profile = MiseSettings.instance.state.miseProfile
+            val profile = MiseSettings.getService(project).state.miseProfile
             val profileArg = if (profile.isNotEmpty()) "--profile \"$profile\"" else ""
             val command = "mise run $profileArg \"${task.name}\""
 

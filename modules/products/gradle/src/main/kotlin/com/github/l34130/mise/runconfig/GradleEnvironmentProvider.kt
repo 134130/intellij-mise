@@ -15,9 +15,9 @@ class GradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
         task?.runProfile is ApplicationConfiguration
 
     override fun createExecutionEnvironment(
-        project: Project?,
-        task: ExecuteRunConfigurationTask?,
-        executor: Executor?,
+        project: Project,
+        task: ExecuteRunConfigurationTask,
+        executor: Executor,
     ): ExecutionEnvironment? {
         val environment =
             GradleExecutionEnvironmentProvider.EP_NAME.extensions
@@ -25,19 +25,21 @@ class GradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
                     provider != this && provider.isApplicable(task)
                 }?.createExecutionEnvironment(project, task, executor)
 
-        if (MiseSettings.instance.state.useMiseDirEnv
+        if (MiseSettings
+                .getService(project)
+                .state.useMiseDirEnv
                 .not()
         ) {
             return environment
         }
 
         if (environment?.runProfile is GradleRunConfiguration) {
-            val sourceConfig = task!!.runProfile as ApplicationConfiguration
+            val sourceConfig = task.runProfile as ApplicationConfiguration
             val gradleConfig = environment.runProfile as GradleRunConfiguration
 
             gradleConfig.settings.env = MiseCmd.loadEnv(
                 workDir = sourceConfig.project.basePath,
-                miseProfile = MiseSettings.instance.state.miseProfile,
+                miseProfile = MiseSettings.getService(project).state.miseProfile,
             ) + sourceConfig.envs
         }
 

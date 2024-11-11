@@ -1,7 +1,9 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.github.l34130.mise.jdk.ProjectJdkSetup"/>
-        
+
+        <projectConfigurable instance="com.github.l34130.mise.settings.MiseConfigurable" displayName="Mise Settings"/>
+
         <runConfigurationExtension implementation="com.github.l34130.mise.runconfig.IdeaRunConfigurationExtension"
                                    id="miseIdea"/>
     </extensions>

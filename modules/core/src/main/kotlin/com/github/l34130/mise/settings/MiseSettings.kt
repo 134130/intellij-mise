@@ -1,6 +1,5 @@
 package com.github.l34130.mise.settings
 
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
@@ -11,7 +10,7 @@ import com.intellij.util.messages.Topic
 
 data class MiseState(
     var useMiseDirEnv: Boolean = true,
-    var miseProfile: String = ".",
+    var miseProfile: String = "",
 ) : Cloneable {
     public override fun clone(): MiseState =
         MiseState(
@@ -37,12 +36,12 @@ class MiseSettings(
         fun getService(project: Project): MiseSettings = project.service<MiseSettings>()
 
         val MISE_SETTINGS_TOPIC = Topic.create("Mise Settings", SettingsChangeListener::class.java)
-        val instance: MiseSettings = ApplicationManager.getApplication().getService(MiseSettings::class.java)
     }
 
     interface SettingsChangeListener {
         fun settingsChanged(
             oldState: MiseState,
-            newState: MiseState)
+            newState: MiseState,
+        )
     }
 }
