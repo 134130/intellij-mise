@@ -6,6 +6,7 @@ import com.github.l34130.mise.commands.MiseTool
 import com.github.l34130.mise.notifications.Notification
 import com.github.l34130.mise.settings.MiseConfigurable
 import com.github.l34130.mise.settings.MiseSettings
+import com.github.l34130.mise.settings.MiseState
 import com.intellij.icons.AllIcons
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
@@ -84,7 +85,9 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
         settingsConnection.subscribe(
             MiseSettings.MISE_SETTINGS_TOPIC,
             object : MiseSettings.SettingsChangeListener {
-                override fun settingsChanged(oldState: MiseSettings.State, newState: MiseSettings.State) {
+                override fun settingsChanged(
+                    oldState: MiseState,
+                    newState: MiseState) {
                     if (oldState.miseProfile != newState.miseProfile) {
                         refreshMiseConfiguration()
                     }
@@ -307,7 +310,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
             val tasksNode = DefaultMutableTreeNode("Tasks")
             rootNode.add(tasksNode)
 
-            val miseProfile = MiseSettings.instance.state.miseProfile
+            val miseProfile = MiseSettings.getService(project).state.miseProfile
             val workDir = project.basePath ?: return
             val tasks = MiseCmd.loadTasks(workDir, miseProfile)
 
@@ -365,7 +368,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
         val terminalToolWindow = toolWindowManager.getToolWindow("Terminal")
 
         terminalToolWindow?.show {
-            val profile = MiseSettings.instance.state.miseProfile
+            val profile = MiseSettings.getService(project).state.miseProfile
             val profileArg = if (profile.isNotEmpty()) "--profile \"$profile\"" else ""
             val command = "mise run $profileArg \"${task.name}\""
 

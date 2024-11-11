@@ -1,7 +1,7 @@
 package com.github.l34130.mise.runconfig
 
 import com.github.l34130.mise.commands.MiseCmd
-import com.github.l34130.mise.settings.ui.MiseConfigurationPanelEditor
+import com.github.l34130.mise.run.MiseRunConfigurationSettingsEditor
 import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.configurations.JavaParameters
@@ -11,25 +11,25 @@ import com.intellij.openapi.options.SettingsEditor
 import org.jdom.Element
 
 class IdeaRunConfigurationExtension : RunConfigurationExtension() {
-    override fun getEditorTitle(): String = MiseConfigurationPanelEditor.EDITOR_TITLE
+    override fun getEditorTitle(): String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
     override fun <P : RunConfigurationBase<*>> createEditor(configuration: P): SettingsEditor<P> =
-        MiseConfigurationPanelEditor(configuration)
+        MiseRunConfigurationSettingsEditor(configuration.project)
 
-    override fun getSerializationId(): String = MiseConfigurationPanelEditor.SERIALIZATION_ID
+    override fun getSerializationId(): String = MiseRunConfigurationSettingsEditor.SERIALIZATION_ID
 
     override fun readExternal(
         runConfiguration: RunConfigurationBase<*>,
         element: Element,
     ) {
-        MiseConfigurationPanelEditor.readExternal(runConfiguration, element)
+        MiseRunConfigurationSettingsEditor.readExternal(runConfiguration, element)
     }
 
     override fun writeExternal(
         runConfiguration: RunConfigurationBase<*>,
         element: Element,
     ) {
-        MiseConfigurationPanelEditor.writeExternal(runConfiguration, element)
+        MiseRunConfigurationSettingsEditor.writeExternal(runConfiguration, element)
     }
 
     override fun <T : RunConfigurationBase<*>> updateJavaParameters(
@@ -49,12 +49,13 @@ class IdeaRunConfigurationExtension : RunConfigurationExtension() {
                 ).effectiveEnvironment
         params.env.putAll(sourceEnv)
 
-        if (MiseConfigurationPanelEditor.isMiseEnabled(configuration)) {
+        val miseState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
+        if (miseState?.useMiseDirEnv == true) {
             params.env.putAll(
                 MiseCmd.loadEnv(
                     workDir = params.workingDirectory,
-                    miseProfile = MiseConfigurationPanelEditor.getMiseProfile(configuration),
-                )
+                    miseProfile = miseState.miseProfile,
+                ),
             )
         }
     }
