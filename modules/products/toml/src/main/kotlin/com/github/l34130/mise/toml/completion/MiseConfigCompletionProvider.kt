@@ -1,11 +1,20 @@
 package com.github.l34130.mise.toml.completion
 
+import com.github.l34130.mise.commands.MiseCmd
+import com.github.l34130.mise.commands.MiseTask
 import com.github.l34130.mise.icons.MiseIcons
+import com.github.l34130.mise.settings.MiseSettings
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.ProcessingContext
+import kotlin.io.path.Path
+
+fun normalizePath(path: String) = Path(
+    FileUtil.expandUserHome(path)
+).normalize().toAbsolutePath().toString()
 
 class MiseConfigCompletionProvider : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
@@ -20,15 +29,39 @@ class MiseConfigCompletionProvider : CompletionProvider<CompletionParameters>() 
             return
         }
 
-        val miseTasks = MiseConfigPsiUtils.getMiseTasks(root)
+        val profile = MiseSettings.getService(root.project).state.miseProfile
+        // TODO: Store the tasks in a cache and update them only when the file changes
+        //    This will prevent unnecessary calls to the CLI or when the file is an invalid state
+        val tasksFromMise = MiseCmd.loadTasks(
+            workDir = root.project.basePath,
+            miseProfile = profile,
+            notify = false,
+        )
+
+        val tasksInFile = MiseConfigPsiUtils.getMiseTasks(root)
+        val uniqueTasks = HashMap<String, MiseTask>()
+        val currentPath = normalizePath(
+            Path(root.project.basePath ?: "", root.viewProvider.virtualFile.path).toString()
+        )
+
+        tasksFromMise
+            .filter {
+                when (it.source) {
+                    null -> true
+                    else -> normalizePath(it.source!!) != currentPath
+                }
+            }
+            .forEach { uniqueTasks[it.name] = it }
+        tasksInFile.forEach { uniqueTasks[it.name] = it }
 
         resultSet.addAllElements(
-            miseTasks
+            uniqueTasks
+                .filter { it.key.isNotBlank() }
                 .map {
                     LookupElementBuilder
-                        .create(it.name)
+                        .create(it.key)
                         .withIcon(MiseIcons.DEFAULT)
-                        .withTypeText(it.description)
+                        .withTypeText(it.value.description ?: it.value.command)
                         .withCaseSensitivity(false)
                 },
         )

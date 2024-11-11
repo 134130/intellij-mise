@@ -39,15 +39,18 @@ object MiseCmd {
     fun loadTasks(
         workDir: String?,
         miseProfile: String,
+        notify: Boolean = true,
     ): List<MiseTask> {
         try {
             val cliResult = runCommandLine(listOf("mise", "tasks", "ls", "--json", "--profile", miseProfile), workDir)
 
             if (cliResult.isFailure) {
-                Notification.notify(
-                    "Failed to import Mise tasks: ${cliResult.exceptionOrNull() ?: "Unknown exception"}",
-                    NotificationType.WARNING,
-                )
+                if (notify) {
+                    Notification.notify(
+                        "Failed to import Mise tasks: ${cliResult.exceptionOrNull() ?: "Unknown exception"}",
+                        NotificationType.WARNING,
+                    )
+                }
                 return emptyList()
             }
 
@@ -56,7 +59,9 @@ object MiseCmd {
                 .create()
                 .fromJson<List<MiseTask>>(cliResult.getOrThrow())
         } catch (e: Exception) {
-            Notification.notify("Failed to import Mise tasks: ${e.message}", NotificationType.ERROR)
+            if (notify) {
+                Notification.notify("Failed to import Mise tasks: ${e.message}", NotificationType.ERROR)
+            }
             return emptyList()
         }
     }

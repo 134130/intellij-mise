@@ -1,6 +1,7 @@
 package com.github.l34130.mise.toolWindow
 
 import com.github.l34130.mise.commands.MiseCmd
+import com.github.l34130.mise.commands.MiseRunAction
 import com.github.l34130.mise.commands.MiseTask
 import com.github.l34130.mise.commands.MiseTool
 import com.github.l34130.mise.notifications.Notification
@@ -18,14 +19,12 @@ import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.PopupHandler
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
-import org.jetbrains.plugins.terminal.TerminalView
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.event.MouseEvent
@@ -102,7 +101,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
                 override fun actionPerformed(e: AnActionEvent) {
                     val task = getSelectedTask()
                     if (task != null) {
-                        executeTask(task)
+                        executeTask(task.name)
                     }
                 }
 
@@ -162,7 +161,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
             val rowBounds = tree.getRowBounds(row) ?: return
             when {
                 e.clickCount == 2 && rowBounds.contains(e.point) -> {
-                    executeTask(userObject)
+                    executeTask(userObject.name)
                 }
 
                 rowBounds.contains(e.point) -> {
@@ -363,18 +362,8 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
         }
     }
 
-    private fun executeTask(task: MiseTask) {
-        val toolWindowManager = ToolWindowManager.getInstance(project)
-        val terminalToolWindow = toolWindowManager.getToolWindow("Terminal")
-
-        terminalToolWindow?.show {
-            val profile = MiseSettings.getService(project).state.miseProfile
-            val profileArg = if (profile.isNotEmpty()) "--profile \"$profile\"" else ""
-            val command = "mise run $profileArg \"${task.name}\""
-
-            val terminal = TerminalView.getInstance(project)
-            terminal.createLocalShellWidget(project.basePath ?: "", command).executeCommand(command)
-        }
+    private fun executeTask(taskName: String) {
+       MiseRunAction.executeTask(project, taskName)
     }
 
     override fun dispose() {
