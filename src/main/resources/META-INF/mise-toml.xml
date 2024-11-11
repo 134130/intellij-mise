@@ -11,6 +11,11 @@
                   fieldName="INSTANCE"
                   patterns=".mise.toml;.mise.*.toml;mise.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
         />
+        <runLineMarkerContributor
+                language="TOML"
+                patterns=".mise.toml;.mise.*.toml;mise.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
+                implementationClass="com.github.l34130.mise.toml.editor.MiseRunLineMarkerProvider"
+        />
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">

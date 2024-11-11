@@ -92,6 +92,10 @@ fun TomlTable.parseMiseTask(): MiseTask? {
         }
     }
 
+    if (headerKey.segments.size < 2) {
+        return null
+    }
+
     return MiseTask(
         name = ElementManipulators.getValueText(headerKey.segments[1]),
         aliases = aliases,
