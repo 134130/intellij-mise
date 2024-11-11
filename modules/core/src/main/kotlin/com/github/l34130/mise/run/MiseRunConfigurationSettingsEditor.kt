@@ -25,16 +25,18 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
 
     override fun createEditor(): JComponent {
         val service = MiseSettings.getService(project)
-        myMiseDirEnvCb.isSelected = service.state.useMiseDirEnv
-        myMiseProfileTf.text = service.state.miseProfile
+        if (service.state.useMiseDirEnv) {
+            myMiseDirEnvCb.isSelected = true
+            myMiseProfileTf.text = service.state.miseProfile
+        }
 
         return JPanel(BorderLayout()).apply {
             add(
                 panel {
                     row {
-                        cell(myMiseDirEnvCb).comment(
-                            "Load environment variables from mise configuration file(s)",
-                        )
+                        cell(myMiseDirEnvCb)
+                            .comment("Load environment variables from mise configuration file(s)")
+                            .enabled(!service.state.useMiseDirEnv)
                     }
                     row("Profile: ") {
                         cell(myMiseProfileTf)
@@ -44,6 +46,12 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
                             ).columns(COLUMNS_LARGE)
                             .focused()
                             .resizableColumn()
+                            .enabled(!service.state.useMiseDirEnv)
+                    }
+                    row {
+                        cell(JPanel())
+                            .comment("<icon src='AllIcons.General.ShowWarning'> Using the configuration in Settings")
+                            .visible(service.state.useMiseDirEnv)
                     }
                 },
             )
@@ -69,7 +77,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
 
     companion object {
         const val EDITOR_TITLE: String = "Mise"
-        val SERIALIZATION_ID: String = Companion::class.qualifiedName!!
+        val SERIALIZATION_ID: String = MiseRunConfigurationSettingsEditor::class.java.name
 
         fun readExternal(
             runConfiguration: RunConfigurationBase<*>,
