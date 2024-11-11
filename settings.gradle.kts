@@ -23,6 +23,7 @@ include(
     "modules/products/idea",
     "modules/products/nodejs",
     "modules/products/rider",
+    "modules/products/toml",
 )
 
 rootProject.name = "mise"

@@ -9,7 +9,11 @@ import com.github.l34130.mise.settings.MiseSettings
 import com.intellij.icons.AllIcons
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionGroup
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
@@ -268,7 +272,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
         private fun buildTaskTooltip(task: MiseTask): String = buildString {
             append("<html>")
             append("<b>${task.name}</b>")
-            if (task.description.isNotEmpty()) {
+            if (!task.description.isNullOrEmpty()) {
                 append("<br>${task.description}")
             }
             append("<br>Source: ${task.source}")
