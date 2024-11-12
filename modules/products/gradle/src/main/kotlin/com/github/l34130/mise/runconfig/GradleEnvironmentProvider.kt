@@ -40,6 +40,7 @@ class GradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
             gradleConfig.settings.env = MiseCmd.loadEnv(
                 workDir = sourceConfig.project.basePath,
                 miseProfile = MiseSettings.getService(project).state.miseProfile,
+                project = project,
             ) + sourceConfig.envs
         }
 

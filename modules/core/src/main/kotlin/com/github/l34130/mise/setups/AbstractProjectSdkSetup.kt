@@ -58,6 +58,7 @@ abstract class AbstractProjectSdkSetup :
         val loadedTools = MiseCmd.loadTools(
             workDir = project.basePath,
             miseProfile = profile,
+            project = project,
         )
 
         val tools = loadedTools[toolRequest.name]

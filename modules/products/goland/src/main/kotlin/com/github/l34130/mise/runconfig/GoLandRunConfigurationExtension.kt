@@ -46,6 +46,7 @@ class GoLandRunConfigurationExtension : GoRunConfigurationExtension() {
                 .loadEnv(
                     workDir = configuration.getWorkingDirectory(),
                     miseProfile = miseState.miseProfile,
+                    project = configuration.getProject(),
                 ).forEach { (k, v) ->
                     cmdLine.addEnvironmentVariable(k, v)
                 }

@@ -43,6 +43,7 @@ class RiderPatchCommandLineExtension : PatchCommandLineExtension {
         val envs = MiseCmd.loadEnv(
             workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
             miseProfile = MiseSettings.getService(project).state.miseProfile,
+            project = project,
         )
         commandLine.withEnvironment(envs)
     }

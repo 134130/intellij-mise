@@ -55,6 +55,7 @@ class IdeaRunConfigurationExtension : RunConfigurationExtension() {
                 MiseCmd.loadEnv(
                     workDir = params.workingDirectory,
                     miseProfile = miseState.miseProfile,
+                    project = configuration.project,
                 ),
             )
         }
