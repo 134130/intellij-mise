@@ -10,33 +10,28 @@
 **Mise** is a plugin for JetBrains IDEs that allows you to set environment variables for your run configurations
 from Mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 
-### Supported Platforms
+## Features
+
+- **Tool Integration**: Set project's SDK automatically from `mise.toml` files.
+  - `java`, `go`, `node`, `deno` SDKs are supported.
+- **Environment Variables**: Set environment variables for your run configurations from `mise.toml` files.
+
+## Supported Platforms
 - **IntelliJ IDEA**
 - **GoLand**
 - **WebStorm**
 - **Rider**
 - _Submit issue if you need other IDE_
 
-### Features
-
-- **Environment Variables**: Set environment variables for your run configurations from Mise config files.
-- **Tool Integration**: Set project's SDK automatically from Mise config files.
-
-### `mise ls` supports
-
-- `java`
-- `go`
-- `node`
-- `deno`
-
-### `mise set` supports
-
-- IntelliJ IDEA
-- GoLand
-- WebStorm
-- Rider
-
 <!-- Plugin description end -->
+
+## Screenshots
+
+![main](https://github.com/user-attachments/assets/e668d651-9d39-497e-b1b6-d9f05d5c3232)
+
+![run](https://github.com/user-attachments/assets/6b5ef885-17d0-4865-ac3e-150a588d4d02)
+
+![run-gif](https://github.com/user-attachments/assets/1af82256-954c-4b3c-afcc-6bc8dd1f44a1)
 
 ## Installation
 

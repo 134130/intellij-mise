@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+## [2.5.0] - 2024-11-12
+
+### Added
+
+- Add mise settings to preferences
+- Add mise panel (display tasks, env, tool)
+- Add run button in `mise.toml` files
+- Support autocomplete in `mise.toml` files
+
+### Fixed
+
+- Fix Node.js envvars are overriding runconfiguraion's envvars
+
 ## [2.4.0] - 2024-11-10
 
 ### Added
@@ -86,7 +99,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.5.0...HEAD
+[2.5.0]: https://github.com/134130/intellij-mise/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/134130/intellij-mise/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/134130/intellij-mise/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/134130/intellij-mise/compare/v2.1.1...v2.2.0
