@@ -1,4 +1,4 @@
-package com.github.l34130.mise.toolWindow
+package com.github.l34130.mise.toolwindow
 
 import com.github.l34130.mise.commands.MiseCmd
 import com.github.l34130.mise.commands.MiseRunAction

@@ -1,4 +1,4 @@
-package com.github.l34130.mise.toolWindow
+package com.github.l34130.mise.toolwindow
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
