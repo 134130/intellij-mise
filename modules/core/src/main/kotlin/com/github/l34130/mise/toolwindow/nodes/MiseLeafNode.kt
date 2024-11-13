@@ -11,6 +11,4 @@ abstract class MiseLeafNode<T : Any>(
     override fun isAlwaysLeaf(): Boolean = true
 
     override fun getChildren(): Collection<MiseNode<*>> = emptyList()
-
-    abstract fun type(): String
 }

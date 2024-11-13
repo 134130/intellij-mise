@@ -164,4 +164,8 @@ class MiseTreeToolWindow(
         treeModel.invalidateAsync()
         state.applyTo(tree)
     }
+
+    companion object {
+//        fun getInstance(project: Project): MiseTreeToolWindow = project.service()
+    }
 }

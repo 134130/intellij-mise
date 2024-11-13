@@ -12,7 +12,7 @@
                     secondary="true"
                     icon="com.github.l34130.mise.icons.MiseIcons.DEFAULT"
                     anchor="right"
-                    factoryClass="com.github.l34130.mise.toolwindow.MisePanelWindowFactory"/>
+                    factoryClass="com.github.l34130.mise.toolwindow.MiseTreeToolWindowFactory"/>
     </extensions>
 
     <actions>

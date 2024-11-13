@@ -7,12 +7,25 @@ import com.intellij.ui.SimpleTextAttributes
 import javax.swing.Icon
 
 abstract class MiseNode<T : Any>(
-    val nodeProject: Project,
+    nodeProject: Project,
     value: T,
     private val icon: Icon?,
 ) : AbstractTreeNode<T>(nodeProject, value) {
     override fun update(presentation: PresentationData) {
         presentation.setIcon(icon)
-        presentation.addText(value.toString(), SimpleTextAttributes.REGULAR_ATTRIBUTES)
+        val attr =
+            if (isActive()) {
+                SimpleTextAttributes.REGULAR_ATTRIBUTES
+            } else {
+                SimpleTextAttributes.GRAYED_ATTRIBUTES
+            }
+
+        presentation.addText(displayName(), attr)
     }
+
+    open fun displayName(): String = value.toString()
+
+    open fun isActive(): Boolean = true
+
+    override fun toString(): String = displayName()
 }
