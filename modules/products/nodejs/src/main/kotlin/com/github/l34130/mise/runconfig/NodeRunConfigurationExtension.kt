@@ -52,6 +52,7 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
                     MiseCmd.loadEnv(
                         workDir = configuration.project.basePath,
                         miseProfile = miseState.miseProfile,
+                        project = configuration.project,
                     )
 
                 for ((key, value) in envs) {

@@ -10,10 +10,16 @@ import com.intellij.openapi.project.Project
 import kotlin.reflect.KClass
 
 object Notification {
-    fun notify(content: String, type: NotificationType, project: Project? = null) {
-        val notification = NotificationGroupManager.getInstance()
-            .getNotificationGroup(NOTIFICATION_GROUP_ID)
-            .createNotification(content.replace("\n", "<br>"), type)
+    fun notify(
+        content: String,
+        type: NotificationType,
+        project: Project? = null,
+    ) {
+        val notification =
+            NotificationGroupManager
+                .getInstance()
+                .getNotificationGroup(NOTIFICATION_GROUP_ID)
+                .createNotification(content.replace("\n", "<br>"), type)
 
         notification.icon = MiseIcons.DEFAULT
         notification.notify(project)
@@ -36,6 +42,28 @@ object Notification {
                             project,
                             configurableClass.javaObjectType,
                         )
+                    },
+                )
+
+        notification.icon = MiseIcons.DEFAULT
+        notification.notify(project)
+    }
+
+    fun notifyWithAction(
+        content: String,
+        type: NotificationType,
+        project: Project? = null,
+        actionName: String,
+        action: Runnable,
+    ) {
+        val notification =
+            NotificationGroupManager
+                .getInstance()
+                .getNotificationGroup(NOTIFICATION_GROUP_ID)
+                .createNotification(content.replace("\n", "<br>"), type)
+                .addAction(
+                    NotificationAction.createSimple(actionName) {
+                        action.run()
                     },
                 )
 

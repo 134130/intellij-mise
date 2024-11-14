@@ -311,7 +311,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
 
             val miseProfile = MiseSettings.getService(project).state.miseProfile
             val workDir = project.basePath ?: return
-            val tasks = MiseCmd.loadTasks(workDir, miseProfile)
+            val tasks = MiseCmd.loadTasks(workDir, miseProfile, project)
 
             val tasksBySource = tasks.groupBy { it.source }
 
@@ -324,7 +324,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
                 }
             }
 
-            val tools = MiseCmd.loadTools(workDir, miseProfile)
+            val tools = MiseCmd.loadTools(workDir, miseProfile, project)
             val toolsNode = DefaultMutableTreeNode("Tools")
             rootNode.add(toolsNode)
 
@@ -341,7 +341,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
                 }
             }
 
-            val env = MiseCmd.loadEnv(workDir, miseProfile)
+            val env = MiseCmd.loadEnv(workDir, miseProfile, project)
             val envNode = DefaultMutableTreeNode("Environment variables")
             rootNode.add(envNode)
             env.forEach { (key, value) ->

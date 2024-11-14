@@ -6,11 +6,17 @@ import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.util.use
+import org.jetbrains.plugins.terminal.TerminalView
 
 object MiseCmd {
     fun loadEnv(
         workDir: String?,
         miseProfile: String,
+        project: Project,
     ): Map<String, String> {
         try {
             val cliResult = runCommandLine(listOf("mise", "env", "--profile", miseProfile), workDir)
@@ -30,6 +36,9 @@ object MiseCmd {
                 .filter { it.isNotBlank() }
                 .map { it.split("=", limit = 2) }
                 .associate { it[0] to it[1] }
+        } catch (e: MiseCmdException) {
+            handleMiseCmdException(project, e)
+            return emptyMap()
         } catch (e: Exception) {
             Notification.notify("Failed to import Mise environment: ${e.message}", NotificationType.ERROR)
             return emptyMap()
@@ -39,6 +48,7 @@ object MiseCmd {
     fun loadTasks(
         workDir: String?,
         miseProfile: String,
+        project: Project,
         notify: Boolean = true,
     ): List<MiseTask> {
         try {
@@ -58,6 +68,9 @@ object MiseCmd {
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .create()
                 .fromJson<List<MiseTask>>(cliResult.getOrThrow())
+        } catch (e: MiseCmdException) {
+            handleMiseCmdException(project, e)
+            return emptyList()
         } catch (e: Exception) {
             if (notify) {
                 Notification.notify("Failed to import Mise tasks: ${e.message}", NotificationType.ERROR)
@@ -69,6 +82,7 @@ object MiseCmd {
     fun loadTools(
         workDir: String?,
         miseProfile: String,
+        project: Project,
     ): Map<String, List<MiseTool>> {
         try {
             val miseVersionStr =
@@ -104,6 +118,9 @@ object MiseCmd {
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .create()
                 .fromJson<Map<String, List<MiseTool>>>(cliResult.getOrThrow())
+        } catch (e: MiseCmdException) {
+            handleMiseCmdException(project, e)
+            return emptyMap()
         } catch (e: Exception) {
             Notification.notify("Failed to import Mise tools: ${e.message}", NotificationType.ERROR)
             return emptyMap()
@@ -122,9 +139,50 @@ object MiseCmd {
         val exitCode = process.waitFor()
         if (exitCode != 0) {
             val stderr = process.errorReader().use { it.readText() }
-            throw RuntimeException(stderr)
+            throw MiseCmdException.parseFromStderr(stderr) ?: RuntimeException(stderr)
         }
 
         return Result.success(process.inputReader().use { it.readText() })
+    }
+
+    private fun handleMiseCmdException(
+        project: Project,
+        e: MiseCmdException,
+    ) {
+        when (e) {
+            is MiseCmdNotTrustedConfigFileException -> {
+                Notification.notifyWithAction(
+                    content =
+                        """
+                        <b>Mise configuration file is not trusted.</b>
+                        ${e.configFilePath}
+                        """.trimIndent(),
+                    type = NotificationType.WARNING,
+                    actionName = "Trust the config file",
+                    project = project,
+                ) {
+                    val widget =
+                        project
+                            .service<TerminalView>()
+                            .createLocalShellWidget(
+                                project.basePath,
+                                "mise trust",
+                            )
+                    widget.executeCommand("mise trust '${FileUtil.expandUserHome(e.configFilePath)}'")
+                }
+            }
+
+            is MiseCmdErrorParsingConfigFileException -> {
+                Notification.notify(
+                    content =
+                        """
+                        <b>Failed to parse Mise configuration file</b>
+                        ${e.configFilePath}
+                        """.trimIndent(),
+                    type = NotificationType.ERROR,
+                    project = project,
+                )
+            }
+        }
     }
 }

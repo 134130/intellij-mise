@@ -35,6 +35,7 @@ class MiseConfigCompletionProvider : CompletionProvider<CompletionParameters>() 
         val tasksFromMise = MiseCmd.loadTasks(
             workDir = root.project.basePath,
             miseProfile = profile,
+            project = root.project,
             notify = false,
         )
 
