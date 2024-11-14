@@ -1,6 +1,6 @@
 package com.github.l34130.mise.goland.go
 
-import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.github.l34130.mise.core.setup.MiseToolRequest
 import com.goide.configuration.GoSdkConfigurable
@@ -21,7 +21,7 @@ class ProjectGoSdkSetup : AbstractProjectSdkSetup() {
         )
 
     override fun setupSdk(
-        tool: MiseTool,
+        tool: MiseDevTool,
         project: Project,
     ): Boolean {
         val sdkService = GoSdkService.getInstance(project)

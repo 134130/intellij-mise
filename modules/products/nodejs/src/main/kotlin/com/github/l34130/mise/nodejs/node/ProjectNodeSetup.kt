@@ -1,6 +1,6 @@
 package com.github.l34130.mise.nodejs.node
 
-import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.github.l34130.mise.core.setup.MiseToolRequest
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterManager
@@ -23,7 +23,7 @@ class ProjectNodeSetup : AbstractProjectSdkSetup() {
         )
 
     override fun setupSdk(
-        tool: MiseTool,
+        tool: MiseDevTool,
         project: Project,
     ): Boolean {
         val nodeJsInterpreterManager = NodeJsInterpreterManager.getInstance(project)

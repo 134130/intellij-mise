@@ -19,7 +19,7 @@ class MiseCommandLine(
     fun loadDevTools(
         profile: String?,
         notify: Boolean = true,
-    ): Map<MiseToolName, List<MiseTool>> {
+    ): Map<MiseDevToolName, List<MiseDevTool>> {
         val versionString =
             runCommandLine<String>("mise", "version").getOrNull()
 
@@ -43,7 +43,7 @@ class MiseCommandLine(
             commandLineArgs.add("--offline")
         }
 
-        return runCommandLine<Map<MiseToolName, List<MiseTool>>>(commandLineArgs).getOrElse { exception ->
+        return runCommandLine<Map<MiseDevToolName, List<MiseDevTool>>>(commandLineArgs).getOrElse { exception ->
             if (!notify) {
                 return@getOrElse emptyMap()
             }

@@ -1,7 +1,7 @@
 package com.github.l34130.mise.core.setup
 
 import com.github.l34130.mise.core.command.MiseCommandLine
-import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.notification.Notification
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.notification.NotificationType
@@ -28,7 +28,7 @@ abstract class AbstractProjectSdkSetup :
     abstract fun getToolRequest(): MiseToolRequest
 
     abstract fun setupSdk(
-        tool: MiseTool,
+        tool: MiseDevTool,
         project: Project,
     ): Boolean
 

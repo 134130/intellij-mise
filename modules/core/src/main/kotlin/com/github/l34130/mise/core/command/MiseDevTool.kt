@@ -1,7 +1,7 @@
 package com.github.l34130.mise.core.command
 
 @JvmInline
-value class MiseToolName(
+value class MiseDevToolName(
     val value: String,
 ) {
     fun canonicalName(): String = toolNameToCanonicalName[value] ?: value.replaceFirstChar { it.uppercase() }
@@ -30,11 +30,14 @@ value class MiseToolName(
     }
 }
 
-data class MiseTool(
+data class MiseDevTool(
     val version: String,
     val requestedVersion: String?,
     val installPath: String,
     val installed: Boolean,
     val active: Boolean,
     val source: MiseSource?,
-)
+) {
+    override fun toString(): String =
+        "MiseDevTool(version='$version', requestedVersion=$requestedVersion, installPath='$installPath', installed=$installed, active=$active, source=$source)"
+}
