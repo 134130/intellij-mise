@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.toolwindow
 
-import com.github.l34130.mise.core.settings.MiseConfigurable
+import com.github.l34130.mise.core.setting.MiseConfigurable
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent

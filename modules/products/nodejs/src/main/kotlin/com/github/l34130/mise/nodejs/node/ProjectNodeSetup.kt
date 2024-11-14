@@ -1,8 +1,8 @@
 package com.github.l34130.mise.nodejs.node
 
-import com.github.l34130.mise.core.commands.MiseTool
-import com.github.l34130.mise.core.setups.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.setups.MiseToolRequest
+import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.setup.MiseToolRequest
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterManager
 import com.intellij.javascript.nodejs.interpreter.local.NodeJsLocalInterpreter
 import com.intellij.javascript.nodejs.npm.NpmManager

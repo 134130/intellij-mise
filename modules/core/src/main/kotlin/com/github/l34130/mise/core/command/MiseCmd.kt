@@ -1,7 +1,7 @@
-package com.github.l34130.mise.core.commands
+package com.github.l34130.mise.core.command
 
-import com.github.l34130.mise.core.notifications.Notification
-import com.github.l34130.mise.core.utils.fromJson
+import com.github.l34130.mise.core.notification.Notification
+import com.github.l34130.mise.core.util.fromJson
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -9,7 +9,6 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
-import com.intellij.openapi.util.use
 import org.jetbrains.plugins.terminal.TerminalView
 
 object MiseCmd {

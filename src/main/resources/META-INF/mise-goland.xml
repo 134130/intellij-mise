@@ -2,7 +2,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.github.l34130.mise.goland.go.ProjectGoSdkSetup"/>
 
-        <projectConfigurable instance="com.github.l34130.mise.core.settings.MiseConfigurable" displayName="Mise Settings"/>
+        <projectConfigurable instance="com.github.l34130.mise.core.setting.MiseConfigurable"
+                             displayName="Mise Settings"/>
     </extensions>
     <extensions defaultExtensionNs="com.goide">
         <runConfigurationExtension implementation="com.github.l34130.mise.gradle.run.GoLandRunConfigurationExtension"

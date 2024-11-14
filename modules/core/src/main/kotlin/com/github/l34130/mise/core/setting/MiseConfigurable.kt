@@ -1,4 +1,4 @@
-package com.github.l34130.mise.core.settings
+package com.github.l34130.mise.core.setting
 
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project

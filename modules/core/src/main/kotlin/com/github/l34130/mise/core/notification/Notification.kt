@@ -1,6 +1,6 @@
-package com.github.l34130.mise.core.notifications
+package com.github.l34130.mise.core.notification
 
-import com.github.l34130.mise.core.icons.MiseIcons
+import com.github.l34130.mise.core.icon.MiseIcons
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType

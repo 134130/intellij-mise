@@ -1,10 +1,9 @@
-package com.github.l34130.mise.core.commands
+package com.github.l34130.mise.core.command
 
-import com.github.l34130.mise.core.settings.MiseSettings
+import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.command.executeCommand
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager

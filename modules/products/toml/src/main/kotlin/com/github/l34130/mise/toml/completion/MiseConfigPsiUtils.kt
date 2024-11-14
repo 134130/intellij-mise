@@ -1,6 +1,6 @@
 package com.github.l34130.mise.toml.completion
 
-import com.github.l34130.mise.core.commands.MiseTask
+import com.github.l34130.mise.core.command.MiseTask
 import com.intellij.psi.ElementManipulators
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile

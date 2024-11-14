@@ -1,7 +1,7 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.commands.MiseTool
-import com.github.l34130.mise.core.utils.ToolUtils
+import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.util.ToolUtils
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.openapi.project.Project

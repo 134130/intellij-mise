@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.run
 
-import com.github.l34130.mise.core.settings.MiseSettings
+import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project

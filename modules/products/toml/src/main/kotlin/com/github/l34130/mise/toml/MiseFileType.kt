@@ -1,6 +1,6 @@
 package com.github.l34130.mise.toml
 
-import com.github.l34130.mise.core.icons.MiseIcons
+import com.github.l34130.mise.core.icon.MiseIcons
 import com.intellij.openapi.fileTypes.LanguageFileType
 import org.toml.lang.TomlLanguage
 import javax.swing.Icon

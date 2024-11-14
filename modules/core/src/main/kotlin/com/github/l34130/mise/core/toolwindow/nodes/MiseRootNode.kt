@@ -1,8 +1,8 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.commands.MiseCmd
-import com.github.l34130.mise.core.commands.MiseTool
-import com.github.l34130.mise.core.settings.MiseSettings
+import com.github.l34130.mise.core.command.MiseCmd
+import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.Project

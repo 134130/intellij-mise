@@ -1,6 +1,6 @@
 package com.github.l34130.mise.idea.run
 
-import com.github.l34130.mise.core.commands.MiseCmd
+import com.github.l34130.mise.core.command.MiseCmd
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.GeneralCommandLine

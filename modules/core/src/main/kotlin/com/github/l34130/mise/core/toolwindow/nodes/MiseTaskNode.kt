@@ -1,7 +1,7 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.commands.MiseRunAction
-import com.github.l34130.mise.core.commands.MiseTask
+import com.github.l34130.mise.core.command.MiseRunAction
+import com.github.l34130.mise.core.command.MiseTask
 import com.github.l34130.mise.core.toolwindow.DoubleClickable
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData

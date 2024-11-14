@@ -1,4 +1,4 @@
-package com.github.l34130.mise.core.commands
+package com.github.l34130.mise.core.command
 
 sealed class MiseCmdException(
     message: String,

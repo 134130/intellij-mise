@@ -1,8 +1,8 @@
 package com.github.l34130.mise.nodejs.deno
 
-import com.github.l34130.mise.core.commands.MiseTool
-import com.github.l34130.mise.core.setups.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.setups.MiseToolRequest
+import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.setup.MiseToolRequest
 import com.intellij.deno.DenoConfigurable
 import com.intellij.deno.DenoSettings
 import com.intellij.openapi.components.service

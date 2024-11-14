@@ -1,4 +1,4 @@
-package com.github.l34130.mise.core.icons
+package com.github.l34130.mise.core.icon
 
 import com.intellij.openapi.util.IconLoader
 

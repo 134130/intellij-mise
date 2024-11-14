@@ -1,8 +1,8 @@
 package com.github.l34130.mise.goland.go
 
-import com.github.l34130.mise.core.commands.MiseTool
-import com.github.l34130.mise.core.setups.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.setups.MiseToolRequest
+import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.setup.MiseToolRequest
 import com.goide.configuration.GoSdkConfigurable
 import com.goide.sdk.GoSdk
 import com.goide.sdk.GoSdkImpl

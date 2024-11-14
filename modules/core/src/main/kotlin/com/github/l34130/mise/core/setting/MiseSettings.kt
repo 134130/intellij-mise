@@ -1,4 +1,4 @@
-package com.github.l34130.mise.core.settings
+package com.github.l34130.mise.core.setting
 
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service

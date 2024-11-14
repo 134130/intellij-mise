@@ -1,9 +1,9 @@
-package com.github.l34130.mise.core.setups
+package com.github.l34130.mise.core.setup
 
-import com.github.l34130.mise.core.commands.MiseCmd
-import com.github.l34130.mise.core.commands.MiseTool
-import com.github.l34130.mise.core.notifications.Notification
-import com.github.l34130.mise.core.settings.MiseSettings
+import com.github.l34130.mise.core.command.MiseCmd
+import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.notification.Notification
+import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.WriteAction

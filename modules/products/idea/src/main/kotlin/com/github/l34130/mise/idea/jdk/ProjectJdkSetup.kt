@@ -1,8 +1,8 @@
 package com.github.l34130.mise.idea.jdk
 
-import com.github.l34130.mise.core.commands.MiseTool
-import com.github.l34130.mise.core.setups.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.setups.MiseToolRequest
+import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.setup.MiseToolRequest
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk

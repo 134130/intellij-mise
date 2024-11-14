@@ -1,4 +1,4 @@
-package com.github.l34130.mise.core.commands
+package com.github.l34130.mise.core.command
 
 data class MiseSource(
     val type: String, // .mise.toml, .mise.config, etc.

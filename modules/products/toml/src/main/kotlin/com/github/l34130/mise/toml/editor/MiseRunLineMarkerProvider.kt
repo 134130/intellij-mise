@@ -1,6 +1,6 @@
 package com.github.l34130.mise.toml.editor
 
-import com.github.l34130.mise.core.commands.MiseRunAction
+import com.github.l34130.mise.core.command.MiseRunAction
 import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.icons.AllIcons
 import com.intellij.psi.PsiElement
