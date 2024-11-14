@@ -1,4 +1,4 @@
-package com.github.l34130.mise.nodejs.runconfig
+package com.github.l34130.mise.nodejs.run
 
 import com.github.l34130.mise.core.commands.MiseCmd
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor

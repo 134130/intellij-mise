@@ -7,7 +7,7 @@
     </extensions>
     <extensions defaultExtensionNs="JavaScript">
         <nodeRunConfigurationExtension
-                implementation="com.github.l34130.mise.nodejs.runconfig.NodeRunConfigurationExtension"
+                implementation="com.github.l34130.mise.nodejs.run.NodeRunConfigurationExtension"
                                    id="miseNodeJS"/>
     </extensions>
     <actions>

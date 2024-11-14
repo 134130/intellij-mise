@@ -1,4 +1,4 @@
-package com.github.l34130.mise.gradle.runconfig
+package com.github.l34130.mise.gradle.run
 
 import com.github.l34130.mise.core.commands.MiseCmd
 import com.github.l34130.mise.core.settings.MiseSettings

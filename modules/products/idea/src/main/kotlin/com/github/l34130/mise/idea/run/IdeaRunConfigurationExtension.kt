@@ -1,4 +1,4 @@
-package com.github.l34130.mise.idea.runconfig
+package com.github.l34130.mise.idea.run
 
 import com.github.l34130.mise.core.commands.MiseCmd
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor

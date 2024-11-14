@@ -1,4 +1,4 @@
-package com.github.l34130.mise.goland.runconfig
+package com.github.l34130.mise.goland.run
 
 import com.github.l34130.mise.core.commands.MiseCmd
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
