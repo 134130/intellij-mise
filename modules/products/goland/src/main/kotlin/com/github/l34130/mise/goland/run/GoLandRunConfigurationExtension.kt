@@ -1,6 +1,6 @@
 package com.github.l34130.mise.goland.run
 
-import com.github.l34130.mise.core.command.MiseCmd
+import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.goide.execution.GoRunConfigurationBase
 import com.goide.execution.GoRunningState
@@ -42,14 +42,12 @@ class GoLandRunConfigurationExtension : GoRunConfigurationExtension() {
     ) {
         val miseState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
         if (miseState?.useMiseDirEnv == true) {
-            MiseCmd
-                .loadEnv(
-                    workDir = configuration.getWorkingDirectory(),
-                    miseProfile = miseState.miseProfile,
-                    project = configuration.getProject(),
-                ).forEach { (k, v) ->
-                    cmdLine.addEnvironmentVariable(k, v)
-                }
+            MiseCommandLine(
+                project = configuration.getProject(),
+                workDir = configuration.getWorkingDirectory(),
+            ).loadEnvironmentVariables(profile = miseState.miseProfile).forEach { (k, v) ->
+                cmdLine.addEnvironmentVariable(k, v)
+            }
         }
         super.patchCommandLine(configuration, runnerSettings, cmdLine, runnerId, state, commandLineType)
     }

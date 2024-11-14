@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.setup
 
-import com.github.l34130.mise.core.command.MiseCmd
+import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.command.MiseTool
 import com.github.l34130.mise.core.notification.Notification
 import com.github.l34130.mise.core.setting.MiseSettings
@@ -56,11 +56,10 @@ abstract class AbstractProjectSdkSetup :
 
         val profile = MiseSettings.getService(project).state.miseProfile
         val loadedTools =
-            MiseCmd.loadTools(
-                workDir = project.basePath,
-                miseProfile = profile,
+            MiseCommandLine(
                 project = project,
-            )
+                workDir = project.basePath,
+            ).loadDevTools(profile = profile)
 
         val tools = loadedTools[toolRequest.name]
         if (tools.isNullOrEmpty() || tools.size > 1) {

@@ -1,6 +1,6 @@
 package com.github.l34130.mise.idea.run
 
-import com.github.l34130.mise.core.command.MiseCmd
+import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -52,11 +52,10 @@ class IdeaRunConfigurationExtension : RunConfigurationExtension() {
         val miseState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
         if (miseState?.useMiseDirEnv == true) {
             params.env.putAll(
-                MiseCmd.loadEnv(
-                    workDir = params.workingDirectory,
-                    miseProfile = miseState.miseProfile,
+                MiseCommandLine(
                     project = configuration.project,
-                ),
+                    workDir = params.workingDirectory,
+                ).loadEnvironmentVariables(profile = miseState.miseProfile),
             )
         }
     }

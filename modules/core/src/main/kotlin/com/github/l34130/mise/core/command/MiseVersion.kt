@@ -6,7 +6,7 @@ data class MiseVersion(
     val patch: Int,
 ) : Comparable<MiseVersion> {
     companion object {
-        fun from(str: String): MiseVersion {
+        fun parse(str: String): MiseVersion {
             val versionStr = str.split(" ").firstOrNull()
 
             requireNotNull(versionStr) { "Invalid version string: $str" }

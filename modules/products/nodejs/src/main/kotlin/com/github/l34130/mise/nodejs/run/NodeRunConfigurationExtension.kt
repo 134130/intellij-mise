@@ -1,6 +1,6 @@
 package com.github.l34130.mise.nodejs.run
 
-import com.github.l34130.mise.core.command.MiseCmd
+import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile
@@ -49,11 +49,10 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
         return object : NodeRunConfigurationLaunchSession() {
             override fun addNodeOptionsTo(targetRun: NodeTargetRun) {
                 val envs =
-                    MiseCmd.loadEnv(
-                        workDir = configuration.project.basePath,
-                        miseProfile = miseState.miseProfile,
+                    MiseCommandLine(
                         project = configuration.project,
-                    )
+                        workDir = configuration.project.basePath,
+                    ).loadEnvironmentVariables(profile = miseState.miseProfile)
 
                 for ((key, value) in envs) {
                     targetRun.commandLineBuilder.addEnvironmentVariable(key, value)

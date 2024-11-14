@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.command.MiseCmd
+import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.command.MiseTool
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.ide.projectView.PresentationData
@@ -25,7 +25,7 @@ class MiseRootNode(
     }
 
     private fun getToolNodes(settings: MiseSettings): Collection<MiseToolConfigDirectoryNode> {
-        val toolsByToolNames = MiseCmd.loadTools(nodeProject.basePath, settings.state.miseProfile, project)
+        val toolsByToolNames = MiseCommandLine(project, nodeProject.basePath).loadDevTools(settings.state.miseProfile)
 
         val toolsBySourcePaths = mutableMapOf<String, MutableList<Pair<String, MiseTool>>>()
         for ((toolName, toolInfos) in toolsByToolNames.entries) {
@@ -46,7 +46,8 @@ class MiseRootNode(
     }
 
     private fun getEnvironmentNodes(settings: MiseSettings): Collection<MiseEnvironmentNode> {
-        val envs = MiseCmd.loadEnv(nodeProject.basePath, settings.state.miseProfile, project)
+        val envs =
+            MiseCommandLine(project, nodeProject.basePath).loadEnvironmentVariables(settings.state.miseProfile)
 
         return envs.map { (key, value) ->
             MiseEnvironmentNode(
@@ -58,7 +59,7 @@ class MiseRootNode(
     }
 
     private fun getTaskNodes(settings: MiseSettings): Collection<MiseTaskNode> {
-        val tasks = MiseCmd.loadTasks(nodeProject.basePath, settings.state.miseProfile, project)
+        val tasks = MiseCommandLine(project, nodeProject.basePath).loadTasks(settings.state.miseProfile)
 
         return tasks.map { task ->
             MiseTaskNode(

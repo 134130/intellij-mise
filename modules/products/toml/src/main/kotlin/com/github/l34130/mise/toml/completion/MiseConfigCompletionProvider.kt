@@ -1,6 +1,6 @@
 package com.github.l34130.mise.toml.completion
 
-import com.github.l34130.mise.core.command.MiseCmd
+import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.command.MiseTask
 import com.github.l34130.mise.core.icon.MiseIcons
 import com.github.l34130.mise.core.setting.MiseSettings
@@ -34,10 +34,11 @@ class MiseConfigCompletionProvider : CompletionProvider<CompletionParameters>() 
         // TODO: Store the tasks in a cache and update them only when the file changes
         //    This will prevent unnecessary calls to the CLI or when the file is an invalid state
         val tasksFromMise =
-            MiseCmd.loadTasks(
-                workDir = root.project.basePath,
-                miseProfile = profile,
+            MiseCommandLine(
                 project = root.project,
+                workDir = root.project.basePath,
+            ).loadTasks(
+                profile = profile,
                 notify = false,
             )
 

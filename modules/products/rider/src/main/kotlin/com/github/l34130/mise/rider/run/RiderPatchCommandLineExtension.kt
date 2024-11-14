@@ -1,6 +1,6 @@
 package com.github.l34130.mise.rider.run
 
-import com.github.l34130.mise.core.command.MiseCmd
+import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.ProcessListener
@@ -41,11 +41,10 @@ class RiderPatchCommandLineExtension : PatchCommandLineExtension {
         }
 
         val envs =
-            MiseCmd.loadEnv(
-                workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
-                miseProfile = MiseSettings.getService(project).state.miseProfile,
+            MiseCommandLine(
                 project = project,
-            )
+                workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
+            ).loadEnvironmentVariables(profile = MiseSettings.getService(project).state.miseProfile)
         commandLine.withEnvironment(envs)
     }
 }
