@@ -17,8 +17,4 @@
                 implementationClass="com.github.l34130.mise.toml.editor.MiseRunLineMarkerProvider"
         />
     </extensions>
-
-    <extensions defaultExtensionNs="JavaScript.JsonSchema">
-        <ProviderFactory implementation="com.github.l34130.mise.toml.schema.MiseSchemaProviderFactory"/>
-    </extensions>
 </idea-plugin>
