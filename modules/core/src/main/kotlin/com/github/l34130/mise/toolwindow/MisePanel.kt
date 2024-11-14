@@ -35,28 +35,35 @@ import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
 
-class RefreshAction(private val panel: MisePanel) : AnAction(
-    "Refresh Mise Configuration",
-    "Refresh Mise configuration",
-    AllIcons.Actions.Refresh
-) {
+class RefreshAction(
+    private val panel: MisePanel,
+) : AnAction(
+        "Refresh Mise Configuration",
+        "Refresh Mise configuration",
+        AllIcons.Actions.Refresh,
+    ) {
     override fun actionPerformed(e: AnActionEvent) {
         FileDocumentManager.getInstance().saveAllDocuments()
         panel.refreshMiseConfiguration()
     }
 }
 
-class SettingsAction(private val project: Project) : AnAction(
-    "Mise Settings",
-    "Open Mise settings",
-    AllIcons.General.Settings
-) {
+class SettingsAction(
+    private val project: Project,
+) : AnAction(
+        "Mise Settings",
+        "Open Mise settings",
+        AllIcons.General.Settings,
+    ) {
     override fun actionPerformed(e: AnActionEvent) {
         ShowSettingsUtil.getInstance().showSettingsDialog(project, MiseConfigurable::class.java)
     }
 }
 
-class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout()), Disposable {
+class MisePanel(
+    private val project: Project,
+) : JBPanel<JBPanel<*>>(BorderLayout()),
+    Disposable {
     private val rootNode = DefaultMutableTreeNode("Root")
     private val treeModel = DefaultTreeModel(rootNode)
     private val tree = Tree(treeModel)
@@ -72,12 +79,15 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
             addMouseListener(TreeMouseListener())
         }
 
-        add(JBScrollPane(tree).apply {
-            border = JBUI.Borders.empty()
-            viewport.isOpaque = false
-            background = UIManager.getColor("Tree.background")
-            isOpaque = false
-        }, BorderLayout.CENTER)
+        add(
+            JBScrollPane(tree).apply {
+                border = JBUI.Borders.empty()
+                viewport.isOpaque = false
+                background = UIManager.getColor("Tree.background")
+                isOpaque = false
+            },
+            BorderLayout.CENTER,
+        )
 
         refreshMiseConfiguration()
 
@@ -86,31 +96,33 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
             object : MiseSettings.SettingsChangeListener {
                 override fun settingsChanged(
                     oldState: MiseState,
-                    newState: MiseState) {
+                    newState: MiseState,
+                ) {
                     if (oldState.miseProfile != newState.miseProfile) {
                         refreshMiseConfiguration()
                     }
                 }
-            }
+            },
         )
     }
 
-    private fun createActionGroup(): ActionGroup {
-        return DefaultActionGroup().apply {
-            add(object : AnAction("Run Task", "Run selected Mise task", AllIcons.Actions.Execute) {
-                override fun actionPerformed(e: AnActionEvent) {
-                    val task = getSelectedTask()
-                    if (task != null) {
-                        executeTask(task.name)
+    private fun createActionGroup(): ActionGroup =
+        DefaultActionGroup().apply {
+            add(
+                object : AnAction("Run Task", "Run selected Mise task", AllIcons.Actions.Execute) {
+                    override fun actionPerformed(e: AnActionEvent) {
+                        val task = getSelectedTask()
+                        if (task != null) {
+                            executeTask(task.name)
+                        }
                     }
-                }
 
-                override fun update(e: AnActionEvent) {
-                    e.presentation.isEnabled = getSelectedTask() != null
-                }
-            })
+                    override fun update(e: AnActionEvent) {
+                        e.presentation.isEnabled = getSelectedTask() != null
+                    }
+                },
+            )
         }
-    }
 
     private fun getSelectedTask(): MiseTask? {
         val path = tree.selectionPath ?: return null
@@ -155,7 +167,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
             row: Int,
             path: TreePath,
             node: DefaultMutableTreeNode,
-            userObject: Any
+            userObject: Any,
         ) {
             if (userObject !is MiseTask) return
             val rowBounds = tree.getRowBounds(row) ?: return
@@ -170,7 +182,11 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
             }
         }
 
-        override fun invokePopup(comp: Component?, x: Int, y: Int) {
+        override fun invokePopup(
+            comp: Component?,
+            x: Int,
+            y: Int,
+        ) {
             val path = tree.getPathForLocation(x, y)
             if (path != null) {
                 tree.selectionPath = path
@@ -214,7 +230,7 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
             expanded: Boolean,
             leaf: Boolean,
             row: Int,
-            hasFocus: Boolean
+            hasFocus: Boolean,
         ): Component {
             super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus)
 
@@ -263,7 +279,10 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
 
         private fun getRootCategory(node: DefaultMutableTreeNode): String? {
             var current = node
-            while (current.parent != null && current.parent is DefaultMutableTreeNode && (current.parent as DefaultMutableTreeNode).parent != null) {
+            while (current.parent != null &&
+                current.parent is DefaultMutableTreeNode &&
+                (current.parent as DefaultMutableTreeNode).parent != null
+            ) {
                 current = current.parent as DefaultMutableTreeNode
             }
             return current.toString()
@@ -271,35 +290,36 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
 
         private fun buildTaskLabel(task: MiseTask): String = task.name
 
-        private fun buildTaskTooltip(task: MiseTask): String = buildString {
-            append("<html>")
-            append("<b>${task.name}</b>")
-            if (!task.description.isNullOrEmpty()) {
-                append("<br>${task.description}")
+        private fun buildTaskTooltip(task: MiseTask): String =
+            buildString {
+                append("<html>")
+                append("<b>${task.name}</b>")
+                if (!task.description.isNullOrEmpty()) {
+                    append("<br>${task.description}")
+                }
+                append("<br>Source: ${task.source}")
+                append("</html>")
             }
-            append("<br>Source: ${task.source}")
-            append("</html>")
-        }
 
-        private fun buildToolTooltip(tool: MiseToolNode): String = buildString {
-            append("<html>")
-            append("<b>${tool.name}</b>")
-            append("<br>Version: ${tool.toolInfo.version}")
-            append("<br>Requested version: ${tool.toolInfo.requestedVersion ?: "N/A"}")
-            append("<br>Install path: ${tool.toolInfo.installPath}")
-            append("<br>Installed: ${tool.toolInfo.installed}")
-            append("<br>Active: ${tool.toolInfo.active}")
-            append("<br>Source: ${tool.toolInfo.source}")
-            append("</html>")
-        }
+        private fun buildToolTooltip(tool: MiseToolNode): String =
+            buildString {
+                append("<html>")
+                append("<b>${tool.name}</b>")
+                append("<br>Version: ${tool.toolInfo.version}")
+                append("<br>Requested version: ${tool.toolInfo.requestedVersion ?: "N/A"}")
+                append("<br>Install path: ${tool.toolInfo.installPath}")
+                append("<br>Installed: ${tool.toolInfo.installed}")
+                append("<br>Active: ${tool.toolInfo.active}")
+                append("<br>Source: ${tool.toolInfo.source}")
+                append("</html>")
+            }
     }
 
     data class MiseToolNode(
         val name: String,
-        val toolInfo: MiseTool
+        val toolInfo: MiseTool,
     ) {
-        override fun toString(): String =
-            name + " (${toolInfo.version})"
+        override fun toString(): String = name + " (${toolInfo.version})"
     }
 
     fun refreshMiseConfiguration() {
@@ -328,9 +348,11 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
             val toolsNode = DefaultMutableTreeNode("Tools")
             rootNode.add(toolsNode)
 
-            val toolsBySource = tools.flatMap { (name, toolInfos) ->
-                toolInfos.map { MiseToolNode(name, it) }
-            }.groupBy { it.toolInfo.source }
+            val toolsBySource =
+                tools
+                    .flatMap { (name, toolInfos) ->
+                        toolInfos.map { MiseToolNode(name, it) }
+                    }.groupBy { it.toolInfo.source }
 
             toolsBySource.forEach { (source, tools) ->
                 val sourceNode = DefaultMutableTreeNode(source?.path ?: "Unknown source")
@@ -357,13 +379,13 @@ class MisePanel(private val project: Project) : JBPanel<JBPanel<*>>(BorderLayout
             Notification.notify(
                 "Failed to load tasks: ${e.message}",
                 type = NotificationType.ERROR,
-                project = project
+                project = project,
             )
         }
     }
 
     private fun executeTask(taskName: String) {
-       MiseRunAction.executeTask(project, taskName)
+        MiseRunAction.executeTask(project, taskName)
     }
 
     override fun dispose() {

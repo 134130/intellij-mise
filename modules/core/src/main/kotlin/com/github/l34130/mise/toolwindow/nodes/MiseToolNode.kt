@@ -15,7 +15,7 @@ class MiseToolConfigDirectoryNode(
 ) : MiseNode<String>(
         project,
         configDirPath,
-        AllIcons.Nodes.Folder,
+        AllIcons.Nodes.ModuleGroup,
     ) {
     override fun displayName(): String = FileUtil.getLocationRelativeToUserHome(configDirPath)
 
