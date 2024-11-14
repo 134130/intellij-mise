@@ -48,7 +48,7 @@ class MiseRootNode(
 
     private fun getEnvironmentNodes(settings: MiseSettings): Collection<MiseEnvironmentNode> {
         val envs =
-            MiseCommandLine(project, nodeProject.basePath).loadEnvironmentVariables(settings.state.miseProfile)
+            MiseCommandLine(project).loadEnvironmentVariables(settings.state.miseProfile)
 
         return envs.map { (key, value) ->
             MiseEnvironmentNode(
@@ -60,7 +60,7 @@ class MiseRootNode(
     }
 
     private fun getTaskNodes(settings: MiseSettings): Collection<MiseTaskNode> {
-        val tasks = MiseCommandLine(project, nodeProject.basePath).loadTasks(settings.state.miseProfile)
+        val tasks = MiseCommandLine(project).loadTasks(settings.state.miseProfile)
 
         return tasks.map { task ->
             MiseTaskNode(

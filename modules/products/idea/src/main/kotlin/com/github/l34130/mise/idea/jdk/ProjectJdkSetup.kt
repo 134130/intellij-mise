@@ -1,8 +1,8 @@
 package com.github.l34130.mise.idea.jdk
 
 import com.github.l34130.mise.core.command.MiseDevTool
+import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.setup.MiseToolRequest
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
@@ -11,11 +11,7 @@ import com.intellij.openapi.roots.ProjectRootManager
 import kotlin.reflect.KClass
 
 class ProjectJdkSetup : AbstractProjectSdkSetup() {
-    override fun getToolRequest(): MiseToolRequest =
-        MiseToolRequest(
-            name = "java",
-            canonicalName = "JDK",
-        )
+    override fun getDevToolName() = MiseDevToolName("java")
 
     override fun setupSdk(
         tool: MiseDevTool,

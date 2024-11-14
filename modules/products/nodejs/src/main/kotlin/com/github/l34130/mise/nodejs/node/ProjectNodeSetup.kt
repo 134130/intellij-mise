@@ -1,8 +1,8 @@
 package com.github.l34130.mise.nodejs.node
 
 import com.github.l34130.mise.core.command.MiseDevTool
+import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.setup.MiseToolRequest
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterManager
 import com.intellij.javascript.nodejs.interpreter.local.NodeJsLocalInterpreter
 import com.intellij.javascript.nodejs.npm.NpmManager
@@ -16,11 +16,7 @@ import kotlin.io.path.Path
 import kotlin.reflect.KClass
 
 class ProjectNodeSetup : AbstractProjectSdkSetup() {
-    override fun getToolRequest(): MiseToolRequest =
-        MiseToolRequest(
-            name = "node",
-            canonicalName = "Node.js",
-        )
+    override fun getDevToolName() = MiseDevToolName("node")
 
     override fun setupSdk(
         tool: MiseDevTool,

@@ -10,7 +10,7 @@
         <notificationGroup displayType="BALLOON" id="Mise"/>
         <toolWindow id="Mise"
                     secondary="true"
-                    icon="com.github.l34130.mise.icons.MiseIcons.DEFAULT"
+                    icon="com.github.l34130.mise.core.icon.MiseIcons.DEFAULT"
                     anchor="right"
                     factoryClass="com.github.l34130.mise.core.toolwindow.MiseTreeToolWindowFactory"/>
     </extensions>
@@ -19,7 +19,7 @@
         <group id="ch.mise.actions"
                text="Mise"
                popup="true"
-               icon="com.github.l34130.mise.icons.MiseIcons.DEFAULT">
+               icon="com.github.l34130.mise.core.icon.MiseIcons.DEFAULT">
             <add-to-group group-id="ToolsMenu"/>
         </group>
     </actions>

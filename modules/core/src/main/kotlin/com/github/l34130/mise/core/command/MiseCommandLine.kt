@@ -1,9 +1,9 @@
 package com.github.l34130.mise.core.command
 
 import com.github.l34130.mise.core.notification.NotificationService
+import com.github.l34130.mise.core.util.fromJson
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -13,7 +13,7 @@ private val LOG = Logger.getInstance(MiseCommandLine::class.java)
 
 class MiseCommandLine(
     private val project: Project,
-    private val workDir: String? = null,
+    private val workDir: String? = project.basePath,
 ) {
     // `mise ls`
     fun loadDevTools(
@@ -43,28 +43,29 @@ class MiseCommandLine(
             commandLineArgs.add("--offline")
         }
 
-        return runCommandLine<Map<MiseDevToolName, List<MiseDevTool>>>(commandLineArgs).getOrElse { exception ->
-            if (!notify) {
-                return@getOrElse emptyMap()
-            }
-
-            val notificationService = project.service<NotificationService>()
-
-            when (exception) {
-                is MiseCommandLineException -> {
-                    notificationService.warn("Failed to load dev tools", exception.message)
+        return runCommandLine<Map<String, List<MiseDevTool>>>(commandLineArgs)
+            .getOrElse { exception ->
+                if (!notify) {
+                    return@getOrElse emptyMap()
                 }
 
-                else -> {
-                    notificationService.error(
-                        "Failed to load dev tools",
-                        exception.message ?: exception.javaClass.simpleName,
-                    )
-                }
-            }
+                val notificationService = project.service<NotificationService>()
 
-            emptyMap()
-        }
+                when (exception) {
+                    is MiseCommandLineException -> {
+                        notificationService.warn("Failed to load dev tools", exception.message)
+                    }
+
+                    else -> {
+                        notificationService.error(
+                            "Failed to load dev tools",
+                            exception.message ?: exception.javaClass.simpleName,
+                        )
+                    }
+                }
+
+                emptyMap()
+            }.mapKeys { (toolName, _) -> MiseDevToolName(toolName) }
     }
 
     // `mise env`
@@ -139,11 +140,11 @@ class MiseCommandLine(
         }
     }
 
-    private fun <T> runCommandLine(commandLineArgs: List<String>): Result<T> = runCommandLine(*commandLineArgs.toTypedArray())
+    private inline fun <reified T> runCommandLine(vararg commandLineArgs: String): Result<T> = runCommandLine(commandLineArgs.toList())
 
-    private fun <T> runCommandLine(vararg commandLineArgs: String): Result<T> {
+    private inline fun <reified T> runCommandLine(commandLineArgs: List<String>): Result<T> {
         val process =
-            GeneralCommandLine(*commandLineArgs)
+            GeneralCommandLine(commandLineArgs)
                 .withWorkDirectory(workDir)
                 .createProcess()
 
@@ -161,11 +162,16 @@ class MiseCommandLine(
 
         val stdout = process.inputStream.bufferedReader()
 
+        if (T::class == String::class) {
+            val result = stdout.use { it.readText() } as T
+            return Result.success(result)
+        }
+
         val result =
             GsonBuilder()
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .create()
-                .fromJson<T>(stdout, object : TypeToken<T>() {}.type)
+                .fromJson<T>(stdout)
 
         return Result.success(result)
     }

@@ -1,13 +1,12 @@
 package com.github.l34130.mise.core.command
 
+import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindowManager
-import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
 import org.jetbrains.plugins.terminal.TerminalView
 
 class MiseRunTaskOnTerminalAction(
@@ -36,7 +35,7 @@ class MiseRunTaskOnTerminalAction(
             taskName: String,
             profile: String? = null,
         ) {
-            val widget = project.service<TerminalView>().createLocalShellWidget(project.basePath, taskName)
+            project.service<TerminalView>().createLocalShellWidget(project.basePath, taskName)
 
             val command =
                 buildString {
@@ -45,12 +44,7 @@ class MiseRunTaskOnTerminalAction(
                     append(" '$taskName'")
                 }
 
-            project
-                .service<ToolWindowManager>()
-                .getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID)
-                ?.show {
-                    widget.executeCommand(command)
-                }
+            TerminalUtils.executeCommand(project, command, taskName)
         }
     }
 }

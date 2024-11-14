@@ -5,41 +5,42 @@ import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 
 @Service(Service.Level.PROJECT)
 class NotificationService(
-    private val project: Project,
+    private val project: Project? = null,
 ) {
     fun info(
         title: String,
         htmlText: String,
-        action: NotificationAction? = null,
+        actionProvider: (() -> NotificationAction)? = null,
     ) {
-        showNotification(title, htmlText, NotificationType.INFORMATION, action)
+        showNotification(title, htmlText, NotificationType.INFORMATION, actionProvider)
     }
 
     fun warn(
         title: String,
         htmlText: String,
-        action: NotificationAction? = null,
+        actionProvider: (() -> NotificationAction)? = null,
     ) {
-        showNotification(title, htmlText, NotificationType.WARNING, action)
+        showNotification(title, htmlText, NotificationType.WARNING, actionProvider)
     }
 
     fun error(
         title: String,
         htmlText: String,
-        action: NotificationAction? = null,
+        actionProvider: (() -> NotificationAction)? = null,
     ) {
-        showNotification(title, htmlText, NotificationType.ERROR, action)
+        showNotification(title, htmlText, NotificationType.ERROR, actionProvider)
     }
 
     private fun showNotification(
         title: String,
         htmlText: String,
         type: NotificationType,
-        action: NotificationAction? = null,
+        actionProvider: (() -> NotificationAction)? = null,
     ) {
         val notification =
             NotificationGroupManager
@@ -47,7 +48,7 @@ class NotificationService(
                 .getNotificationGroup(NOTIFICATION_GROUP_ID)
                 .createNotification(title, htmlText, type)
 
-        action?.let { notification.addAction(it) }
+        actionProvider?.let { notification.addAction(it()) }
 
         notification.icon = MiseIcons.DEFAULT
         notification.notify(project)
@@ -55,5 +56,7 @@ class NotificationService(
 
     companion object {
         private const val NOTIFICATION_GROUP_ID = "Mise"
+
+        fun getInstance(project: Project? = null): NotificationService = project?.service() ?: NotificationService()
     }
 }

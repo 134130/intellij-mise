@@ -1,8 +1,8 @@
 package com.github.l34130.mise.nodejs.deno
 
 import com.github.l34130.mise.core.command.MiseDevTool
+import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.setup.MiseToolRequest
 import com.intellij.deno.DenoConfigurable
 import com.intellij.deno.DenoSettings
 import com.intellij.openapi.components.service
@@ -13,11 +13,7 @@ import kotlin.io.path.Path
 import kotlin.reflect.KClass
 
 class ProjectDenoSetup : AbstractProjectSdkSetup() {
-    override fun getToolRequest(): MiseToolRequest =
-        MiseToolRequest(
-            name = "deno",
-            canonicalName = "Deno",
-        )
+    override fun getDevToolName() = MiseDevToolName("deno")
 
     override fun setupSdk(
         tool: MiseDevTool,

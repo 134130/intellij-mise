@@ -1,9 +1,16 @@
 package com.github.l34130.mise.core.command
 
+import ai.grazie.utils.isLowercase
+
 @JvmInline
 value class MiseDevToolName(
     val value: String,
 ) {
+    init {
+        require(value.isNotBlank()) { "DevTool name must not be blank" }
+        require(value.isLowercase()) { "DevTool name must be lowercase" }
+    }
+
     fun canonicalName(): String = toolNameToCanonicalName[value] ?: value.replaceFirstChar { it.uppercase() }
 
     companion object {

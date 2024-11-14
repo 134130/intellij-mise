@@ -7,7 +7,7 @@ import com.intellij.openapi.project.Project
 
 class MiseTreeStructure(
     project: Project,
-) : AbstractTreeStructureBase(project) { // NOTE: AbstractTreeStructureBase(project) is original
+) : AbstractTreeStructureBase(project) {
     override fun getProviders(): List<TreeStructureProvider> = listOf(defaultTreeStructureProvider)
 
     override fun getRootElement(): Any = MiseRootNode(myProject)

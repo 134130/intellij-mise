@@ -6,7 +6,7 @@
                              displayName="Mise Settings"/>
     </extensions>
     <extensions defaultExtensionNs="com.goide">
-        <runConfigurationExtension implementation="com.github.l34130.mise.gradle.run.GoLandRunConfigurationExtension"
+        <runConfigurationExtension implementation="com.github.l34130.mise.goland.run.GoLandRunConfigurationExtension"
                                    id="miseGoLand"/>
     </extensions>
 

@@ -38,6 +38,8 @@ class MiseTreeToolWindow(
 
     init {
         background = UIUtil.getTreeBackground()
+        size.width = Int.MAX_VALUE
+        tree.size.width = Int.MAX_VALUE
 
         TreeUIHelper.getInstance().installTreeSpeedSearch(tree)
         tree.isRootVisible = false

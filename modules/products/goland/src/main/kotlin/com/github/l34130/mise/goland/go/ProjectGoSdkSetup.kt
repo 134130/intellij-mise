@@ -1,8 +1,8 @@
 package com.github.l34130.mise.goland.go
 
 import com.github.l34130.mise.core.command.MiseDevTool
+import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.setup.MiseToolRequest
 import com.goide.configuration.GoSdkConfigurable
 import com.goide.sdk.GoSdk
 import com.goide.sdk.GoSdkImpl
@@ -14,11 +14,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import kotlin.reflect.KClass
 
 class ProjectGoSdkSetup : AbstractProjectSdkSetup() {
-    override fun getToolRequest(): MiseToolRequest =
-        MiseToolRequest(
-            name = "go",
-            canonicalName = "Go",
-        )
+    override fun getDevToolName() = MiseDevToolName("go")
 
     override fun setupSdk(
         tool: MiseDevTool,

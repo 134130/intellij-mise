@@ -52,10 +52,7 @@ class IdeaRunConfigurationExtension : RunConfigurationExtension() {
         val miseState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
         if (miseState?.useMiseDirEnv == true) {
             params.env.putAll(
-                MiseCommandLine(
-                    project = configuration.project,
-                    workDir = params.workingDirectory,
-                ).loadEnvironmentVariables(profile = miseState.miseProfile),
+                MiseCommandLine(project = configuration.project).loadEnvironmentVariables(profile = miseState.miseProfile),
             )
         }
     }
