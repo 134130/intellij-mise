@@ -31,7 +31,7 @@ class MiseRootNode(
         val toolsBySourcePaths = mutableMapOf<String, MutableList<Pair<MiseDevToolName, MiseDevTool>>>()
         for ((toolName, toolInfos) in toolsByToolNames.entries) {
             for (toolInfo in toolInfos) {
-                val sourcePath = toolInfo.source?.path ?: continue
+                val sourcePath = toolInfo.source?.absolutePath ?: continue
                 val tools = toolsBySourcePaths.getOrPut(sourcePath) { mutableListOf() }
                 tools.add(toolName to toolInfo)
             }

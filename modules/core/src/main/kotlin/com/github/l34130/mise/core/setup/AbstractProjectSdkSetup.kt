@@ -105,7 +105,7 @@ abstract class AbstractProjectSdkSetup :
                         """
                         <b>${toolRequest.canonicalName} configured to ${toolRequest.name}@${tool.version}</b>
                         
-                        ${tool.source?.path?.let(FileUtil::getLocationRelativeToUserHome) ?: "unknown source"}
+                        ${tool.source?.absolutePath?.let(FileUtil::getLocationRelativeToUserHome) ?: "unknown source"}
                         """.trimIndent(),
                         NotificationType.INFORMATION,
                     )
