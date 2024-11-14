@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [2.6.1] - 2024-11-15
+
+### Fixed
+
+- 2024.3 Compatibility
+
 ## [2.6.0] - 2024-11-15
 
 ### Added
@@ -111,7 +117,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.6.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.6.1...HEAD
+[2.6.1]: https://github.com/134130/intellij-mise/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/134130/intellij-mise/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/134130/intellij-mise/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/134130/intellij-mise/compare/v2.3.0...v2.4.0
