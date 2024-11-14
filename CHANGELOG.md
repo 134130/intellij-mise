@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+## [2.6.0] - 2024-11-15
+
+### Added
+
+- Trust config files with Button
+
+### Fixed
+
+- Tools Window is now beautified
+- Drop Schema provider for `mise.toml` files
+- Some performance improvements
+
 ## [2.5.0] - 2024-11-12
 
 ### Added
@@ -99,7 +111,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.5.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/134130/intellij-mise/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/134130/intellij-mise/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/134130/intellij-mise/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/134130/intellij-mise/compare/v2.2.0...v2.3.0
