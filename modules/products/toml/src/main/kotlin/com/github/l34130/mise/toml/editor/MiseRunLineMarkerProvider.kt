@@ -1,6 +1,6 @@
 package com.github.l34130.mise.toml.editor
 
-import com.github.l34130.mise.commands.MiseRunAction
+import com.github.l34130.mise.core.commands.MiseRunAction
 import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.icons.AllIcons
 import com.intellij.psi.PsiElement
@@ -19,7 +19,7 @@ class MiseRunLineMarkerProvider : RunLineMarkerContributor() {
         return Info(
             AllIcons.Actions.Execute,
             { "Run mise task: $taskName" },
-            MiseRunAction(taskName)
+            MiseRunAction(taskName),
         )
     }
 
@@ -38,7 +38,6 @@ class MiseRunLineMarkerProvider : RunLineMarkerContributor() {
                     return parent.text
                 }
             }
-
 
             // Case 2: Table-style task [tasks.taskname]
             // [tasks.taskname]
