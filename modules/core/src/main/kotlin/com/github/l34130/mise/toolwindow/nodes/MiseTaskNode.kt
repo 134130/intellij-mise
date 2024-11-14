@@ -1,20 +1,22 @@
 package com.github.l34130.mise.toolwindow.nodes
 
+import com.github.l34130.mise.commands.MiseRunAction
 import com.github.l34130.mise.commands.MiseTask
+import com.github.l34130.mise.toolwindow.DoubleClickable
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
-import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.Project
+import java.awt.event.MouseEvent
 
 class MiseTaskServiceNode(
     project: Project,
-    val tasks: Collection<AbstractTreeNode<*>>,
+    val tasks: Collection<MiseTaskNode>,
 ) : MiseNode<String>(
         project,
         "Tasks",
         AllIcons.Nodes.ConfigFolder,
     ) {
-    override fun getChildren(): Collection<AbstractTreeNode<*>> = tasks
+    override fun getChildren(): Collection<MiseTaskNode> = tasks
 }
 
 class MiseTaskNode(
@@ -24,7 +26,8 @@ class MiseTaskNode(
         project,
         taskInfo,
         AllIcons.Debugger.Console,
-    ) {
+    ),
+    DoubleClickable {
     override fun displayName(): String = taskInfo.name
 
     override fun createPresentation(): PresentationData =
@@ -37,4 +40,8 @@ class MiseTaskNode(
                     }
                 }
         }
+
+    override fun onDoubleClick(event: MouseEvent) {
+        MiseRunAction.executeTask(project, taskInfo.name)
+    }
 }

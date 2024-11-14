@@ -1,6 +1,5 @@
 package com.github.l34130.mise.toolwindow
 
-import com.github.l34130.mise.toolwindow.nodes.AbstractActionTreeNode
 import com.intellij.ide.ActivityTracker
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.NodeDescriptor
@@ -67,7 +66,7 @@ class MiseTreeToolWindow(
         object : DoubleClickListener() {
             override fun onDoubleClick(event: MouseEvent): Boolean {
                 val path = tree.getPathForLocation(event.x, event.y)
-                ((path?.lastPathComponent as? DefaultMutableTreeNode)?.userObject as? AbstractActionTreeNode)?.onDoubleClick(
+                ((path?.lastPathComponent as? DefaultMutableTreeNode)?.userObject as? DoubleClickable)?.onDoubleClick(
                     event,
                 )
                 return true

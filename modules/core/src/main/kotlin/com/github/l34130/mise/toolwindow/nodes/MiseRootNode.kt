@@ -20,10 +20,11 @@ class MiseRootNode(
         return listOf(
             MiseToolServiceNode(project, getToolNodes(settings)),
             MiseTaskServiceNode(project, getTaskNodes(settings)),
+            MiseEnvironmentServiceNode(project, getEnvironmentNodes(settings)),
         )
     }
 
-    private fun getToolNodes(settings: MiseSettings): Collection<AbstractTreeNode<*>> {
+    private fun getToolNodes(settings: MiseSettings): Collection<MiseToolConfigDirectoryNode> {
         val toolsByToolNames = MiseCmd.loadTools(nodeProject.basePath, settings.state.miseProfile)
 
         val toolsBySourcePaths = mutableMapOf<String, MutableList<Pair<String, MiseTool>>>()
@@ -44,7 +45,19 @@ class MiseRootNode(
         }
     }
 
-    private fun getTaskNodes(settings: MiseSettings): Collection<AbstractTreeNode<*>> {
+    private fun getEnvironmentNodes(settings: MiseSettings): Collection<MiseEnvironmentNode> {
+        val envs = MiseCmd.loadEnv(nodeProject.basePath, settings.state.miseProfile)
+
+        return envs.map { (key, value) ->
+            MiseEnvironmentNode(
+                project = nodeProject,
+                key = key,
+                value = value,
+            )
+        }
+    }
+
+    private fun getTaskNodes(settings: MiseSettings): Collection<MiseTaskNode> {
         val tasks = MiseCmd.loadTasks(nodeProject.basePath, settings.state.miseProfile)
 
         return tasks.map { task ->
