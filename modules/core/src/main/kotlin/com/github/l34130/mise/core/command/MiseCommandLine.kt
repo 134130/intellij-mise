@@ -19,7 +19,7 @@ class MiseCommandLine(
     fun loadDevTools(
         profile: String?,
         notify: Boolean = true,
-    ): Map<String, List<MiseTool>> {
+    ): Map<MiseToolName, List<MiseTool>> {
         val versionString =
             runCommandLine<String>("mise", "version").getOrNull()
 
@@ -43,7 +43,7 @@ class MiseCommandLine(
             commandLineArgs.add("--offline")
         }
 
-        return runCommandLine<Map<String, List<MiseTool>>>(commandLineArgs).getOrElse { exception ->
+        return runCommandLine<Map<MiseToolName, List<MiseTool>>>(commandLineArgs).getOrElse { exception ->
             if (!notify) {
                 return@getOrElse emptyMap()
             }
@@ -168,24 +168,5 @@ class MiseCommandLine(
                 .fromJson<T>(stdout, object : TypeToken<T>() {}.type)
 
         return Result.success(result)
-    }
-}
-
-@JvmInline
-value class MiseToolName(
-    val value: String,
-) {
-    fun getCanonicalName(): String = toolNameToCanonicalName[value] ?: value.replaceFirstChar { it.uppercase() }
-
-    companion object {
-        private val toolNameToCanonicalName =
-            mapOf(
-                "go" to "Go",
-                "java" to "Java",
-                "node" to "Node.js",
-                "dotnet" to ".NET",
-                "deno" to "Deno",
-                "python" to "Python",
-            )
     }
 }

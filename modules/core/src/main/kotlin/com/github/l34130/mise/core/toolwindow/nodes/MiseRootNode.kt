@@ -2,6 +2,7 @@ package com.github.l34130.mise.core.toolwindow.nodes
 
 import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.command.MiseTool
+import com.github.l34130.mise.core.command.MiseToolName
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -27,7 +28,7 @@ class MiseRootNode(
     private fun getToolNodes(settings: MiseSettings): Collection<MiseToolConfigDirectoryNode> {
         val toolsByToolNames = MiseCommandLine(project, nodeProject.basePath).loadDevTools(settings.state.miseProfile)
 
-        val toolsBySourcePaths = mutableMapOf<String, MutableList<Pair<String, MiseTool>>>()
+        val toolsBySourcePaths = mutableMapOf<String, MutableList<Pair<MiseToolName, MiseTool>>>()
         for ((toolName, toolInfos) in toolsByToolNames.entries) {
             for (toolInfo in toolInfos) {
                 val sourcePath = toolInfo.source?.path ?: continue

@@ -1,7 +1,7 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
 import com.github.l34130.mise.core.command.MiseTool
-import com.github.l34130.mise.core.util.ToolUtils
+import com.github.l34130.mise.core.command.MiseToolName
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.openapi.project.Project
@@ -21,7 +21,7 @@ class MiseToolServiceNode(
 class MiseToolConfigDirectoryNode(
     project: Project,
     val configDirPath: String,
-    val tools: List<Pair<String, MiseTool>>,
+    val tools: List<Pair<MiseToolName, MiseTool>>,
 ) : MiseNode<String>(
         project,
         configDirPath,
@@ -42,7 +42,7 @@ class MiseToolConfigDirectoryNode(
 
 class MiseToolNode(
     project: Project,
-    val toolName: String,
+    val toolName: MiseToolName,
     val toolInfo: MiseTool,
 ) : MiseLeafNode<MiseTool>(
         project,
@@ -58,7 +58,7 @@ class MiseToolNode(
             tooltip =
                 buildString {
                     if (!toolInfo.installed && !toolInfo.active) {
-                        append("${ToolUtils.getCanonicalName(toolName)} is inactivated because it is not installed.")
+                        append("${toolName.canonicalName()} is inactivated because it is not installed.")
                     }
                 }
         }
