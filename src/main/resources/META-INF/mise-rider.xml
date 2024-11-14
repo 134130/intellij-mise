@@ -1,7 +1,5 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
-        <projectConfigurable instance="com.github.l34130.mise.settings.MiseConfigurable" displayName="Mise Settings"/>
-
-        <rider.patchCommandLine implementation="com.github.l34130.mise.runconfig.RiderPatchCommandLineExtension" />
+        <rider.patchCommandLine implementation="com.github.l34130.mise.rider.run.RiderPatchCommandLineExtension"/>
     </extensions>
 </idea-plugin>

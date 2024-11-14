@@ -1,6 +1,6 @@
 package com.github.l34130.mise.toml.completion
 
-import com.github.l34130.mise.commands.MiseTask
+import com.github.l34130.mise.core.command.MiseTask
 import com.intellij.psi.ElementManipulators
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -17,12 +17,14 @@ object MiseConfigPsiUtils {
         tasks.addAll(psiFile.children.filterIsInstance<TomlTable>().mapNotNull { it.parseTableStyleTask() })
 
         // Handle key-value style tasks (a = 'echo a')
-        psiFile.children.filterIsInstance<TomlTable>()
+        psiFile.children
+            .filterIsInstance<TomlTable>()
             .find { it.header.key?.textMatches("tasks") == true }
             ?.let { tasksTable ->
                 tasks.addAll(
                     tasksTable.entries
-                        .mapNotNull { it.parseKeyValueStyleTask() })
+                        .mapNotNull { it.parseKeyValueStyleTask() },
+                )
             }
 
         return tasks
@@ -41,7 +43,7 @@ object MiseConfigPsiUtils {
         // Check if we're in a key-value style task's depends
         val tasksTable = tomlKeyValue.parent as? TomlTable
         return tasksTable?.header?.key?.textMatches("tasks") == true &&
-                tomlKeyValue.key.textMatches("depends")
+            tomlKeyValue.key.textMatches("depends")
     }
 }
 
@@ -72,7 +74,7 @@ fun TomlKeyValue.parseKeyValueStyleTask(): MiseTask? {
             depends = null,
             description = null,
             hide = false,
-            command = ElementManipulators.getValueText(value as TomlLiteral)
+            command = ElementManipulators.getValueText(value as TomlLiteral),
         )
     }
 
@@ -95,17 +97,21 @@ private fun parseTaskProperties(entries: List<TomlKeyValue>): MiseTask? {
             key.textMatches("alias") -> {
                 when (value) {
                     is TomlLiteral -> aliases = listOf(ElementManipulators.getValueText(value))
-                    is TomlArray -> aliases = value.elements
-                        .mapNotNull { it as? TomlLiteral }
-                        .map { ElementManipulators.getValueText(it) }
+                    is TomlArray ->
+                        aliases =
+                            value.elements
+                                .mapNotNull { it as? TomlLiteral }
+                                .map { ElementManipulators.getValueText(it) }
                 }
             }
 
             key.textMatches("depends") -> {
                 when (value) {
-                    is TomlArray -> depends = value.elements
-                        .mapNotNull { it as? TomlLiteral }
-                        .map { ElementManipulators.getValueText(it) }
+                    is TomlArray ->
+                        depends =
+                            value.elements
+                                .mapNotNull { it as? TomlLiteral }
+                                .map { ElementManipulators.getValueText(it) }
                 }
             }
 
@@ -135,6 +141,6 @@ private fun parseTaskProperties(entries: List<TomlKeyValue>): MiseTask? {
         depends = depends,
         description = description,
         hide = hide,
-        command = command
+        command = command,
     )
 }

@@ -1,11 +1,17 @@
 package com.github.l34130.mise.toml.editor
 
-import com.github.l34130.mise.commands.MiseRunAction
+import com.github.l34130.mise.core.command.MiseRunTaskOnTerminalAction
+import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.components.service
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafPsiElement
-import org.toml.lang.psi.*
+import org.toml.lang.psi.TomlKey
+import org.toml.lang.psi.TomlKeySegment
+import org.toml.lang.psi.TomlKeyValue
+import org.toml.lang.psi.TomlTable
+import org.toml.lang.psi.TomlTableHeader
 
 class MiseRunLineMarkerProvider : RunLineMarkerContributor() {
     override fun getInfo(element: PsiElement): Info? {
@@ -16,10 +22,12 @@ class MiseRunLineMarkerProvider : RunLineMarkerContributor() {
 
         val taskName = getTaskInfo(element) ?: return null
 
+        val miseSettings = element.project.service<MiseSettings>()
+        val profile = miseSettings.state.miseProfile
         return Info(
             AllIcons.Actions.Execute,
-            { "Run mise task: $taskName" },
-            MiseRunAction(taskName)
+            { "Run Mise task: $taskName" },
+            MiseRunTaskOnTerminalAction(taskName, profile),
         )
     }
 
@@ -38,7 +46,6 @@ class MiseRunLineMarkerProvider : RunLineMarkerContributor() {
                     return parent.text
                 }
             }
-
 
             // Case 2: Table-style task [tasks.taskname]
             // [tasks.taskname]
