@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.command.MiseRunAction
+import com.github.l34130.mise.core.command.MiseRunTaskOnTerminalAction
 import com.github.l34130.mise.core.command.MiseTask
 import com.github.l34130.mise.core.toolwindow.DoubleClickable
 import com.intellij.icons.AllIcons
@@ -42,6 +42,6 @@ class MiseTaskNode(
         }
 
     override fun onDoubleClick(event: MouseEvent) {
-        MiseRunAction.executeTask(project, taskInfo.name)
+        MiseRunTaskOnTerminalAction.executeTask(project, taskInfo.name)
     }
 }

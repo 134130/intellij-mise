@@ -10,7 +10,7 @@ import com.intellij.util.messages.Topic
 
 data class MiseState(
     var useMiseDirEnv: Boolean = true,
-    var miseProfile: String = "",
+    var miseProfile: String? = null,
 ) : Cloneable {
     public override fun clone(): MiseState =
         MiseState(
