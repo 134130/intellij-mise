@@ -2,11 +2,13 @@ package com.github.l34130.mise.nodejs.run
 
 import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
+import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile
 import com.intellij.javascript.nodejs.execution.NodeTargetRun
 import com.intellij.javascript.nodejs.execution.runConfiguration.AbstractNodeRunConfigurationExtension
 import com.intellij.javascript.nodejs.execution.runConfiguration.NodeRunConfigurationLaunchSession
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.SettingsEditor
 import org.jdom.Element
@@ -41,18 +43,21 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
         configuration: AbstractNodeTargetRunProfile,
         environment: ExecutionEnvironment,
     ): NodeRunConfigurationLaunchSession? {
-        val miseState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
-        if (miseState?.useMiseDirEnv != true) {
-            return null
-        }
+        val project = configuration.project
+        val projectState = project.service<MiseSettings>().state
+        val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
+
+        val profile =
+            when {
+                projectState.useMiseDirEnv -> projectState.miseProfile
+                runConfigState?.useMiseDirEnv == true -> runConfigState.miseProfile
+                else -> return null
+            }
 
         return object : NodeRunConfigurationLaunchSession() {
             override fun addNodeOptionsTo(targetRun: NodeTargetRun) {
                 val envs =
-                    MiseCommandLine(
-                        project = configuration.project,
-                        workDir = configuration.project.basePath,
-                    ).loadEnvironmentVariables(profile = miseState.miseProfile)
+                    MiseCommandLine(project = project).loadEnvironmentVariables(profile = profile)
 
                 for ((key, value) in envs) {
                     targetRun.commandLineBuilder.addEnvironmentVariable(key, value)

@@ -8,6 +8,11 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup displayType="BALLOON" id="Mise"/>
+
+        <projectConfigurable instance="com.github.l34130.mise.core.setting.MiseConfigurable"
+                             groupId="tools"
+                             displayName="Mise Settings"/>
+
         <toolWindow id="Mise"
                     secondary="true"
                     icon="com.github.l34130.mise.core.icon.MiseIcons.DEFAULT"

@@ -56,6 +56,5 @@ class MiseTreeToolWindowFactory :
 
     override fun init(toolWindow: ToolWindow) {
         toolWindow.stripeTitle = "Mise"
-        toolWindow.component.size.width = toolWindow.component.size.width * 2
     }
 }

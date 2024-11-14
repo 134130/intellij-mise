@@ -2,11 +2,13 @@ package com.github.l34130.mise.idea.run
 
 import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
+import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
+import com.intellij.openapi.components.service
 import com.intellij.openapi.options.SettingsEditor
 import org.jdom.Element
 
@@ -48,6 +50,26 @@ class IdeaRunConfigurationExtension : RunConfigurationExtension() {
                     },
                 ).effectiveEnvironment
         params.env.putAll(sourceEnv)
+
+        val projectState = configuration.project.service<MiseSettings>().state
+        val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
+
+        when {
+            projectState.useMiseDirEnv -> {
+                params.env.putAll(
+                    MiseCommandLine(configuration.project).loadEnvironmentVariables(profile = projectState.miseProfile),
+                )
+            }
+
+            runConfigState?.useMiseDirEnv == true -> {
+                params.env.putAll(
+                    MiseCommandLine(
+                        configuration.project,
+                        params.workingDirectory,
+                    ).loadEnvironmentVariables(profile = runConfigState.miseProfile),
+                )
+            }
+        }
 
         val miseState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
         if (miseState?.useMiseDirEnv == true) {

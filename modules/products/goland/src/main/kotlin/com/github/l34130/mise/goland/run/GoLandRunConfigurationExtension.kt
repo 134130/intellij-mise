@@ -2,11 +2,13 @@ package com.github.l34130.mise.goland.run
 
 import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
+import com.github.l34130.mise.core.setting.MiseSettings
 import com.goide.execution.GoRunConfigurationBase
 import com.goide.execution.GoRunningState
 import com.goide.execution.extension.GoRunConfigurationExtension
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.target.TargetedCommandLineBuilder
+import com.intellij.openapi.components.service
 import com.intellij.openapi.options.SettingsEditor
 import org.jdom.Element
 
@@ -40,16 +42,26 @@ class GoLandRunConfigurationExtension : GoRunConfigurationExtension() {
         state: GoRunningState<out GoRunConfigurationBase<*>>,
         commandLineType: GoRunningState.CommandLineType,
     ) {
-        val miseState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
-        if (miseState?.useMiseDirEnv == true) {
-            MiseCommandLine(
-                project = configuration.getProject(),
-                workDir = configuration.getWorkingDirectory(),
-            ).loadEnvironmentVariables(profile = miseState.miseProfile).forEach { (k, v) ->
-                cmdLine.addEnvironmentVariable(k, v)
+        val project = configuration.getProject()
+        val projectState = project.service<MiseSettings>().state
+        val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
+
+        when {
+            projectState.useMiseDirEnv -> {
+                MiseCommandLine(project = project)
+                    .loadEnvironmentVariables(profile = projectState.miseProfile)
+                    .forEach { (k, v) -> cmdLine.addEnvironmentVariable(k, v) }
+            }
+
+            runConfigState?.useMiseDirEnv == true -> {
+                MiseCommandLine(
+                    project = project,
+                    workDir = configuration.getWorkingDirectory(),
+                ).loadEnvironmentVariables(profile = runConfigState.miseProfile).forEach { (k, v) ->
+                    cmdLine.addEnvironmentVariable(k, v)
+                }
             }
         }
-        super.patchCommandLine(configuration, runnerSettings, cmdLine, runnerId, state, commandLineType)
     }
 
     override fun isApplicableFor(configuration: GoRunConfigurationBase<*>): Boolean = true

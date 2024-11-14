@@ -1,9 +1,6 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.github.l34130.mise.nodejs.node.ProjectNodeSetup"/>
-
-        <projectConfigurable instance="com.github.l34130.mise.core.setting.MiseConfigurable"
-                             displayName="Mise Settings"/>
     </extensions>
     <extensions defaultExtensionNs="JavaScript">
         <nodeRunConfigurationExtension

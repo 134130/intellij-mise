@@ -2,6 +2,8 @@ package com.github.l34130.mise.core.run
 
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.icons.AllIcons
+import com.intellij.openapi.components.service
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
@@ -24,11 +26,17 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     private val myMiseProfileTf = JBTextField()
 
     override fun createEditor(): JComponent {
-        val service = MiseSettings.getService(project)
-        if (service.state.useMiseDirEnv) {
-            myMiseDirEnvCb.isSelected = true
-            myMiseProfileTf.text = service.state.miseProfile
+        val projectState = MiseSettings.getService(project).state
+        if (projectState.useMiseDirEnv) {
+            myMiseDirEnvCb.isEnabled = false
+            myMiseProfileTf.isEnabled = false
         }
+
+        myMiseDirEnvCb.addChangeListener {
+            myMiseProfileTf.isEnabled = myMiseDirEnvCb.isSelected
+        }
+
+        val isOverridden = projectState.useMiseDirEnv
 
         return JPanel(BorderLayout()).apply {
             add(
@@ -36,7 +44,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
                     row {
                         cell(myMiseDirEnvCb)
                             .comment("Load environment variables from mise configuration file(s)")
-                            .enabled(!service.state.useMiseDirEnv)
+                            .enabled(!isOverridden)
                     }
                     row("Profile: ") {
                         cell(myMiseProfileTf)
@@ -46,12 +54,13 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
                             ).columns(COLUMNS_LARGE)
                             .focused()
                             .resizableColumn()
-                            .enabled(!service.state.useMiseDirEnv)
+                            .enabled(!isOverridden)
                     }
                     row {
-                        cell(JPanel())
-                            .comment("<icon src='AllIcons.General.ShowWarning'> Using the configuration in Settings")
-                            .visible(service.state.useMiseDirEnv)
+                        icon(AllIcons.General.ShowWarning)
+                        label("Using the configuration in Settings / Tools / Mise Settings")
+                            .visible(isOverridden)
+                            .bold()
                     }
                 },
             )
@@ -71,8 +80,19 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     override fun resetEditorFrom(config: T) {
         val userData = config.getCopyableUserData(USER_DATA_KEY) ?: return
 
-        myMiseDirEnvCb.isSelected = userData.useMiseDirEnv
-        myMiseProfileTf.text = userData.miseProfile
+        val projectState = project.service<MiseSettings>().state
+        val state = userData.mergeProjectState(projectState)
+
+        myMiseDirEnvCb.isSelected = state.useMiseDirEnv
+        myMiseProfileTf.text = state.miseProfile
+        if (!myMiseDirEnvCb.isSelected) {
+            myMiseProfileTf.isEnabled = false
+        }
+
+        if (projectState.useMiseDirEnv) {
+            myMiseDirEnvCb.isEnabled = false
+            myMiseProfileTf.isEnabled = false
+        }
     }
 
     companion object {

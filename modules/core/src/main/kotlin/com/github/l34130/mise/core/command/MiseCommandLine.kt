@@ -32,9 +32,9 @@ class MiseCommandLine(
 
         val commandLineArgs = mutableListOf("mise", "ls", "--current", "--json")
 
-        profile?.let {
+        if (!profile.isNullOrBlank()) {
             commandLineArgs.add("--profile")
-            commandLineArgs.add("'$it'")
+            commandLineArgs.add("$profile")
         }
 
         // https://github.com/jdx/mise/commit/6e7e4074989bda47e40900cb651b694c72d39f4d
@@ -75,9 +75,9 @@ class MiseCommandLine(
     ): Map<String, String> {
         val commandLineArgs = mutableListOf("mise", "env", "--json")
 
-        profile?.let {
+        if (!profile.isNullOrBlank()) {
             commandLineArgs.add("--profile")
-            commandLineArgs.add("'$it'")
+            commandLineArgs.add("$profile")
         }
 
         return runCommandLine<Map<String, String>>(commandLineArgs).getOrElse { exception ->
@@ -111,9 +111,9 @@ class MiseCommandLine(
     ): List<MiseTask> {
         val commandLineArgs = mutableListOf("mise", "task", "ls", "--json")
 
-        profile?.let {
+        if (!profile.isNullOrBlank()) {
             commandLineArgs.add("--profile")
-            commandLineArgs.add("'$it'")
+            commandLineArgs.add("$profile")
         }
 
         return runCommandLine<List<MiseTask>>(commandLineArgs).getOrElse { exception ->

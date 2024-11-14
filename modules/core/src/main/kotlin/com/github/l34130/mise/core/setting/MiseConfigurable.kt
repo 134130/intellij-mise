@@ -25,22 +25,38 @@ class MiseConfigurable(
         myMiseDirEnvCb.isSelected = service.state.useMiseDirEnv
         myMiseProfileTf.text = service.state.miseProfile
 
+        if (!service.state.useMiseDirEnv) {
+            myMiseProfileTf.isEnabled = false
+        }
+
+        myMiseDirEnvCb.addChangeListener {
+            myMiseProfileTf.isEnabled = myMiseDirEnvCb.isSelected
+        }
+
         return JPanel(BorderLayout()).apply {
             add(
                 panel {
                     row {
-                        cell(myMiseDirEnvCb).comment(
-                            "Load environment variables from mise configuration file(s)",
-                        )
+                        label("Environments").bold()
                     }
-                    row("Profile: ") {
-                        cell(myMiseProfileTf)
-                            .comment(
-                                "Specify the mise profile to use (leave empty for default)" +
-                                    "<br/><a href='https://mise.jdx.dev/profiles.html#profiles'>Learn more about mise profiles</a>",
-                            ).columns(COLUMNS_LARGE)
-                            .focused()
-                            .resizableColumn()
+
+                    row {
+                        panel {
+                            row {
+                                cell(myMiseDirEnvCb).comment(
+                                    "Load environment variables from mise configuration file(s)",
+                                )
+                            }
+                            row("Profile: ") {
+                                cell(myMiseProfileTf)
+                                    .comment(
+                                        "Specify the mise profile to use (leave empty for default)" +
+                                            "<br/><a href='https://mise.jdx.dev/profiles.html#profiles'>Learn more about mise profiles</a>",
+                                    ).columns(COLUMNS_LARGE)
+                                    .focused()
+                                    .resizableColumn()
+                            }
+                        }
                     }
                 },
             )
