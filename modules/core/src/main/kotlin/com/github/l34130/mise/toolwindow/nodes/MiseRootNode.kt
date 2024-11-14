@@ -17,7 +17,10 @@ class MiseRootNode(
     override fun getChildren(): Collection<AbstractTreeNode<*>> {
         val settings = MiseSettings.getService(nodeProject)
 
-        return getToolNodes(settings)
+        return listOf(
+            MiseToolServiceNode(project, getToolNodes(settings)),
+            MiseTaskServiceNode(project, getTaskNodes(settings)),
+        )
     }
 
     private fun getToolNodes(settings: MiseSettings): Collection<AbstractTreeNode<*>> {
@@ -37,6 +40,17 @@ class MiseRootNode(
                 project = nodeProject,
                 configDirPath = sourcePath,
                 tools = tools,
+            )
+        }
+    }
+
+    private fun getTaskNodes(settings: MiseSettings): Collection<AbstractTreeNode<*>> {
+        val tasks = MiseCmd.loadTasks(nodeProject.basePath, settings.state.miseProfile)
+
+        return tasks.map { task ->
+            MiseTaskNode(
+                project = nodeProject,
+                taskInfo = task,
             )
         }
     }

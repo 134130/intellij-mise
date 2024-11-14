@@ -8,6 +8,17 @@ import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
 
+class MiseToolServiceNode(
+    project: Project,
+    val tools: Collection<AbstractTreeNode<*>>,
+) : MiseNode<String>(
+        project,
+        "Tools",
+        AllIcons.Nodes.ConfigFolder,
+    ) {
+    override fun getChildren(): Collection<AbstractTreeNode<*>> = tools
+}
+
 class MiseToolConfigDirectoryNode(
     project: Project,
     val configDirPath: String,
@@ -15,7 +26,7 @@ class MiseToolConfigDirectoryNode(
 ) : MiseNode<String>(
         project,
         configDirPath,
-        AllIcons.Nodes.ModuleGroup,
+        null,
     ) {
     override fun displayName(): String = FileUtil.getLocationRelativeToUserHome(configDirPath)
 
