@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [2.6.2] - 2024-11-16
+
+- fix: Do not check DevTool name's lowercase by @134130 in https://github.com/134130/intellij-mise/pull/88
+
 ## [2.6.1] - 2024-11-15
 
 ### Fixed
@@ -117,7 +121,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.6.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.6.2...HEAD
+[2.6.2]: https://github.com/134130/intellij-mise/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/134130/intellij-mise/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/134130/intellij-mise/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/134130/intellij-mise/compare/v2.4.0...v2.5.0
