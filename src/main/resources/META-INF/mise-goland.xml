@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin require-restart="false">
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.github.l34130.mise.goland.go.ProjectGoSdkSetup"/>
     </extensions>

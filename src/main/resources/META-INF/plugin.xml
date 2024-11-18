@@ -1,5 +1,5 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
-<idea-plugin url="https://github.com/l34130/intellij-mise">
+<idea-plugin url="https://github.com/l34130/intellij-mise" require-restart="false">
     <id>com.github.l34130.mise</id>
     <name>Mise</name>
     <vendor>134130</vendor>
