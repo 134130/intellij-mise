@@ -3,11 +3,9 @@ package com.github.l34130.mise.core.command
 import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
-import org.jetbrains.plugins.terminal.TerminalView
 
 class MiseRunTaskOnTerminalAction(
     private val taskName: String,
@@ -35,8 +33,6 @@ class MiseRunTaskOnTerminalAction(
             taskName: String,
             profile: String? = null,
         ) {
-            project.service<TerminalView>().createLocalShellWidget(project.basePath, taskName)
-
             val command =
                 buildString {
                     append("mise run")

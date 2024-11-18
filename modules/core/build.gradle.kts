@@ -14,6 +14,7 @@ dependencies {
         create(IntelliJPlatformType.IntellijIdeaCommunity, properties("platformVersion"), false)
 
         bundledPlugin("com.intellij.java")
+        bundledPlugin("org.jetbrains.plugins.terminal")
 
         instrumentationTools()
     }
