@@ -59,9 +59,8 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
                     row {
                         icon(AllIcons.General.ShowWarning)
                         label("Using the configuration in Settings / Tools / Mise Settings")
-                            .visible(isOverridden)
                             .bold()
-                    }
+                    }.visible(isOverridden)
                 },
             )
         }
