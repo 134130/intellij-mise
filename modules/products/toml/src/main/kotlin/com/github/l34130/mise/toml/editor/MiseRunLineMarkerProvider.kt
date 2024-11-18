@@ -3,7 +3,6 @@ package com.github.l34130.mise.toml.editor
 import com.github.l34130.mise.core.command.MiseRunTaskOnTerminalAction
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.lineMarker.RunLineMarkerContributor
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafPsiElement
@@ -24,11 +23,8 @@ class MiseRunLineMarkerProvider : RunLineMarkerContributor() {
 
         val miseSettings = element.project.service<MiseSettings>()
         val profile = miseSettings.state.miseProfile
-        return Info(
-            AllIcons.Actions.Execute,
-            { "Run Mise task: $taskName" },
-            MiseRunTaskOnTerminalAction(taskName, profile),
-        )
+
+        return Info(MiseRunTaskOnTerminalAction(taskName, profile))
     }
 
     private fun getTaskInfo(element: LeafPsiElement): String? {

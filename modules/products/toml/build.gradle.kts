@@ -16,6 +16,8 @@ dependencies {
 
         bundledPlugin("org.toml.lang")
 
+        jetbrainsRuntime()
+
         instrumentationTools()
     }
 }

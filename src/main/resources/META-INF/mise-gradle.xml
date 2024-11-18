@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin require-restart="false">
     <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
         <executionEnvironmentProvider implementation="com.github.l34130.mise.gradle.run.GradleEnvironmentProvider"
                                       order="first"/>

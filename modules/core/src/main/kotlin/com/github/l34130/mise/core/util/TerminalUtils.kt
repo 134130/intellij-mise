@@ -4,7 +4,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
-import org.jetbrains.plugins.terminal.TerminalView
+import org.jetbrains.plugins.terminal.TerminalToolWindowManager
 
 object TerminalUtils {
     fun executeCommand(
@@ -12,7 +12,8 @@ object TerminalUtils {
         command: String,
         tabName: String? = null,
     ) {
-        val widget = project.service<TerminalView>().createLocalShellWidget(project.basePath, tabName ?: "Mise")
+        val widget =
+            project.service<TerminalToolWindowManager>().createLocalShellWidget(project.basePath, tabName ?: "Mise")
 
         project
             .service<ToolWindowManager>()

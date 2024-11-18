@@ -125,13 +125,6 @@ class MiseTreeToolWindow(
     override fun dispose() {
     }
 
-    override fun getData(dataId: String): Any? =
-        when {
-//            ExplorerTreeToolWindowDataKeys.SELECTED_NODES.`is`(dataId) -> getSelectedNodes<AbstractTreeNode<*>>()
-//            ExplorerTreeToolWindowDataKeys.REFRESH_CALLBACK.`is`(dataId) ->
-            else -> null
-        }
-
     private inline fun <reified T : AbstractTreeNode<*>> getSelectedNodesSameType(): List<T>? {
         val selectedNodes = getSelectedNodes<T>()
         if (selectedNodes.isEmpty()) {
