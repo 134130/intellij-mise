@@ -16,6 +16,8 @@ dependencies {
         bundledPlugin("com.intellij.java")
         bundledPlugin("org.jetbrains.plugins.terminal")
 
+        jetbrainsRuntime()
+
         instrumentationTools()
     }
 }

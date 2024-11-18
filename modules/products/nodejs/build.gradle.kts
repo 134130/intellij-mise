@@ -17,6 +17,8 @@ dependencies {
         bundledPlugins("JavaScript", "NodeJS")
         plugins("deno:233.6745.297")
 
+        jetbrainsRuntime()
+
         instrumentationTools()
     }
 }
