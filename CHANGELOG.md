@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [3.0.0] - 2024-11-18
+
+### BREAKING CHANGE
+
+- Change minimum support version from `2024.2` to `2023.3` to support `2024.3+` IDEs
+
 ## [2.6.2] - 2024-11-16
 
 - fix: Do not check DevTool name's lowercase by @134130 in https://github.com/134130/intellij-mise/pull/88
@@ -121,7 +127,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v2.6.2...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/134130/intellij-mise/compare/v2.6.2...v3.0.0
 [2.6.2]: https://github.com/134130/intellij-mise/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/134130/intellij-mise/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/134130/intellij-mise/compare/v2.5.0...v2.6.0
