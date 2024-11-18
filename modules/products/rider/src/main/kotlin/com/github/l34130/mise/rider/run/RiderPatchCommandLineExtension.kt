@@ -3,6 +3,7 @@ package com.github.l34130.mise.rider.run
 import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.process.ProcessInfo
 import com.intellij.execution.process.ProcessListener
 import com.intellij.openapi.project.Project
 import com.jetbrains.rd.util.lifetime.Lifetime
@@ -17,6 +18,7 @@ class RiderPatchCommandLineExtension : PatchCommandLineExtension {
     override fun patchDebugCommandLine(
         lifetime: Lifetime,
         workerRunInfo: WorkerRunInfo,
+        processInfo: ProcessInfo?,
         project: Project,
     ): Promise<WorkerRunInfo> {
         patchCommandLine(workerRunInfo.commandLine, project)
