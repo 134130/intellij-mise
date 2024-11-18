@@ -12,20 +12,22 @@ import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ShowSettingsUtil
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.io.FileUtil
 import kotlin.reflect.KClass
 
 abstract class AbstractProjectSdkSetup :
     DumbAwareAction(),
-    StartupActivity.DumbAware {
+    ProjectActivity,
+    DumbAware {
     final override fun actionPerformed(e: AnActionEvent) {
         e.project?.let { configureSdk(it, true) }
     }
 
-    final override fun runActivity(project: Project) {
+    override suspend fun execute(project: Project) {
         configureSdk(project, false)
     }
 
