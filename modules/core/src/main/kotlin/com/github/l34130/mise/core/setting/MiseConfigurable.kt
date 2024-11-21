@@ -7,6 +7,7 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.COLUMNS_LARGE
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.layout.selected
 import java.awt.BorderLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -24,14 +25,6 @@ class MiseConfigurable(
 
         myMiseDirEnvCb.isSelected = service.state.useMiseDirEnv
         myMiseProfileTf.text = service.state.miseProfile
-
-        if (!service.state.useMiseDirEnv) {
-            myMiseProfileTf.isEnabled = false
-        }
-
-        myMiseDirEnvCb.addChangeListener {
-            myMiseProfileTf.isEnabled = myMiseDirEnvCb.isSelected
-        }
 
         return JPanel(BorderLayout()).apply {
             add(
@@ -51,11 +44,11 @@ class MiseConfigurable(
                                 cell(myMiseProfileTf)
                                     .comment(
                                         "Specify the mise profile to use (leave empty for default)" +
-                                            "<br/><a href='https://mise.jdx.dev/profiles.html#profiles'>Learn more about mise profiles</a>",
+                                                "<br/><a href='https://mise.jdx.dev/profiles.html#profiles'>Learn more about mise profiles</a>",
                                     ).columns(COLUMNS_LARGE)
                                     .focused()
                                     .resizableColumn()
-                            }
+                            }.enabledIf(myMiseDirEnvCb.selected)
                         }
                     }
                 },

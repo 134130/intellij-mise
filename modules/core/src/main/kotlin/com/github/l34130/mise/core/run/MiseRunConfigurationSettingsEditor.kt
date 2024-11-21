@@ -12,6 +12,9 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.COLUMNS_LARGE
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.layout.ComponentPredicate
+import com.intellij.ui.layout.and
+import com.intellij.ui.layout.selected
 import org.jdom.Element
 import java.awt.BorderLayout
 import javax.swing.JComponent
@@ -27,16 +30,10 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
 
     override fun createEditor(): JComponent {
         val projectState = MiseSettings.getService(project).state
-        if (projectState.useMiseDirEnv) {
-            myMiseDirEnvCb.isEnabled = false
-            myMiseProfileTf.isEnabled = false
-        }
-
-        myMiseDirEnvCb.addChangeListener {
-            myMiseProfileTf.isEnabled = myMiseDirEnvCb.isSelected
-        }
 
         val isOverridden = projectState.useMiseDirEnv
+
+        myMiseDirEnvCb.selected.and(ComponentPredicate.fromValue(isOverridden.not()))
 
         return JPanel(BorderLayout()).apply {
             add(
@@ -44,8 +41,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
                     row {
                         cell(myMiseDirEnvCb)
                             .comment("Load environment variables from mise configuration file(s)")
-                            .enabled(!isOverridden)
-                    }
+                    }.enabled(isOverridden.not())
                     row("Profile: ") {
                         cell(myMiseProfileTf)
                             .comment(
@@ -54,8 +50,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
                             ).columns(COLUMNS_LARGE)
                             .focused()
                             .resizableColumn()
-                            .enabled(!isOverridden)
-                    }
+                    }.enabledIf(myMiseDirEnvCb.selected.and(ComponentPredicate.fromValue(isOverridden.not())))
                     row {
                         icon(AllIcons.General.ShowWarning)
                         label("Using the configuration in Settings / Tools / Mise Settings")
