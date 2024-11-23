@@ -8,7 +8,7 @@
                 class="com.github.l34130.mise.nodejs.deno.ProjectDenoSetup"
                 text="Reload Deno"
         >
-            <add-to-group group-id="ch.mise.actions"/>
+            <add-to-group group-id="com.github.l34130.mise.actions"/>
         </action>
     </actions>
 </idea-plugin>

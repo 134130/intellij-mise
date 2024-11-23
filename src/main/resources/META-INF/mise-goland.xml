@@ -12,7 +12,7 @@
                 class="com.github.l34130.mise.goland.go.ProjectGoSdkSetup"
                 text="Reload GOROOT"
         >
-            <add-to-group group-id="ch.mise.actions"/>
+            <add-to-group group-id="com.github.l34130.mise.actions"/>
         </action>
     </actions>
 </idea-plugin>
