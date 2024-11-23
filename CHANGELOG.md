@@ -134,7 +134,7 @@
 - Support JDK integration from mise tools.
 
 [Unreleased]: https://github.com/134130/intellij-mise/compare/v3.1.0...HEAD
-[3.1.0]: https://github.com/134130/intellij-mise/compare/v3.0.0...3.1.0
+[3.1.0]: https://github.com/134130/intellij-mise/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/134130/intellij-mise/compare/v2.6.2...v3.0.0
 [2.6.2]: https://github.com/134130/intellij-mise/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/134130/intellij-mise/compare/v2.6.0...v2.6.1
