@@ -1,6 +1,8 @@
 package com.github.l34130.mise.goland.run
 
-import com.github.l34130.mise.core.command.MiseCommandLine
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
+import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.goide.execution.GoRunConfigurationBase
@@ -46,22 +48,22 @@ class GoLandRunConfigurationExtension : GoRunConfigurationExtension() {
         val projectState = project.service<MiseSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
-        when {
-            projectState.useMiseDirEnv -> {
-                MiseCommandLine(project = project)
-                    .loadEnvironmentVariables(profile = projectState.miseProfile)
-                    .forEach { (k, v) -> cmdLine.addEnvironmentVariable(k, v) }
-            }
-
-            runConfigState?.useMiseDirEnv == true -> {
-                MiseCommandLine(
-                    project = project,
-                    workDir = configuration.getWorkingDirectory(),
-                ).loadEnvironmentVariables(profile = runConfigState.miseProfile).forEach { (k, v) ->
-                    cmdLine.addEnvironmentVariable(k, v)
-                }
-            }
+        val (workDir, profile) = when {
+            projectState.useMiseDirEnv -> project.basePath to projectState.miseProfile
+            runConfigState?.useMiseDirEnv == true -> configuration.getWorkingDirectory() to runConfigState.miseProfile
+            else -> return
         }
+
+        MiseCommandLineHelper.getEnvVars(workDir, profile)
+            .fold(
+                onSuccess = { envVars -> envVars },
+                onFailure = {
+                    if (it !is MiseCommandLineNotFoundException) {
+                        MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                    }
+                    emptyMap()
+                },
+            ).forEach { (k, v) -> cmdLine.addEnvironmentVariable(k, v) }
     }
 
     override fun isApplicableFor(configuration: GoRunConfigurationBase<*>): Boolean = true

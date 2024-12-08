@@ -1,9 +1,11 @@
 package com.github.l34130.mise.core.setup
 
-import com.github.l34130.mise.core.command.MiseCommandLine
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
-import com.github.l34130.mise.core.notification.NotificationService
+import com.github.l34130.mise.core.notification.MiseNotificationService
+import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.notification.NotificationAction
@@ -45,11 +47,19 @@ abstract class AbstractProjectSdkSetup :
         isUserInteraction: Boolean,
     ) {
         val devToolName = getDevToolName()
-        val notificationService = project.service<NotificationService>()
+        val miseNotificationService = project.service<MiseNotificationService>()
 
         val profile = MiseSettings.getService(project).state.miseProfile
-        val tools =
-            MiseCommandLine(project).loadDevTools(profile = profile)[devToolName]
+        val toolsResult = MiseCommandLineHelper.getDevTools(workDir = project.basePath, profile = profile)
+        val tools = toolsResult.fold(
+            onSuccess = { tools -> tools[devToolName] },
+            onFailure = {
+                if (it !is MiseCommandLineNotFoundException) {
+                    MiseNotificationServiceUtils.notifyException("Failed to load dev tools", it)
+                }
+                emptyList()
+            }
+        )
 
         if (tools.isNullOrEmpty() || tools.size > 1) {
             if (!isUserInteraction) return
@@ -61,7 +71,7 @@ abstract class AbstractProjectSdkSetup :
                     "Multiple"
                 }
 
-            notificationService.warn(
+            miseNotificationService.warn(
                 "$noOrMultiple dev tools configuration for ${devToolName.canonicalName()} found",
                 "Check your Mise configuration or configure it manually",
             ) {
@@ -81,7 +91,7 @@ abstract class AbstractProjectSdkSetup :
         val tool = tools.first()
 
         if (!tool.installed) {
-            notificationService.warn(
+            miseNotificationService.warn(
                 "$devToolName@${tool.version} is not installed",
                 "Run `mise install` command to install the tool",
             ) {
@@ -100,13 +110,13 @@ abstract class AbstractProjectSdkSetup :
             try {
                 val updated = setupSdk(tool, project)
                 if (updated || isUserInteraction) {
-                    notificationService.info(
+                    miseNotificationService.info(
                         "${devToolName.canonicalName()} configured to $devToolName@${tool.version}",
                         tool.source?.absolutePath?.let(FileUtil::getLocationRelativeToUserHome) ?: "unknown source",
                     )
                 }
             } catch (e: Exception) {
-                notificationService.error(
+                miseNotificationService.error(
                     "Failed to set ${devToolName.canonicalName()} to $devToolName@${tool.version}",
                     e.message ?: e.javaClass.simpleName,
                 )

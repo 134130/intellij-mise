@@ -9,7 +9,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 
 @Service(Service.Level.PROJECT)
-class NotificationService(
+class MiseNotificationService(
     private val project: Project? = null,
 ) {
     fun info(
@@ -57,6 +57,7 @@ class NotificationService(
     companion object {
         private const val NOTIFICATION_GROUP_ID = "Mise"
 
-        fun getInstance(project: Project? = null): NotificationService = project?.service() ?: NotificationService()
+        fun getInstance(project: Project? = null): MiseNotificationService =
+            project?.service() ?: MiseNotificationService()
     }
 }

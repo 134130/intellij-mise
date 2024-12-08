@@ -1,8 +1,10 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.command.MiseCommandLine
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
+import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -26,7 +28,18 @@ class MiseRootNode(
     }
 
     private fun getToolNodes(settings: MiseSettings): Collection<MiseToolConfigDirectoryNode> {
-        val toolsByToolNames = MiseCommandLine(project, nodeProject.basePath).loadDevTools(settings.state.miseProfile)
+        val toolsByToolNames = MiseCommandLineHelper.getDevTools(
+            workDir = nodeProject.basePath,
+            profile = settings.state.miseProfile
+        ).fold(
+            onSuccess = { tools -> tools },
+            onFailure = {
+                if (it !is MiseCommandLineNotFoundException) {
+                    MiseNotificationServiceUtils.notifyException("Failed to load dev tools", it)
+                }
+                emptyMap()
+            }
+        )
 
         val toolsBySourcePaths = mutableMapOf<String, MutableList<Pair<MiseDevToolName, MiseDevTool>>>()
         for ((toolName, toolInfos) in toolsByToolNames.entries) {
@@ -47,8 +60,18 @@ class MiseRootNode(
     }
 
     private fun getEnvironmentNodes(settings: MiseSettings): Collection<MiseEnvironmentNode> {
-        val envs =
-            MiseCommandLine(project).loadEnvironmentVariables(settings.state.miseProfile)
+        val envs = MiseCommandLineHelper.getEnvVars(
+            workDir = nodeProject.basePath,
+            profile = settings.state.miseProfile
+        ).fold(
+            onSuccess = { envs -> envs },
+            onFailure = {
+                if (it !is MiseCommandLineNotFoundException) {
+                    MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                }
+                emptyMap()
+            }
+        )
 
         return envs.map { (key, value) ->
             MiseEnvironmentNode(
@@ -60,7 +83,18 @@ class MiseRootNode(
     }
 
     private fun getTaskNodes(settings: MiseSettings): Collection<MiseTaskNode> {
-        val tasks = MiseCommandLine(project).loadTasks(settings.state.miseProfile)
+        val tasks = MiseCommandLineHelper.getTasks(
+            workDir = nodeProject.basePath,
+            profile = settings.state.miseProfile
+        ).fold(
+            onSuccess = { tasks -> tasks },
+            onFailure = {
+                if (it !is MiseCommandLineNotFoundException) {
+                    MiseNotificationServiceUtils.notifyException("Failed to load tasks", it)
+                }
+                emptyList()
+            }
+        )
 
         return tasks.map { task ->
             MiseTaskNode(

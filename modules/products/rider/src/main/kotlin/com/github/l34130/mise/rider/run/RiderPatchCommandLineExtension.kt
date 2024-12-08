@@ -1,6 +1,8 @@
 package com.github.l34130.mise.rider.run
 
-import com.github.l34130.mise.core.command.MiseCommandLine
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
+import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.ProcessInfo
@@ -38,15 +40,24 @@ class RiderPatchCommandLineExtension : PatchCommandLineExtension {
         commandLine: GeneralCommandLine,
         project: Project,
     ) {
-        if (!MiseSettings.getService(project).state.useMiseDirEnv) {
+        val projectState = MiseSettings.getService(project).state
+        if (!projectState.useMiseDirEnv) {
             return
         }
 
-        val envs =
-            MiseCommandLine(
-                project = project,
-                workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
-            ).loadEnvironmentVariables(profile = MiseSettings.getService(project).state.miseProfile)
-        commandLine.withEnvironment(envs)
+        val miseEnvVars = MiseCommandLineHelper.getEnvVars(
+            workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
+            profile = projectState.miseProfile
+        ).fold(
+            onSuccess = { envVars -> envVars },
+            onFailure = {
+                if (it !is MiseCommandLineNotFoundException) {
+                    MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                }
+                emptyMap()
+            },
+        )
+
+        commandLine.withEnvironment(miseEnvVars)
     }
 }
