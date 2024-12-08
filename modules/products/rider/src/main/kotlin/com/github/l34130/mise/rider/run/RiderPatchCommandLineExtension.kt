@@ -1,13 +1,11 @@
 package com.github.l34130.mise.rider.run
 
-import com.github.l34130.mise.core.command.MiseCommandLineException
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
-import com.github.l34130.mise.core.notification.MiseNotificationService
+import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.ProcessInfo
 import com.intellij.execution.process.ProcessListener
-import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.jetbrains.rd.util.lifetime.Lifetime
 import com.jetbrains.rider.projectView.solutionDirectoryPath
@@ -52,19 +50,7 @@ class RiderPatchCommandLineExtension : PatchCommandLineExtension {
         ).fold(
             onSuccess = { envVars -> envVars },
             onFailure = {
-                val miseNotificationService = project.service<MiseNotificationService>()
-                when (it) {
-                    is MiseCommandLineException -> {
-                        miseNotificationService.warn("Failed to load environment variables", it.message)
-                    }
-
-                    else -> {
-                        miseNotificationService.error(
-                            "Failed to load environment variables",
-                            it.message ?: it.javaClass.simpleName
-                        )
-                    }
-                }
+                MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
                 emptyMap()
             },
         )
