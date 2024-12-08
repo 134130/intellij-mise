@@ -21,7 +21,7 @@ class MiseTreeToolWindowFactory : ToolWindowFactory, DumbAware {
         }
         contentManager.addContent(ContentImpl(initializingLabel, "", false))
 
-        val component = MiseTreeToolWindow(MiseTreeStructure(project))
+        val component = MiseTreeToolWindow(project, MiseTreeStructure(project))
 
         val content =
             contentManager.factory.createContent(component, null, false).also {

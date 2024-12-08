@@ -26,7 +26,7 @@ class MiseCommandLineNotTrustedConfigFileException(
 ) : MiseCommandLineException(
     generalCommandLine = generalCommandLine,
     message = "Config file $configFilePath is not trusted. Trust it with `mise trust`.",
-    ) {
+) {
     companion object {
         private val stderrRegex = Regex("Config file (.+) is not trusted.")
 

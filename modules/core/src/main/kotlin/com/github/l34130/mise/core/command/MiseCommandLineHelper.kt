@@ -35,4 +35,12 @@ object MiseCommandLineHelper {
         val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
         return miseCommandLine.runCommandLine(commandLineArgs)
     }
+
+    // mise trust
+    fun trustConfigFile(configFilePath: String): Result<Unit> {
+        val commandLineArgs = mutableListOf("trust", configFilePath)
+
+        val miseCommandLine = MiseCommandLine(null, null)
+        return miseCommandLine.runCommandLine(commandLineArgs)
+    }
 }

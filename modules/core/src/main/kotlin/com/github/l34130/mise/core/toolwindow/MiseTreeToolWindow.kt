@@ -15,6 +15,7 @@ import com.intellij.openapi.actionSystem.DataProvider
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.options.ShowSettingsUtil
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.DoubleClickListener
 import com.intellij.ui.PopupHandler
@@ -32,6 +33,7 @@ import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 
 class MiseTreeToolWindow(
+    project: Project,
     treeStructure: MiseTreeStructure,
 ) : SimpleToolWindowPanel(true, true),
     DataProvider,
@@ -59,7 +61,7 @@ class MiseTreeToolWindow(
                     runInEdt {
                         ShowSettingsUtil
                             .getInstance()
-                            .showSettingsDialog(null, MiseConfigurable::class.java)
+                            .showSettingsDialog(project, MiseConfigurable::class.java)
                     }
                 }
             },
