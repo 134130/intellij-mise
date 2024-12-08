@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.run
 
-import com.github.l34130.mise.core.setting.MiseState
+import com.github.l34130.mise.core.setting.MiseSettings
 
 data class MiseRunConfigurationState(
     var useMiseDirEnv: Boolean = true,
@@ -12,7 +12,7 @@ data class MiseRunConfigurationState(
             miseConfigEnvironment = miseConfigEnvironment,
         )
 
-    fun mergeProjectState(projectState: MiseState): MiseRunConfigurationState =
+    fun mergeProjectState(projectState: MiseSettings.MyState): MiseRunConfigurationState =
         this.copy(
             useMiseDirEnv = projectState.useMiseDirEnv,
             miseConfigEnvironment = projectState.miseConfigEnvironment,

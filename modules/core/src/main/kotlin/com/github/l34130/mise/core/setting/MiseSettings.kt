@@ -11,49 +11,37 @@ import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.EnvironmentUtil
-import com.intellij.util.messages.Topic
 import java.io.File
 
-data class MiseState(
-    var executablePath: String = "",
-    var useMiseDirEnv: Boolean = true,
-    var miseConfigEnvironment: String = "",
-) : Cloneable {
-    public override fun clone(): MiseState =
-        MiseState(
-            executablePath = executablePath,
-            useMiseDirEnv = useMiseDirEnv,
-            miseConfigEnvironment = miseConfigEnvironment,
-        )
-}
 
 @Service(Service.Level.PROJECT)
 @State(name = "com.github.l34130.mise.settings.MiseSettings", storages = [Storage("mise.xml")])
 class MiseSettings(
     private val project: Project,
-) : PersistentStateComponent<MiseState> {
-    private var state = MiseState()
+) : PersistentStateComponent<MiseSettings.MyState> {
 
-    override fun getState() = state
+    private var myState = MyState()
 
-    override fun loadState(state: MiseState) {
-        this.state = state.clone()
+    override fun getState() = myState
+
+    override fun loadState(state: MyState) {
+        myState = state.clone()
     }
 
     override fun noStateLoaded() {
-        state = MiseState(
-            executablePath = getMiseExecutablePath() ?: "",
-        )
+        myState = MyState().also {
+            it.executablePath = getMiseExecutablePath() ?: ""
+        }
     }
 
     override fun initializeComponent() {
-        state = MiseState(
-            executablePath = state.executablePath.takeIf { it.isNotEmpty() } ?: getMiseExecutablePath() ?: "",
-            useMiseDirEnv = state.useMiseDirEnv,
-            miseConfigEnvironment = state.miseConfigEnvironment,
-        )
+        myState = MyState().also {
+            it.executablePath = myState.executablePath.takeIf { it.isNotEmpty() } ?: getMiseExecutablePath() ?: ""
+            it.useMiseDirEnv = myState.useMiseDirEnv
+            it.miseConfigEnvironment = myState.miseConfigEnvironment
+        }
 
-        if (state.executablePath.isEmpty()) {
+        if (myState.executablePath.isEmpty()) {
             MiseNotificationService.getInstance(project).warn(
                 title = "Mise Executable Not Found",
                 htmlText = """
@@ -74,8 +62,6 @@ class MiseSettings(
     companion object {
         fun getService(project: Project): MiseSettings = project.service<MiseSettings>()
 
-        val MISE_SETTINGS_TOPIC = Topic.create("Mise Settings", SettingsChangeListener::class.java)
-
         private fun getMiseExecutablePath(): String? {
             val path = EnvironmentUtil.getValue("PATH") ?: return null
 
@@ -90,10 +76,17 @@ class MiseSettings(
         }
     }
 
-    interface SettingsChangeListener {
-        fun settingsChanged(
-            oldState: MiseState,
-            newState: MiseState,
-        )
+    class MyState : Cloneable {
+        var executablePath: String = ""
+        var useMiseDirEnv: Boolean = true
+        var miseConfigEnvironment: String = ""
+
+        public override fun clone(): MyState {
+            return MyState().also {
+                it.executablePath = executablePath
+                it.useMiseDirEnv = useMiseDirEnv
+                it.miseConfigEnvironment = miseConfigEnvironment
+            }
+        }
     }
 }

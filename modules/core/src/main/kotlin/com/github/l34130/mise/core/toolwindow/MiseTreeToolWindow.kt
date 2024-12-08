@@ -1,5 +1,7 @@
 package com.github.l34130.mise.core.toolwindow
 
+import com.github.l34130.mise.core.setting.MiseConfigurable
+import com.intellij.icons.AllIcons
 import com.intellij.ide.ActivityTracker
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.NodeDescriptor
@@ -8,9 +10,11 @@ import com.intellij.ide.util.treeView.TreeState
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DataProvider
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.DoubleClickListener
 import com.intellij.ui.PopupHandler
@@ -34,17 +38,46 @@ class MiseTreeToolWindow(
     Disposable {
     private val treeModel =
         StructureTreeModel(treeStructure, null, Invoker.forBackgroundPoolWithoutReadAction(this), this)
-    private val tree = Tree(AsyncTreeModel(treeModel, true, this))
+    private val myTree = Tree(AsyncTreeModel(treeModel, true, this))
 
     init {
+        val actionManager = ActionManager.getInstance()
+        val actionGroup = DefaultActionGroup()
+        actionGroup.add(
+            object : AnAction("Refresh", "Refresh the Tree", AllIcons.Actions.Refresh) {
+                override fun actionPerformed(e: AnActionEvent) {
+                    runInEdt {
+                        redrawContent()
+                    }
+                }
+            },
+        )
+        actionGroup.addSeparator()
+        actionGroup.add(
+            object : AnAction("Settings", "Open Mise settings", AllIcons.General.Settings) {
+                override fun actionPerformed(e: AnActionEvent) {
+                    runInEdt {
+                        ShowSettingsUtil
+                            .getInstance()
+                            .showSettingsDialog(null, MiseConfigurable::class.java)
+                    }
+                }
+            },
+        )
+
+        val actionToolbar = actionManager.createActionToolbar("Mise View Toolbar", actionGroup, true)
+        actionToolbar.targetComponent = this
+        toolbar = actionToolbar.component
+        setContent(ScrollPaneFactory.createScrollPane(myTree))
+
         background = UIUtil.getTreeBackground()
         size.width = Int.MAX_VALUE
-        tree.size.width = Int.MAX_VALUE
+        myTree.size.width = Int.MAX_VALUE
 
-        TreeUIHelper.getInstance().installTreeSpeedSearch(tree)
-        tree.isRootVisible = false
-        tree.autoscrolls = true
-        tree.cellRenderer =
+        TreeUIHelper.getInstance().installTreeSpeedSearch(myTree)
+        myTree.isRootVisible = false
+        myTree.autoscrolls = true
+        myTree.cellRenderer =
             object : NodeRenderer() {
                 override fun customizeCellRenderer(
                     tree: JTree,
@@ -67,15 +100,15 @@ class MiseTreeToolWindow(
 
         object : DoubleClickListener() {
             override fun onDoubleClick(event: MouseEvent): Boolean {
-                val path = tree.getPathForLocation(event.x, event.y)
+                val path = myTree.getPathForLocation(event.x, event.y)
                 ((path?.lastPathComponent as? DefaultMutableTreeNode)?.userObject as? DoubleClickable)?.onDoubleClick(
                     event,
                 )
                 return true
             }
-        }.installOn(tree)
+        }.installOn(myTree)
 
-        tree.addMouseListener(
+        myTree.addMouseListener(
             (
                 object : PopupHandler() {
                     override fun invokePopup(
@@ -119,7 +152,7 @@ class MiseTreeToolWindow(
 
         redrawContent()
 
-        TreeUtil.expand(tree, 2)
+        TreeUtil.expand(myTree, 2)
     }
 
     override fun dispose() {
@@ -140,7 +173,7 @@ class MiseTreeToolWindow(
     }
 
     private inline fun <reified T : AbstractTreeNode<*>> getSelectedNodes() =
-        tree.selectionPaths
+        myTree.selectionPaths
             ?.asSequence()
             ?.map { it.lastPathComponent }
             ?.filterIsInstance<DefaultMutableTreeNode>()
@@ -151,12 +184,12 @@ class MiseTreeToolWindow(
 
     fun redrawContent() {
         setContent(
-            ScrollPaneFactory.createScrollPane(tree),
+            ScrollPaneFactory.createScrollPane(myTree),
         )
         // required for refresh
-        val state = TreeState.createOn(tree)
+        val state = TreeState.createOn(myTree)
         treeModel.invalidateAsync()
-        state.applyTo(tree)
+        state.applyTo(myTree)
     }
 
     companion object {
