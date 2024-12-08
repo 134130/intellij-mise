@@ -9,7 +9,7 @@ import com.intellij.openapi.project.Project
 
 class MiseRunTaskOnTerminalAction(
     private val taskName: String,
-    private val profile: String? = null,
+    private val configEnvironment: String? = null,
 ) : DumbAwareAction(
         "Run Mise Task",
         "Execute the Mise task on Terminal",
@@ -22,7 +22,7 @@ class MiseRunTaskOnTerminalAction(
             return
         }
 
-        executeTask(project, taskName, profile)
+        executeTask(project, taskName, configEnvironment)
     }
 
     companion object {
@@ -31,12 +31,12 @@ class MiseRunTaskOnTerminalAction(
         fun executeTask(
             project: Project,
             taskName: String,
-            profile: String? = null,
+            configEnvironment: String? = null,
         ) {
             val command =
                 buildString {
                     append("mise run")
-                    profile?.let { append(" --profile '$it'") }
+                    configEnvironment?.let { append(" --profile '$it'") } // TODO: Handle mise config environment
                     append(" '$taskName'")
                 }
 

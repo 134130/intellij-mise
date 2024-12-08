@@ -49,16 +49,16 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
         val projectState = project.service<MiseSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
-        val (workDir, profile) =
+        val (workDir, configEnvironment) =
             when {
-                projectState.useMiseDirEnv -> project.basePath to projectState.miseProfile
-                runConfigState?.useMiseDirEnv == true -> environment.modulePath to runConfigState.miseProfile
+                projectState.useMiseDirEnv -> project.basePath to projectState.miseConfigEnvironment
+                runConfigState?.useMiseDirEnv == true -> environment.modulePath to runConfigState.miseConfigEnvironment
                 else -> return null
             }
 
         return object : NodeRunConfigurationLaunchSession() {
             override fun addNodeOptionsTo(targetRun: NodeTargetRun) {
-                val envVars = MiseCommandLineHelper.getEnvVars(workDir, profile)
+                val envVars = MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
                     .fold(
                         onSuccess = { envVars -> envVars },
                         onFailure = {

@@ -22,9 +22,9 @@ class MiseRunLineMarkerProvider : RunLineMarkerContributor() {
         val taskName = getTaskInfo(element) ?: return null
 
         val miseSettings = element.project.service<MiseSettings>()
-        val profile = miseSettings.state.miseProfile
+        val configEnvironment = miseSettings.state.miseConfigEnvironment
 
-        return Info(MiseRunTaskOnTerminalAction(taskName, profile))
+        return Info(MiseRunTaskOnTerminalAction(taskName, configEnvironment))
     }
 
     private fun getTaskInfo(element: LeafPsiElement): String? {

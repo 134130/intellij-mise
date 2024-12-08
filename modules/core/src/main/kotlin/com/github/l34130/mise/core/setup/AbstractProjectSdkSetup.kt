@@ -49,8 +49,9 @@ abstract class AbstractProjectSdkSetup :
         val devToolName = getDevToolName()
         val miseNotificationService = project.service<MiseNotificationService>()
 
-        val profile = MiseSettings.getService(project).state.miseProfile
-        val toolsResult = MiseCommandLineHelper.getDevTools(workDir = project.basePath, profile = profile)
+        val configEnvironment = MiseSettings.getService(project).state.miseConfigEnvironment
+        val toolsResult =
+            MiseCommandLineHelper.getDevTools(workDir = project.basePath, configEnvironment = configEnvironment)
         val tools = toolsResult.fold(
             onSuccess = { tools -> tools[devToolName] },
             onFailure = {

@@ -47,7 +47,7 @@ class RiderPatchCommandLineExtension : PatchCommandLineExtension {
 
         val miseEnvVars = MiseCommandLineHelper.getEnvVars(
             workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
-            profile = projectState.miseProfile
+            configEnvironment = projectState.miseConfigEnvironment
         ).fold(
             onSuccess = { envVars -> envVars },
             onFailure = {

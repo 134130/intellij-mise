@@ -36,17 +36,17 @@ class GradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
         val projectState = project.service<MiseSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(gradleRunConfiguration)
 
-        val (workDir, profile) = when {
-            projectState.useMiseDirEnv -> project.basePath to projectState.miseProfile
+        val (workDir, configEnvironment) = when {
+            projectState.useMiseDirEnv -> project.basePath to projectState.miseConfigEnvironment
             runConfigState?.useMiseDirEnv == true -> {
                 val sourceConfig = task.runProfile as ApplicationConfiguration
-                sourceConfig.project.basePath to runConfigState.miseProfile
+                sourceConfig.project.basePath to runConfigState.miseConfigEnvironment
             }
 
             else -> return environment
         }
 
-        val miseEnvVars = MiseCommandLineHelper.getEnvVars(workDir, profile)
+        val miseEnvVars = MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
             .fold(
                 onSuccess = { envVars -> envVars },
                 onFailure = {

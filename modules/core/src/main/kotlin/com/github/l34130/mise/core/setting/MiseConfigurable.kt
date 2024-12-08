@@ -18,7 +18,7 @@ class MiseConfigurable(
     private val project: Project,
 ) : SearchableConfigurable {
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
-    private val myMiseProfileTf = JBTextField()
+    private val myMiseConfigEnvironmentTf = JBTextField()
 
     override fun getDisplayName(): String = "Mise Settings"
 
@@ -26,7 +26,7 @@ class MiseConfigurable(
         val service = MiseSettings.getService(project)
 
         myMiseDirEnvCb.isSelected = service.state.useMiseDirEnv
-        myMiseProfileTf.text = service.state.miseProfile
+        myMiseConfigEnvironmentTf.text = service.state.miseConfigEnvironment
 
         return JPanel(BorderLayout()).apply {
             add(
@@ -56,12 +56,12 @@ class MiseConfigurable(
                                 "Load environment variables from mise configuration file(s)",
                             )
                         }
-                        row("Profile:") {
-                            cell(myMiseProfileTf)
+                        row("Config Environment:") {
+                            cell(myMiseConfigEnvironmentTf)
                                 .comment(
                                     """
-                                    Specify the mise profile to use (leave empty for default)<br/>
-                                    <a href='https://mise.jdx.dev/profiles.html#profiles'>Learn more about mise profiles</a>
+                                    Specify the mise configuration environment to use (leave empty for default) <br/>
+                                    <a href='https://mise.jdx.dev/configuration/environments.html'>Learn more about mise configuration environments</a>
                                     """.trimIndent(),
                                 ).columns(COLUMNS_LARGE)
                                 .focused()
@@ -76,14 +76,14 @@ class MiseConfigurable(
     override fun isModified(): Boolean {
         val service = MiseSettings.getService(project)
         return myMiseDirEnvCb.isSelected != service.state.useMiseDirEnv ||
-            myMiseProfileTf.text != service.state.miseProfile
+                myMiseConfigEnvironmentTf.text != service.state.miseConfigEnvironment
     }
 
     override fun apply() {
         if (isModified) {
             val service = MiseSettings.getService(project)
             service.state.useMiseDirEnv = myMiseDirEnvCb.isSelected
-            service.state.miseProfile = myMiseProfileTf.text
+            service.state.miseConfigEnvironment = myMiseConfigEnvironmentTf.text
         }
     }
 
