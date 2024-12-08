@@ -14,6 +14,12 @@ sealed class MiseCommandLineException(
     }
 }
 
+class MiseCommandLineNotFoundException(
+    generalCommandLine: GeneralCommandLine,
+    override val message: String,
+    throwable: Throwable? = null,
+) : MiseCommandLineException(generalCommandLine, message, throwable)
+
 class MiseCommandLineNotTrustedConfigFileException(
     generalCommandLine: GeneralCommandLine,
     val configFilePath: String,

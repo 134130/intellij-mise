@@ -29,7 +29,9 @@ data class MiseState(
 
 @Service(Service.Level.PROJECT)
 @State(name = "com.github.l34130.mise.settings.MiseSettings", storages = [Storage("mise.xml")])
-class MiseSettings : PersistentStateComponent<MiseState> {
+class MiseSettings(
+    private val project: Project,
+) : PersistentStateComponent<MiseState> {
     private var state = MiseState()
 
     override fun getState() = state
@@ -52,7 +54,7 @@ class MiseSettings : PersistentStateComponent<MiseState> {
         )
 
         if (state.executablePath.isEmpty()) {
-            MiseNotificationService.getInstance().warn(
+            MiseNotificationService.getInstance(project).warn(
                 title = "Mise Executable Not Found",
                 htmlText = """
                     Mise executable not found in PATH.<br/>

@@ -1,6 +1,7 @@
 package com.github.l34130.mise.core.setup
 
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.notification.MiseNotificationService
@@ -53,7 +54,9 @@ abstract class AbstractProjectSdkSetup :
         val tools = toolsResult.fold(
             onSuccess = { tools -> tools[devToolName] },
             onFailure = {
-                MiseNotificationServiceUtils.notifyException("Failed to load dev tools", it)
+                if (it !is MiseCommandLineNotFoundException) {
+                    MiseNotificationServiceUtils.notifyException("Failed to load dev tools", it)
+                }
                 emptyList()
             }
         )

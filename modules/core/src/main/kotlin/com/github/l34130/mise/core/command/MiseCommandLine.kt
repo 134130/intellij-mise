@@ -3,6 +3,7 @@ package com.github.l34130.mise.core.command
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.diagnostic.Logger
@@ -30,7 +31,17 @@ internal class MiseCommandLine(
 
     private fun <T> runCommandLine(commandLineArgs: List<String>, transform: (String) -> T): Result<T> {
         val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workDir)
-        val processOutput = ExecUtil.execAndGetOutput(generalCommandLine, 5000)
+        val processOutput = try {
+            ExecUtil.execAndGetOutput(generalCommandLine, 5000)
+        } catch (e: ExecutionException) {
+            return Result.failure(
+                MiseCommandLineNotFoundException(
+                    generalCommandLine,
+                    e.message ?: "Failed to execute command.",
+                    e
+                )
+            )
+        }
 
         if (!processOutput.isExitCodeSet) {
             when {

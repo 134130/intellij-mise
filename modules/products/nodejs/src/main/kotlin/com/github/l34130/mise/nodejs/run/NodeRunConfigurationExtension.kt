@@ -1,6 +1,7 @@
 package com.github.l34130.mise.nodejs.run
 
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseSettings
@@ -61,7 +62,9 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
                     .fold(
                         onSuccess = { envVars -> envVars },
                         onFailure = {
-                            MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                            if (it !is MiseCommandLineNotFoundException) {
+                                MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                            }
                             emptyMap()
                         },
                     )

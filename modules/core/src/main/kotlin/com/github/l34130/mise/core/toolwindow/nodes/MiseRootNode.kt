@@ -1,6 +1,7 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
@@ -33,7 +34,9 @@ class MiseRootNode(
         ).fold(
             onSuccess = { tools -> tools },
             onFailure = {
-                MiseNotificationServiceUtils.notifyException("Failed to load dev tools", it)
+                if (it !is MiseCommandLineNotFoundException) {
+                    MiseNotificationServiceUtils.notifyException("Failed to load dev tools", it)
+                }
                 emptyMap()
             }
         )
@@ -63,7 +66,9 @@ class MiseRootNode(
         ).fold(
             onSuccess = { envs -> envs },
             onFailure = {
-                MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                if (it !is MiseCommandLineNotFoundException) {
+                    MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                }
                 emptyMap()
             }
         )
@@ -84,7 +89,9 @@ class MiseRootNode(
         ).fold(
             onSuccess = { tasks -> tasks },
             onFailure = {
-                MiseNotificationServiceUtils.notifyException("Failed to load tasks", it)
+                if (it !is MiseCommandLineNotFoundException) {
+                    MiseNotificationServiceUtils.notifyException("Failed to load tasks", it)
+                }
                 emptyList()
             }
         )
