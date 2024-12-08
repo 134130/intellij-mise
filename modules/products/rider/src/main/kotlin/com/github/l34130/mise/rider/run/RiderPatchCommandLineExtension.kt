@@ -1,10 +1,13 @@
 package com.github.l34130.mise.rider.run
 
-import com.github.l34130.mise.core.command.MiseCommandLine
+import com.github.l34130.mise.core.command.MiseCommandLineException
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.notification.NotificationService
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.ProcessInfo
 import com.intellij.execution.process.ProcessListener
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.jetbrains.rd.util.lifetime.Lifetime
 import com.jetbrains.rider.projectView.solutionDirectoryPath
@@ -38,15 +41,34 @@ class RiderPatchCommandLineExtension : PatchCommandLineExtension {
         commandLine: GeneralCommandLine,
         project: Project,
     ) {
-        if (!MiseSettings.getService(project).state.useMiseDirEnv) {
+        val projectState = MiseSettings.getService(project).state
+        if (!projectState.useMiseDirEnv) {
             return
         }
 
-        val envs =
-            MiseCommandLine(
-                project = project,
-                workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
-            ).loadEnvironmentVariables(profile = MiseSettings.getService(project).state.miseProfile)
-        commandLine.withEnvironment(envs)
+        val miseEnvVars = MiseCommandLineHelper.getEnvVars(
+            workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
+            profile = projectState.miseProfile
+        ).fold(
+            onSuccess = { envVars -> envVars },
+            onFailure = {
+                val notificationService = project.service<NotificationService>()
+                when (it) {
+                    is MiseCommandLineException -> {
+                        notificationService.warn("Failed to load environment variables", it.message)
+                    }
+
+                    else -> {
+                        notificationService.error(
+                            "Failed to load environment variables",
+                            it.message ?: it.javaClass.simpleName
+                        )
+                    }
+                }
+                emptyMap()
+            },
+        )
+
+        commandLine.withEnvironment(miseEnvVars)
     }
 }

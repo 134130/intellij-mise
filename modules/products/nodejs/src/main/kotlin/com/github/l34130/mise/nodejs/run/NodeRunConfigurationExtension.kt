@@ -1,6 +1,8 @@
 package com.github.l34130.mise.nodejs.run
 
-import com.github.l34130.mise.core.command.MiseCommandLine
+import com.github.l34130.mise.core.command.MiseCommandLineException
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.notification.NotificationService
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.runners.ExecutionEnvironment
@@ -47,19 +49,37 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
         val projectState = project.service<MiseSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
-        val profile =
+        val (workDir, profile) =
             when {
-                projectState.useMiseDirEnv -> projectState.miseProfile
-                runConfigState?.useMiseDirEnv == true -> runConfigState.miseProfile
+                projectState.useMiseDirEnv -> project.basePath to projectState.miseProfile
+                runConfigState?.useMiseDirEnv == true -> environment.modulePath to runConfigState.miseProfile
                 else -> return null
             }
 
         return object : NodeRunConfigurationLaunchSession() {
             override fun addNodeOptionsTo(targetRun: NodeTargetRun) {
-                val envs =
-                    MiseCommandLine(project = project).loadEnvironmentVariables(profile = profile)
+                val envVars = MiseCommandLineHelper.getEnvVars(workDir, profile)
+                    .fold(
+                        onSuccess = { envVars -> envVars },
+                        onFailure = {
+                            val notificationService = project.service<NotificationService>()
+                            when (it) {
+                                is MiseCommandLineException -> {
+                                    notificationService.warn("Failed to load environment variables", it.message)
+                                }
 
-                for ((key, value) in envs) {
+                                else -> {
+                                    notificationService.error(
+                                        "Failed to load environment variables",
+                                        it.message ?: it.javaClass.simpleName
+                                    )
+                                }
+                            }
+                            emptyMap()
+                        },
+                    )
+
+                for ((key, value) in envVars) {
                     targetRun.commandLineBuilder.addEnvironmentVariable(key, value)
                 }
             }

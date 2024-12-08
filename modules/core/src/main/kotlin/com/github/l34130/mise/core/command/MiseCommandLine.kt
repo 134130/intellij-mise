@@ -1,57 +1,17 @@
 package com.github.l34130.mise.core.command
 
-import com.github.l34130.mise.core.notification.NotificationService
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 
 private val LOG = Logger.getInstance(MiseCommandLine::class.java)
 
-class MiseCommandLine(
-//    private val project: Project,
-    private val workDir: String? = project.basePath,
-    private val profile: String? = null,
+internal class MiseCommandLine(
+    private val workDir: String? = null,
 ) {
-
-    // `mise env`
-    fun loadEnvironmentVariables(
-        profile: String?,
-        notify: Boolean = true,
-    ): Map<String, String> {
-        val commandLineArgs = mutableListOf("mise", "env", "--json")
-
-        if (!profile.isNullOrBlank()) {
-            commandLineArgs.add("--profile")
-            commandLineArgs.add("$profile")
-        }
-
-        return runCommandLine<Map<String, String>>(commandLineArgs).getOrElse { exception ->
-            if (!notify) {
-                return@getOrElse emptyMap()
-            }
-
-            val notificationService = project.service<NotificationService>()
-
-            when (exception) {
-                is MiseCommandLineException -> {
-                    notificationService.warn("Failed to load environment variables", exception.message)
-                }
-
-                else -> {
-                    notificationService.error(
-                        "Failed to load environment variables",
-                        exception.message ?: exception.javaClass.simpleName,
-                    )
-                }
-            }
-
-            emptyMap()
-        }
-    }
 
     fun <T> runCommandLine(vararg commandLineArgs: String): Result<T> = runCommandLine(commandLineArgs.toList())
 

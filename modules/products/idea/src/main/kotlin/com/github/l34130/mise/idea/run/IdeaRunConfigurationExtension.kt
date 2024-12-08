@@ -1,6 +1,8 @@
 package com.github.l34130.mise.idea.run
 
-import com.github.l34130.mise.core.command.MiseCommandLine
+import com.github.l34130.mise.core.command.MiseCommandLineException
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.notification.NotificationService
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.RunConfigurationExtension
@@ -51,32 +53,38 @@ class IdeaRunConfigurationExtension : RunConfigurationExtension() {
                 ).effectiveEnvironment
         params.env.putAll(sourceEnv)
 
-        val projectState = configuration.project.service<MiseSettings>().state
+        val project = configuration.project
+        val projectState = project.service<MiseSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
-        when {
-            projectState.useMiseDirEnv -> {
-                params.env.putAll(
-                    MiseCommandLine(configuration.project).loadEnvironmentVariables(profile = projectState.miseProfile),
-                )
-            }
-
-            runConfigState?.useMiseDirEnv == true -> {
-                params.env.putAll(
-                    MiseCommandLine(
-                        configuration.project,
-                        params.workingDirectory,
-                    ).loadEnvironmentVariables(profile = runConfigState.miseProfile),
-                )
-            }
+        val (workDir, profile) = when {
+            projectState.useMiseDirEnv -> project.basePath to projectState.miseProfile
+            runConfigState?.useMiseDirEnv == true -> params.workingDirectory to runConfigState.miseProfile
+            else -> return
         }
 
-        val miseState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
-        if (miseState?.useMiseDirEnv == true) {
-            params.env.putAll(
-                MiseCommandLine(project = configuration.project).loadEnvironmentVariables(profile = miseState.miseProfile),
+        val envVars = MiseCommandLineHelper.getEnvVars(workDir, profile)
+            .fold(
+                onSuccess = { envVars -> envVars },
+                onFailure = {
+                    val notificationService = project.service<NotificationService>()
+                    when (it) {
+                        is MiseCommandLineException -> {
+                            notificationService.warn("Failed to load environment variables", it.message)
+                        }
+
+                        else -> {
+                            notificationService.error(
+                                "Failed to load environment variables",
+                                it.message ?: it.javaClass.simpleName
+                            )
+                        }
+                    }
+                    emptyMap()
+                },
             )
-        }
+
+        params.env.putAll(envVars)
     }
 
     override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean = true

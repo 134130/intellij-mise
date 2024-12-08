@@ -1,6 +1,5 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.command.MiseCommandLineException
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseDevTool
@@ -70,8 +69,30 @@ class MiseRootNode(
     }
 
     private fun getEnvironmentNodes(settings: MiseSettings): Collection<MiseEnvironmentNode> {
-        val envs =
-            MiseCommandLine(project).loadEnvironmentVariables(settings.state.miseProfile)
+        val envs = MiseCommandLineHelper.getEnvVars(
+            workDir = nodeProject.basePath,
+            profile = settings.state.miseProfile
+        ).fold(
+            onSuccess = { envs -> envs },
+            onFailure = {
+                val notificationService = nodeProject.service<NotificationService>()
+
+                when (it) {
+                    is MiseCommandLineException -> {
+                        notificationService.warn("Failed to load environment variables", it.message)
+                    }
+
+                    else -> {
+                        notificationService.error(
+                            "Failed to load environment variables",
+                            it.message ?: it.javaClass.simpleName
+                        )
+                    }
+                }
+
+                emptyMap()
+            }
+        )
 
         return envs.map { (key, value) ->
             MiseEnvironmentNode(

@@ -1,6 +1,18 @@
 package com.github.l34130.mise.core.command
 
 object MiseCommandLineHelper {
+    fun getEnvVars(workDir: String?, profile: String?): Result<Map<String, String>> {
+        val commandLineArgs = mutableListOf("mise", "env", "--json")
+
+        if (!profile.isNullOrBlank()) {
+            commandLineArgs.add("--profile")
+            commandLineArgs.add("$profile")
+        }
+
+        val miseCommandLine = MiseCommandLine(workDir)
+        return miseCommandLine.runCommandLine(commandLineArgs)
+    }
+
     // mise ls
     fun getDevTools(workDir: String?, profile: String?): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
         val miseVersion = getMiseVersion()
@@ -18,7 +30,7 @@ object MiseCommandLineHelper {
             commandLineArgs.add("--offline")
         }
 
-        val miseCommandLine = MiseCommandLine(workDir, profile)
+        val miseCommandLine = MiseCommandLine(workDir)
         return miseCommandLine.runCommandLine<Map<String, List<MiseDevTool>>>(commandLineArgs)
             .map { devTools ->
                 devTools.mapKeys { (toolName, _) -> MiseDevToolName(toolName) }
@@ -34,7 +46,7 @@ object MiseCommandLineHelper {
             commandLineArgs.add("$profile")
         }
 
-        val miseCommandLine = MiseCommandLine(workDir, profile)
+        val miseCommandLine = MiseCommandLine(workDir)
         return miseCommandLine.runCommandLine(commandLineArgs)
     }
 
