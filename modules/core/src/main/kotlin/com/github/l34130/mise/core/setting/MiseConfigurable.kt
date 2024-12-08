@@ -60,8 +60,8 @@ class MiseConfigurable(
                             cell(myMiseProfileTf)
                                 .comment(
                                     """
-                                    Specify the mise profile to use (leave empty for default)<br/>
-                                    <a href='https://mise.jdx.dev/profiles.html#profiles'>Learn more about mise profiles</a>
+                                    Specify the mise configuration environment to use (leave empty for default) <br/>
+                                    <a href='https://mise.jdx.dev/configuration/environments.html'>Learn more about mise configuration environments</a>
                                     """.trimIndent(),
                                 ).columns(COLUMNS_LARGE)
                                 .focused()
