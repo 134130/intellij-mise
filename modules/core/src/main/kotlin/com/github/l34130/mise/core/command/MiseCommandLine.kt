@@ -12,12 +12,25 @@ private val LOG = Logger.getInstance(MiseCommandLine::class.java)
 internal class MiseCommandLine(
     private val workDir: String? = null,
 ) {
+    inline fun <reified T> runCommandLine(vararg commandLineArgs: String): Result<T> =
+        runCommandLine(commandLineArgs.toList())
 
-    fun <T> runCommandLine(vararg commandLineArgs: String): Result<T> = runCommandLine(commandLineArgs.toList())
+    inline fun <reified T> runCommandLine(commandLineArgs: List<String>): Result<T> {
+        return if (T::class == String::class) {
+            runCommandLine(commandLineArgs) { it as T }
+        } else {
+            runCommandLine(commandLineArgs) {
+                GsonBuilder()
+                    .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                    .create()
+                    .fromJson(it, object : TypeToken<T>() {})
+            }
+        }
+    }
 
-    fun <T> runCommandLine(commandLineArgs: List<String>): Result<T> {
+    private fun <T> runCommandLine(commandLineArgs: List<String>, transform: (String) -> T): Result<T> {
         val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workDir)
-        val processOutput = ExecUtil.execAndGetOutput(generalCommandLine, 1000)
+        val processOutput = ExecUtil.execAndGetOutput(generalCommandLine, 5000)
 
         if (!processOutput.isExitCodeSet) {
             when {
@@ -42,11 +55,6 @@ internal class MiseCommandLine(
             }
         }
 
-        val result = GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .create()
-            .fromJson(processOutput.stdout, object : TypeToken<T>() {})
-
-        return Result.success(result)
+        return Result.success(transform(processOutput.stdout))
     }
 }

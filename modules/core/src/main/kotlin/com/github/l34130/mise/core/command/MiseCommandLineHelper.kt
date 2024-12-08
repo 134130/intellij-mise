@@ -50,16 +50,15 @@ object MiseCommandLineHelper {
         return miseCommandLine.runCommandLine(commandLineArgs)
     }
 
-    fun getMiseVersion(): MiseVersion {
+    private fun getMiseVersion(): MiseVersion {
         val miseCommandLine = MiseCommandLine()
         val versionString = miseCommandLine.runCommandLine<String>("mise", "version")
 
         val miseVersion = versionString.fold(
-            onSuccess = { versionString ->
-                MiseVersion.parse(versionString)
+            onSuccess = {
+                MiseVersion.parse(it)
             },
             onFailure = { exception ->
-                // TODO: Handle mise command not found exception
                 MiseVersion(0, 0, 0)
             }
         )
