@@ -1,11 +1,15 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
 import com.github.l34130.mise.core.command.MiseCommandLine
+import com.github.l34130.mise.core.command.MiseCommandLineException
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
+import com.github.l34130.mise.core.notification.NotificationService
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 
 class MiseRootNode(
@@ -26,7 +30,26 @@ class MiseRootNode(
     }
 
     private fun getToolNodes(settings: MiseSettings): Collection<MiseToolConfigDirectoryNode> {
-        val toolsByToolNames = MiseCommandLine(project, nodeProject.basePath).loadDevTools(settings.state.miseProfile)
+        val notificationService = nodeProject.service<NotificationService>()
+
+        val toolsByToolNames = MiseCommandLineHelper.getDevTools(
+            workDir = nodeProject.basePath,
+            profile = settings.state.miseProfile
+        ).fold(
+            onSuccess = { tools -> tools },
+            onFailure = {
+                when (it) {
+                    is MiseCommandLineException -> {
+                        notificationService.warn("Failed to load dev tools", it.message)
+                    }
+
+                    else -> {
+                        notificationService.error("Failed to load dev tools", it.message ?: it.javaClass.simpleName)
+                    }
+                }
+                emptyMap()
+            }
+        )
 
         val toolsBySourcePaths = mutableMapOf<String, MutableList<Pair<MiseDevToolName, MiseDevTool>>>()
         for ((toolName, toolInfos) in toolsByToolNames.entries) {

@@ -1,6 +1,7 @@
 package com.github.l34130.mise.core.setup
 
-import com.github.l34130.mise.core.command.MiseCommandLine
+import com.github.l34130.mise.core.command.MiseCommandLineException
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.notification.NotificationService
@@ -48,8 +49,22 @@ abstract class AbstractProjectSdkSetup :
         val notificationService = project.service<NotificationService>()
 
         val profile = MiseSettings.getService(project).state.miseProfile
-        val tools =
-            MiseCommandLine(project).loadDevTools(profile = profile)[devToolName]
+        val toolsResult = MiseCommandLineHelper.getDevTools(workDir = project.basePath, profile = profile)
+        val tools = toolsResult.fold(
+            onSuccess = { tools -> tools[devToolName] },
+            onFailure = {
+                when (it) {
+                    is MiseCommandLineException -> {
+                        notificationService.warn("Failed to load dev tools", it.message)
+                    }
+
+                    else -> {
+                        notificationService.error("Failed to load dev tools", it.message ?: it.javaClass.simpleName)
+                    }
+                }
+                emptyList()
+            }
+        )
 
         if (tools.isNullOrEmpty() || tools.size > 1) {
             if (!isUserInteraction) return
