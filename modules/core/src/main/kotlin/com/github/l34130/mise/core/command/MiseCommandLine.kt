@@ -5,6 +5,7 @@ import com.github.l34130.mise.core.util.fromJson
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -143,35 +144,36 @@ class MiseCommandLine(
     private inline fun <reified T> runCommandLine(vararg commandLineArgs: String): Result<T> = runCommandLine(commandLineArgs.toList())
 
     private inline fun <reified T> runCommandLine(commandLineArgs: List<String>): Result<T> {
-        val process =
-            GeneralCommandLine(commandLineArgs)
-                .withWorkDirectory(workDir)
-                .createProcess()
+        val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workDir)
+        val processOutput = ExecUtil.execAndGetOutput(generalCommandLine, 1000)
 
-        val exitCode = process.waitFor()
-        if (exitCode != 0) {
-            val stderr = process.errorReader().use { it.readText() }
-            val parsedError = MiseCommandLineException.parseFromStderr(stderr)
+        if (!processOutput.isExitCodeSet) {
+            when {
+                processOutput.isTimeout -> {
+                    return Result.failure(Throwable("Command timed out. (command=$generalCommandLine)"))
+                }
+
+                processOutput.isCancelled -> {
+                    return Result.failure(Throwable("Command was cancelled. (command=$generalCommandLine)"))
+                }
+            }
+        }
+
+        if (processOutput.exitCode != 0) {
+            val stderr = processOutput.stderr
+            val parsedError = MiseCommandLineException.parseFromStderr(generalCommandLine, stderr)
             if (parsedError == null) {
-                LOG.error("Failed to parse error. (exitCode=$exitCode, command=${commandLineArgs.joinToString { " " }})\n$stderr")
+                LOG.error("Failed to parse error. (exitCode=${processOutput.exitCode}, command=$generalCommandLine)\n$stderr")
                 return Result.failure(Throwable(stderr))
             } else {
                 return Result.failure(parsedError)
             }
         }
 
-        val stdout = process.inputStream.bufferedReader()
-
-        if (T::class == String::class) {
-            val result = stdout.use { it.readText() } as T
-            return Result.success(result)
-        }
-
-        val result =
-            GsonBuilder()
-                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                .create()
-                .fromJson<T>(stdout)
+        val result = GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .create()
+            .fromJson<T>(processOutput.stdout)
 
         return Result.success(result)
     }
