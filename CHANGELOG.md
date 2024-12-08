@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+## [3.2.0] - 2024-12-08
+
+### Added
+* Support `mise trust` on UI
+* Add toolbar for Mise Tool window
+
+### Fixed
+* Handle if `mise` command is not installed
+* Use mise --env if available
+
 ## [3.1.0] - 2024-11-23
 
 ### Added
@@ -133,7 +143,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/134130/intellij-mise/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/134130/intellij-mise/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/134130/intellij-mise/compare/v2.6.2...v3.0.0
 [2.6.2]: https://github.com/134130/intellij-mise/compare/v2.6.1...v2.6.2
