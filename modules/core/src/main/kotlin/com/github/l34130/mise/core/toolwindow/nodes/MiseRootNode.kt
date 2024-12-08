@@ -4,7 +4,7 @@ import com.github.l34130.mise.core.command.MiseCommandLineException
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
-import com.github.l34130.mise.core.notification.NotificationService
+import com.github.l34130.mise.core.notification.MiseNotificationService
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -29,7 +29,7 @@ class MiseRootNode(
     }
 
     private fun getToolNodes(settings: MiseSettings): Collection<MiseToolConfigDirectoryNode> {
-        val notificationService = nodeProject.service<NotificationService>()
+        val miseNotificationService = nodeProject.service<MiseNotificationService>()
 
         val toolsByToolNames = MiseCommandLineHelper.getDevTools(
             workDir = nodeProject.basePath,
@@ -39,11 +39,11 @@ class MiseRootNode(
             onFailure = {
                 when (it) {
                     is MiseCommandLineException -> {
-                        notificationService.warn("Failed to load dev tools", it.message)
+                        miseNotificationService.warn("Failed to load dev tools", it.message)
                     }
 
                     else -> {
-                        notificationService.error("Failed to load dev tools", it.message ?: it.javaClass.simpleName)
+                        miseNotificationService.error("Failed to load dev tools", it.message ?: it.javaClass.simpleName)
                     }
                 }
                 emptyMap()
@@ -75,15 +75,15 @@ class MiseRootNode(
         ).fold(
             onSuccess = { envs -> envs },
             onFailure = {
-                val notificationService = nodeProject.service<NotificationService>()
+                val miseNotificationService = nodeProject.service<MiseNotificationService>()
 
                 when (it) {
                     is MiseCommandLineException -> {
-                        notificationService.warn("Failed to load environment variables", it.message)
+                        miseNotificationService.warn("Failed to load environment variables", it.message)
                     }
 
                     else -> {
-                        notificationService.error(
+                        miseNotificationService.error(
                             "Failed to load environment variables",
                             it.message ?: it.javaClass.simpleName
                         )
@@ -110,15 +110,15 @@ class MiseRootNode(
         ).fold(
             onSuccess = { tasks -> tasks },
             onFailure = {
-                val notificationService = nodeProject.service<NotificationService>()
+                val miseNotificationService = nodeProject.service<MiseNotificationService>()
 
                 when (it) {
                     is MiseCommandLineException -> {
-                        notificationService.warn("Failed to load tasks", it.message)
+                        miseNotificationService.warn("Failed to load tasks", it.message)
                     }
 
                     else -> {
-                        notificationService.error("Failed to load tasks", it.message ?: it.javaClass.simpleName)
+                        miseNotificationService.error("Failed to load tasks", it.message ?: it.javaClass.simpleName)
                     }
                 }
 
