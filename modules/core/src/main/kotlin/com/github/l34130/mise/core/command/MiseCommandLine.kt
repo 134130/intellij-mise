@@ -53,42 +53,6 @@ class MiseCommandLine(
         }
     }
 
-    // `mise task ls`
-    fun loadTasks(
-        profile: String?,
-        notify: Boolean = true,
-    ): List<MiseTask> {
-        val commandLineArgs = mutableListOf("mise", "task", "ls", "--json")
-
-        if (!profile.isNullOrBlank()) {
-            commandLineArgs.add("--profile")
-            commandLineArgs.add("$profile")
-        }
-
-        return runCommandLine<List<MiseTask>>(commandLineArgs).getOrElse { exception ->
-            if (!notify) {
-                return@getOrElse emptyList()
-            }
-
-            val notificationService = project.service<NotificationService>()
-
-            when (exception) {
-                is MiseCommandLineException -> {
-                    notificationService.warn("Failed to load tasks", exception.message)
-                }
-
-                else -> {
-                    notificationService.error(
-                        "Failed to load tasks",
-                        exception.message ?: exception.javaClass.simpleName,
-                    )
-                }
-            }
-
-            emptyList()
-        }
-    }
-
     fun <T> runCommandLine(vararg commandLineArgs: String): Result<T> = runCommandLine(commandLineArgs.toList())
 
     fun <T> runCommandLine(commandLineArgs: List<String>): Result<T> {

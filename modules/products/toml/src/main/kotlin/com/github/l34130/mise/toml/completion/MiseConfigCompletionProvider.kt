@@ -1,6 +1,6 @@
 package com.github.l34130.mise.toml.completion
 
-import com.github.l34130.mise.core.command.MiseCommandLine
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseTask
 import com.github.l34130.mise.core.icon.MiseIcons
 import com.github.l34130.mise.core.setting.MiseSettings
@@ -33,14 +33,13 @@ class MiseConfigCompletionProvider : CompletionProvider<CompletionParameters>() 
         val profile = MiseSettings.getService(root.project).state.miseProfile
         // TODO: Store the tasks in a cache and update them only when the file changes
         //    This will prevent unnecessary calls to the CLI or when the file is an invalid state
-        val tasksFromMise =
-            MiseCommandLine(
-                project = root.project,
-                workDir = root.project.basePath,
-            ).loadTasks(
-                profile = profile,
-                notify = false,
-            )
+        val tasksFromMise = MiseCommandLineHelper.getTasks(
+            workDir = root.project.basePath,
+            profile = profile,
+        ).fold(
+            onSuccess = { tasks -> tasks },
+            onFailure = { emptyList() },
+        )
 
         val tasksInFile = MiseConfigPsiUtils.getMiseTasks(root)
         val uniqueTasks = HashMap<String, MiseTask>()

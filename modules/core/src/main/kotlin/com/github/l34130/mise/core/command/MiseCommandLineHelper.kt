@@ -25,6 +25,19 @@ object MiseCommandLineHelper {
             }
     }
 
+    // mise task ls
+    fun getTasks(workDir: String?, profile: String?): Result<List<MiseTask>> {
+        val commandLineArgs = mutableListOf("mise", "task", "ls", "--json")
+
+        if (!profile.isNullOrBlank()) {
+            commandLineArgs.add("--profile")
+            commandLineArgs.add("$profile")
+        }
+
+        val miseCommandLine = MiseCommandLine(workDir, profile)
+        return miseCommandLine.runCommandLine(commandLineArgs)
+    }
+
     fun getMiseVersion(): MiseVersion {
         val miseCommandLine = MiseCommandLine()
         val versionString = miseCommandLine.runCommandLine<String>("mise", "version")

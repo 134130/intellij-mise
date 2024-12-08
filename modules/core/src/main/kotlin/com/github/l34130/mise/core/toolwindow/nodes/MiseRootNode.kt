@@ -83,7 +83,27 @@ class MiseRootNode(
     }
 
     private fun getTaskNodes(settings: MiseSettings): Collection<MiseTaskNode> {
-        val tasks = MiseCommandLine(project).loadTasks(settings.state.miseProfile)
+        val tasks = MiseCommandLineHelper.getTasks(
+            workDir = nodeProject.basePath,
+            profile = settings.state.miseProfile
+        ).fold(
+            onSuccess = { tasks -> tasks },
+            onFailure = {
+                val notificationService = nodeProject.service<NotificationService>()
+
+                when (it) {
+                    is MiseCommandLineException -> {
+                        notificationService.warn("Failed to load tasks", it.message)
+                    }
+
+                    else -> {
+                        notificationService.error("Failed to load tasks", it.message ?: it.javaClass.simpleName)
+                    }
+                }
+
+                emptyList()
+            }
+        )
 
         return tasks.map { task ->
             MiseTaskNode(
