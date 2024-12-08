@@ -12,7 +12,7 @@ private val LOG = Logger.getInstance(MiseCommandLine::class.java)
 
 internal class MiseCommandLine(
     private val workDir: String? = null,
-    private val miseEnv: String? = null,
+    private val configEnvironment: String? = null,
 ) {
     inline fun <reified T> runCommandLine(vararg params: String): Result<T> =
         runCommandLine(params.toList())
@@ -22,13 +22,13 @@ internal class MiseCommandLine(
 
         val commandLineArgs = mutableListOf("mise")
 
-        if (miseEnv != null) {
+        if (configEnvironment != null) {
             if (miseVersion >= MiseVersion(2024, 12, 2)) {
                 commandLineArgs.add("--env")
-                commandLineArgs.add(miseEnv)
+                commandLineArgs.add(configEnvironment)
             } else {
                 commandLineArgs.add("--profile")
-                commandLineArgs.add(miseEnv)
+                commandLineArgs.add(configEnvironment)
             }
         }
 

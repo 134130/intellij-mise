@@ -30,12 +30,12 @@ class MiseConfigCompletionProvider : CompletionProvider<CompletionParameters>() 
             return
         }
 
-        val profile = MiseSettings.getService(root.project).state.miseProfile
+        val configEnvironment = MiseSettings.getService(root.project).state.miseConfigEnvironment
         // TODO: Store the tasks in a cache and update them only when the file changes
         //    This will prevent unnecessary calls to the CLI or when the file is an invalid state
         val tasksFromMise = MiseCommandLineHelper.getTasks(
             workDir = root.project.basePath,
-            profile = profile,
+            configEnvironment = configEnvironment,
         ).fold(
             onSuccess = { tasks -> tasks },
             onFailure = { emptyList() },

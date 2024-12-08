@@ -57,13 +57,13 @@ class IdeaRunConfigurationExtension : RunConfigurationExtension() {
         val projectState = project.service<MiseSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
-        val (workDir, profile) = when {
-            projectState.useMiseDirEnv -> project.basePath to projectState.miseProfile
-            runConfigState?.useMiseDirEnv == true -> params.workingDirectory to runConfigState.miseProfile
+        val (workDir, configEnvironment) = when {
+            projectState.useMiseDirEnv -> project.basePath to projectState.miseConfigEnvironment
+            runConfigState?.useMiseDirEnv == true -> params.workingDirectory to runConfigState.miseConfigEnvironment
             else -> return
         }
 
-        val envVars = MiseCommandLineHelper.getEnvVars(workDir, profile)
+        val envVars = MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
             .fold(
                 onSuccess = { envVars -> envVars },
                 onFailure = {

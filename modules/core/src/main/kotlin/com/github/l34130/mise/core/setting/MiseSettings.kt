@@ -17,13 +17,13 @@ import java.io.File
 data class MiseState(
     var executablePath: String = "",
     var useMiseDirEnv: Boolean = true,
-    var miseProfile: String = "",
+    var miseConfigEnvironment: String = "",
 ) : Cloneable {
     public override fun clone(): MiseState =
         MiseState(
             executablePath = executablePath,
             useMiseDirEnv = useMiseDirEnv,
-            miseProfile = miseProfile,
+            miseConfigEnvironment = miseConfigEnvironment,
         )
 }
 
@@ -50,7 +50,7 @@ class MiseSettings(
         state = MiseState(
             executablePath = state.executablePath.takeIf { it.isNotEmpty() } ?: getMiseExecutablePath() ?: "",
             useMiseDirEnv = state.useMiseDirEnv,
-            miseProfile = state.miseProfile,
+            miseConfigEnvironment = state.miseConfigEnvironment,
         )
 
         if (state.executablePath.isEmpty()) {

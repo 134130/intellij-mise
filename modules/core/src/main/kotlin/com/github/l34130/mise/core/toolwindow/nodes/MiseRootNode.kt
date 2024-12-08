@@ -30,7 +30,7 @@ class MiseRootNode(
     private fun getToolNodes(settings: MiseSettings): Collection<MiseToolConfigDirectoryNode> {
         val toolsByToolNames = MiseCommandLineHelper.getDevTools(
             workDir = nodeProject.basePath,
-            profile = settings.state.miseProfile
+            configEnvironment = settings.state.miseConfigEnvironment
         ).fold(
             onSuccess = { tools -> tools },
             onFailure = {
@@ -62,7 +62,7 @@ class MiseRootNode(
     private fun getEnvironmentNodes(settings: MiseSettings): Collection<MiseEnvironmentNode> {
         val envs = MiseCommandLineHelper.getEnvVars(
             workDir = nodeProject.basePath,
-            profile = settings.state.miseProfile
+            configEnvironment = settings.state.miseConfigEnvironment
         ).fold(
             onSuccess = { envs -> envs },
             onFailure = {
@@ -85,7 +85,7 @@ class MiseRootNode(
     private fun getTaskNodes(settings: MiseSettings): Collection<MiseTaskNode> {
         val tasks = MiseCommandLineHelper.getTasks(
             workDir = nodeProject.basePath,
-            profile = settings.state.miseProfile
+            configEnvironment = settings.state.miseConfigEnvironment
         ).fold(
             onSuccess = { tasks -> tasks },
             onFailure = {

@@ -26,7 +26,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     private val project: Project,
 ) : SettingsEditor<T>() {
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
-    private val myMiseProfileTf = JBTextField()
+    private val myMiseConfigEnvironmentTf = JBTextField()
 
     override fun createEditor(): JComponent {
         val projectState = MiseSettings.getService(project).state
@@ -42,8 +42,8 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
                         cell(myMiseDirEnvCb)
                             .comment("Load environment variables from mise configuration file(s)")
                     }.enabled(isOverridden.not())
-                    row("Profile: ") {
-                        cell(myMiseProfileTf)
+                    row("Config Environment:") {
+                        cell(myMiseConfigEnvironmentTf)
                             .comment(
                                 """
                                 Specify the mise configuration environment to use (leave empty for default) <br/>
@@ -68,7 +68,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
             USER_DATA_KEY,
             MiseRunConfigurationState(
                 useMiseDirEnv = myMiseDirEnvCb.isSelected,
-                miseProfile = myMiseProfileTf.text,
+                miseConfigEnvironment = myMiseConfigEnvironmentTf.text,
             ),
         )
     }
@@ -80,14 +80,14 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
         val state = userData.mergeProjectState(projectState)
 
         myMiseDirEnvCb.isSelected = state.useMiseDirEnv
-        myMiseProfileTf.text = state.miseProfile
+        myMiseConfigEnvironmentTf.text = state.miseConfigEnvironment
         if (!myMiseDirEnvCb.isSelected) {
-            myMiseProfileTf.isEnabled = false
+            myMiseConfigEnvironmentTf.isEnabled = false
         }
 
         if (projectState.useMiseDirEnv) {
             myMiseDirEnvCb.isEnabled = false
-            myMiseProfileTf.isEnabled = false
+            myMiseConfigEnvironmentTf.isEnabled = false
         }
     }
 
@@ -100,11 +100,11 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
             element: Element,
         ) {
             val miseDirEnvCb = element.getAttributeValue("myMiseDirEnvCb")?.toBoolean() ?: false
-            val miseProfile = element.getAttributeValue("myMiseProfileTf") ?: ""
+            val miseConfigEnvironment = element.getAttributeValue("myMiseConfigEnvironmentTf") ?: ""
             val state =
                 MiseRunConfigurationState(
                     useMiseDirEnv = miseDirEnvCb,
-                    miseProfile = miseProfile,
+                    miseConfigEnvironment = miseConfigEnvironment,
                 )
             runConfiguration.putCopyableUserData(USER_DATA_KEY, state)
         }
@@ -116,7 +116,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
             val userData = runConfiguration.getCopyableUserData(USER_DATA_KEY) ?: return
 
             element.setAttribute("myMiseDirEnvCb", userData.useMiseDirEnv.toString())
-            element.setAttribute("myMiseProfileTf", userData.miseProfile)
+            element.setAttribute("myMiseConfigEnvironmentTf", userData.miseConfigEnvironment)
         }
 
         fun getMiseRunConfigurationState(configuration: RunConfigurationBase<*>): MiseRunConfigurationState? =

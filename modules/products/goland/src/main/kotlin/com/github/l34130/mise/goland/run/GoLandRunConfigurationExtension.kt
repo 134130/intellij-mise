@@ -48,13 +48,13 @@ class GoLandRunConfigurationExtension : GoRunConfigurationExtension() {
         val projectState = project.service<MiseSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
-        val (workDir, profile) = when {
-            projectState.useMiseDirEnv -> project.basePath to projectState.miseProfile
-            runConfigState?.useMiseDirEnv == true -> configuration.getWorkingDirectory() to runConfigState.miseProfile
+        val (workDir, configEnvironment) = when {
+            projectState.useMiseDirEnv -> project.basePath to projectState.miseConfigEnvironment
+            runConfigState?.useMiseDirEnv == true -> configuration.getWorkingDirectory() to runConfigState.miseConfigEnvironment
             else -> return
         }
 
-        MiseCommandLineHelper.getEnvVars(workDir, profile)
+        MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
             .fold(
                 onSuccess = { envVars -> envVars },
                 onFailure = {

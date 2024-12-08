@@ -2,15 +2,15 @@ package com.github.l34130.mise.core.command
 
 object MiseCommandLineHelper {
     // mise env
-    fun getEnvVars(workDir: String?, profile: String?): Result<Map<String, String>> {
+    fun getEnvVars(workDir: String?, configEnvironment: String?): Result<Map<String, String>> {
         val commandLineArgs = mutableListOf("env", "--json")
 
-        val miseCommandLine = MiseCommandLine(workDir, profile)
+        val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
         return miseCommandLine.runCommandLine(commandLineArgs)
     }
 
     // mise ls
-    fun getDevTools(workDir: String?, profile: String?): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
+    fun getDevTools(workDir: String?, configEnvironment: String?): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
         val commandLineArgs = mutableListOf("ls", "--current", "--json")
 
         val miseVersion = MiseCommandLine.getMiseVersion()
@@ -21,7 +21,7 @@ object MiseCommandLineHelper {
             commandLineArgs.add("--offline")
         }
 
-        val miseCommandLine = MiseCommandLine(workDir, profile)
+        val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
         return miseCommandLine.runCommandLine<Map<String, List<MiseDevTool>>>(commandLineArgs)
             .map { devTools ->
                 devTools.mapKeys { (toolName, _) -> MiseDevToolName(toolName) }
@@ -29,10 +29,10 @@ object MiseCommandLineHelper {
     }
 
     // mise task ls
-    fun getTasks(workDir: String?, profile: String?): Result<List<MiseTask>> {
+    fun getTasks(workDir: String?, configEnvironment: String?): Result<List<MiseTask>> {
         val commandLineArgs = mutableListOf("task", "ls", "--json")
 
-        val miseCommandLine = MiseCommandLine(workDir, profile)
+        val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
         return miseCommandLine.runCommandLine(commandLineArgs)
     }
 }
