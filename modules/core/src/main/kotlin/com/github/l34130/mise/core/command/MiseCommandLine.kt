@@ -12,11 +12,28 @@ private val LOG = Logger.getInstance(MiseCommandLine::class.java)
 
 internal class MiseCommandLine(
     private val workDir: String? = null,
+    private val miseEnv: String? = null,
 ) {
-    inline fun <reified T> runCommandLine(vararg commandLineArgs: String): Result<T> =
-        runCommandLine(commandLineArgs.toList())
+    inline fun <reified T> runCommandLine(vararg params: String): Result<T> =
+        runCommandLine(params.toList())
 
-    inline fun <reified T> runCommandLine(commandLineArgs: List<String>): Result<T> {
+    inline fun <reified T> runCommandLine(params: List<String>): Result<T> {
+        val miseVersion = getMiseVersion()
+
+        val commandLineArgs = mutableListOf("mise")
+
+        if (miseEnv != null) {
+            if (miseVersion >= MiseVersion(2024, 12, 2)) {
+                commandLineArgs.add("--env")
+                commandLineArgs.add(miseEnv)
+            } else {
+                commandLineArgs.add("--profile")
+                commandLineArgs.add(miseEnv)
+            }
+        }
+
+        commandLineArgs.addAll(params)
+
         return if (T::class == String::class) {
             runCommandLine(commandLineArgs) { it as T }
         } else {
@@ -67,5 +84,23 @@ internal class MiseCommandLine(
         }
 
         return Result.success(transform(processOutput.stdout))
+    }
+
+    companion object {
+        fun getMiseVersion(): MiseVersion {
+            val miseCommandLine = MiseCommandLine()
+            val versionString = miseCommandLine.runCommandLine(listOf("mise", "version")) { it }
+
+            val miseVersion = versionString.fold(
+                onSuccess = {
+                    MiseVersion.parse(it)
+                },
+                onFailure = { _ ->
+                    MiseVersion(0, 0, 0)
+                }
+            )
+
+            return miseVersion
+        }
     }
 }
