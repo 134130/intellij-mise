@@ -10,7 +10,7 @@
 
 - Fix runConfiguration cannot be saved
 - Fix runConfiguration cannot load envvars when it doesn't have working directory.
-  - When the working directory is not set, it will use the project's base directory. 
+  - When the working directory is not set, it will use the project's base directory.
 
 ## [3.2.1] - 2024-12-16
 
