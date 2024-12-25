@@ -14,6 +14,7 @@ import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.ComponentPredicate
 import com.intellij.ui.layout.and
+import com.intellij.ui.layout.not
 import com.intellij.ui.layout.selected
 import org.jdom.Element
 import java.awt.BorderLayout
@@ -25,23 +26,21 @@ private val USER_DATA_KEY = Key<MiseRunConfigurationState>("Mise Run Settings")
 class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     private val project: Project,
 ) : SettingsEditor<T>() {
+    private val projectState = project.service<MiseSettings>().state
+    private val useProjectWideMiseConfig = projectState.useMiseDirEnv
+    private val useProjectWideMiseConfigPredicate = ComponentPredicate.fromValue(useProjectWideMiseConfig)
+
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
     private val myMiseConfigEnvironmentTf = JBTextField()
 
     override fun createEditor(): JComponent {
-        val projectState = MiseSettings.getService(project).state
-
-        val isOverridden = projectState.useMiseDirEnv
-
-        myMiseDirEnvCb.selected.and(ComponentPredicate.fromValue(isOverridden.not()))
-
         return JPanel(BorderLayout()).apply {
             add(
                 panel {
                     row {
                         cell(myMiseDirEnvCb)
                             .comment("Load environment variables from mise configuration file(s)")
-                    }.enabled(isOverridden.not())
+                    }.enabledIf(useProjectWideMiseConfigPredicate.not())
                     row("Config Environment:") {
                         cell(myMiseConfigEnvironmentTf)
                             .comment(
@@ -52,18 +51,27 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
                             ).columns(COLUMNS_LARGE)
                             .focused()
                             .resizableColumn()
-                    }.enabledIf(myMiseDirEnvCb.selected.and(ComponentPredicate.fromValue(isOverridden.not())))
+                    }.enabledIf(myMiseDirEnvCb.selected.and(useProjectWideMiseConfigPredicate.not()))
                     row {
                         icon(AllIcons.General.ShowWarning)
                         label("Using the configuration in Settings / Tools / Mise Settings")
                             .bold()
-                    }.visible(isOverridden)
+                    }.visibleIf(useProjectWideMiseConfigPredicate)
                 },
             )
         }
     }
 
+    // Write to persistence from the UI
     override fun applyEditorTo(config: T) {
+        val projectState = project.service<MiseSettings>().state
+
+        // When the project is configured to use the project-wide mise configuration
+        if (projectState.useMiseDirEnv) {
+            // Ignore applying the settings to the run configuration
+            return
+        }
+
         config.putCopyableUserData(
             USER_DATA_KEY,
             MiseRunConfigurationState(
@@ -73,22 +81,26 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
         )
     }
 
+    // Read from persistence to the UI
     override fun resetEditorFrom(config: T) {
-        val userData = config.getCopyableUserData(USER_DATA_KEY) ?: return
+        val runConfigurationState = config.getCopyableUserData(USER_DATA_KEY) ?: return
 
-        val projectState = project.service<MiseSettings>().state
-        val state = userData.mergeProjectState(projectState)
+        val useMiseDirEnv: Boolean
+        val miseConfigEnvironment: String
 
-        myMiseDirEnvCb.isSelected = state.useMiseDirEnv
-        myMiseConfigEnvironmentTf.text = state.miseConfigEnvironment
-        if (!myMiseDirEnvCb.isSelected) {
-            myMiseConfigEnvironmentTf.isEnabled = false
+        when(useProjectWideMiseConfig) {
+            true -> {
+                useMiseDirEnv = projectState.useMiseDirEnv
+                miseConfigEnvironment = projectState.miseConfigEnvironment
+            }
+            false -> {
+                useMiseDirEnv = runConfigurationState.useMiseDirEnv
+                miseConfigEnvironment = runConfigurationState.miseConfigEnvironment
+            }
         }
 
-        if (projectState.useMiseDirEnv) {
-            myMiseDirEnvCb.isEnabled = false
-            myMiseConfigEnvironmentTf.isEnabled = false
-        }
+        myMiseDirEnvCb.isSelected = useMiseDirEnv
+        myMiseConfigEnvironmentTf.text = miseConfigEnvironment
     }
 
     companion object {
