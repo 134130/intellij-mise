@@ -56,10 +56,10 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
                 runConfigState?.useMiseDirEnv == true -> {
                     val nodejsWorkDir = when(configuration) {
                         is NodeJsRunConfiguration -> configuration.workingDirectory
-                        else -> project.basePath
+                        else -> null
                     }
 
-                    nodejsWorkDir to runConfigState.miseConfigEnvironment
+                    (nodejsWorkDir ?: project.basePath) to runConfigState.miseConfigEnvironment
                 }
                 else -> return null
             }

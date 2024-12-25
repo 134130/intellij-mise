@@ -59,7 +59,7 @@ class IdeaRunConfigurationExtension : RunConfigurationExtension() {
 
         val (workDir, configEnvironment) = when {
             projectState.useMiseDirEnv -> project.basePath to projectState.miseConfigEnvironment
-            runConfigState?.useMiseDirEnv == true -> params.workingDirectory to runConfigState.miseConfigEnvironment
+            runConfigState?.useMiseDirEnv == true -> (params.workingDirectory ?: project.basePath) to runConfigState.miseConfigEnvironment
             else -> return
         }
 
