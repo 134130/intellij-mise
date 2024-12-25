@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [3.2.2] - 2024-12-25
+
+### Fixed
+
+- Fix runConfiguration cannot be saved
+- Fix runConfiguration cannot load envvars when it doesn't have working directory.
+  - When the working directory is not set, it will use the project's base directory. 
+
 ## [3.2.1] - 2024-12-16
 
 ### Added
@@ -151,7 +159,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.2.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.2.2...HEAD
+[3.2.2]: https://github.com/134130/intellij-mise/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/134130/intellij-mise/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/134130/intellij-mise/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/134130/intellij-mise/compare/v3.0.0...v3.1.0
