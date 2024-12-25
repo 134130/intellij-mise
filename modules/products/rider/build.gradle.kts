@@ -15,7 +15,5 @@ dependencies {
         create(IntelliJPlatformType.Rider, properties("platformVersion"))
 
         jetbrainsRuntime()
-
-        instrumentationTools()
     }
 }

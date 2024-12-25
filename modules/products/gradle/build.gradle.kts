@@ -18,7 +18,5 @@ dependencies {
         bundledPlugins("com.intellij.java", "com.intellij.gradle")
 
         jetbrainsRuntime()
-
-        instrumentationTools()
     }
 }

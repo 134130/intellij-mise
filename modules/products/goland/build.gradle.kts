@@ -17,7 +17,5 @@ dependencies {
         bundledPlugin("org.jetbrains.plugins.go")
 
         jetbrainsRuntime()
-
-        instrumentationTools()
     }
 }
