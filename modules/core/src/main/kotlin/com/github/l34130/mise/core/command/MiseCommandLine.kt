@@ -8,8 +8,6 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.diagnostic.Logger
 
-private val LOG = Logger.getInstance(MiseCommandLine::class.java)
-
 internal class MiseCommandLine(
     private val workDir: String? = null,
     private val configEnvironment: String? = null,
@@ -49,8 +47,10 @@ internal class MiseCommandLine(
     private fun <T> runCommandLine(commandLineArgs: List<String>, transform: (String) -> T): Result<T> {
         val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workDir)
         val processOutput = try {
+            logger.debug("Running command: $commandLineArgs")
             ExecUtil.execAndGetOutput(generalCommandLine, 5000)
         } catch (e: ExecutionException) {
+            logger.info("Failed to execute command. (command=$generalCommandLine)", e)
             return Result.failure(
                 MiseCommandLineNotFoundException(
                     generalCommandLine,
@@ -76,13 +76,15 @@ internal class MiseCommandLine(
             val stderr = processOutput.stderr
             val parsedError = MiseCommandLineException.parseFromStderr(generalCommandLine, stderr)
             if (parsedError == null) {
-                LOG.error("Failed to parse error. (exitCode=${processOutput.exitCode}, command=$generalCommandLine)\n$stderr")
+                logger.info("Failed to parse error from stderr. (stderr=$stderr)")
                 return Result.failure(Throwable(stderr))
             } else {
+                logger.debug("Parsed error from stderr. (error=$parsedError)")
                 return Result.failure(parsedError)
             }
         }
 
+        logger.debug("Command executed successfully. (command=$generalCommandLine)")
         return Result.success(transform(processOutput.stdout))
     }
 
@@ -102,5 +104,7 @@ internal class MiseCommandLine(
 
             return miseVersion
         }
+
+        private val logger = Logger.getInstance(MiseCommandLine::class.java)
     }
 }
