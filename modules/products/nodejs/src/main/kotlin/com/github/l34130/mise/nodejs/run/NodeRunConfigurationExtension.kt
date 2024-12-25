@@ -13,6 +13,7 @@ import com.intellij.javascript.nodejs.execution.runConfiguration.NodeRunConfigur
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.SettingsEditor
+import com.jetbrains.nodejs.run.NodeJsRunConfiguration
 import org.jdom.Element
 
 class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
@@ -52,7 +53,14 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
         val (workDir, configEnvironment) =
             when {
                 projectState.useMiseDirEnv -> project.basePath to projectState.miseConfigEnvironment
-                runConfigState?.useMiseDirEnv == true -> environment.modulePath to runConfigState.miseConfigEnvironment
+                runConfigState?.useMiseDirEnv == true -> {
+                    val nodejsWorkDir = when(configuration) {
+                        is NodeJsRunConfiguration -> configuration.workingDirectory
+                        else -> project.basePath
+                    }
+
+                    nodejsWorkDir to runConfigState.miseConfigEnvironment
+                }
                 else -> return null
             }
 
