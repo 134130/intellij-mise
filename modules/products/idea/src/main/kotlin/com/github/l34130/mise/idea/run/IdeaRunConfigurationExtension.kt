@@ -16,7 +16,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Key
 import org.jdom.Element
 import java.util.concurrent.ConcurrentHashMap
 
@@ -102,13 +101,6 @@ class IdeaRunConfigurationExtension : RunConfigurationExtension() {
                             putAll(envsToRestore)
                         }
                     }
-
-                    override fun startNotified(event: ProcessEvent) {}
-
-                    override fun onTextAvailable(
-                        event: ProcessEvent,
-                        outputType: Key<*>,
-                    ) {}
                 },
             )
         }
