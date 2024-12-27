@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/modules/products/gradle" />
             <option value="$PROJECT_DIR$/modules/products/idea" />
             <option value="$PROJECT_DIR$/modules/products/nodejs" />
+            <option value="$PROJECT_DIR$/modules/products/pycharm" />
             <option value="$PROJECT_DIR$/modules/products/rider" />
             <option value="$PROJECT_DIR$/modules/products/toml" />
           </set>
