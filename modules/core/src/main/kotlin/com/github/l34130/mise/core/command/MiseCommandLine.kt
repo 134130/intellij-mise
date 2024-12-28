@@ -7,13 +7,13 @@ import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
 
 internal class MiseCommandLine(
     private val workDir: String? = null,
     private val configEnvironment: String? = null,
 ) {
-    inline fun <reified T> runCommandLine(vararg params: String): Result<T> =
-        runCommandLine(params.toList())
+    inline fun <reified T> runCommandLine(vararg params: String): Result<T> = runCommandLine(params.toList())
 
     inline fun <reified T> runCommandLine(params: List<String>): Result<T> {
         val miseVersion = getMiseVersion()
@@ -44,21 +44,25 @@ internal class MiseCommandLine(
         }
     }
 
-    private fun <T> runCommandLine(commandLineArgs: List<String>, transform: (String) -> T): Result<T> {
+    private fun <T> runCommandLine(
+        commandLineArgs: List<String>,
+        transform: (String) -> T,
+    ): Result<T> {
         val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workDir)
-        val processOutput = try {
-            logger.debug("Running command: $commandLineArgs")
-            ExecUtil.execAndGetOutput(generalCommandLine, 5000)
-        } catch (e: ExecutionException) {
-            logger.info("Failed to execute command. (command=$generalCommandLine)", e)
-            return Result.failure(
-                MiseCommandLineNotFoundException(
-                    generalCommandLine,
-                    e.message ?: "Failed to execute command.",
-                    e
+        val processOutput =
+            try {
+                logger.debug("Running command: $commandLineArgs")
+                ExecUtil.execAndGetOutput(generalCommandLine, 5000)
+            } catch (e: ExecutionException) {
+                logger.info("Failed to execute command. (command=$generalCommandLine)", e)
+                return Result.failure(
+                    MiseCommandLineNotFoundException(
+                        generalCommandLine,
+                        e.message ?: "Failed to execute command.",
+                        e,
+                    ),
                 )
-            )
-        }
+            }
 
         if (!processOutput.isExitCodeSet) {
             when {
@@ -89,18 +93,20 @@ internal class MiseCommandLine(
     }
 
     companion object {
+        @RequiresBackgroundThread
         fun getMiseVersion(): MiseVersion {
             val miseCommandLine = MiseCommandLine()
             val versionString = miseCommandLine.runCommandLine(listOf("mise", "version")) { it }
 
-            val miseVersion = versionString.fold(
-                onSuccess = {
-                    MiseVersion.parse(it)
-                },
-                onFailure = { _ ->
-                    MiseVersion(0, 0, 0)
-                }
-            )
+            val miseVersion =
+                versionString.fold(
+                    onSuccess = {
+                        MiseVersion.parse(it)
+                    },
+                    onFailure = { _ ->
+                        MiseVersion(0, 0, 0)
+                    },
+                )
 
             return miseVersion
         }
