@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [3.2.5] - 2024-12-28
+
+### Fixed
+
+- Mise executable customization is not working
+- Address new version of `mise tasks --json` output
+
 ## [3.2.4] - 2024-12-28
 
 ### Fixed
@@ -177,7 +184,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.2.4...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.2.5...HEAD
+[3.2.5]: https://github.com/134130/intellij-mise/compare/v3.2.4...v3.2.5
 [3.2.4]: https://github.com/134130/intellij-mise/compare/v3.2.3...v3.2.4
 [3.2.3]: https://github.com/134130/intellij-mise/compare/v3.2.2...v3.2.3
 [3.2.2]: https://github.com/134130/intellij-mise/compare/v3.2.1...v3.2.2
