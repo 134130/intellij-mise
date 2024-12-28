@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+## [3.2.4] - 2024-12-28
+
+### Fixed
+
+- Error report submitter cannot report an error when the error is too long.
+- Mise Tools name is not showing correctly.
+- Escape long-running tasks running on EDT.
+
+### Added
+
+- Add a mise cli version to the error report.
+
 ## [3.2.3] - 2024-12-26
 
 ### Fixed
@@ -165,7 +177,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.2.3...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.2.4...HEAD
+[3.2.4]: https://github.com/134130/intellij-mise/compare/v3.2.3...v3.2.4
 [3.2.3]: https://github.com/134130/intellij-mise/compare/v3.2.2...v3.2.3
 [3.2.2]: https://github.com/134130/intellij-mise/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/134130/intellij-mise/compare/v3.2.0...v3.2.1
