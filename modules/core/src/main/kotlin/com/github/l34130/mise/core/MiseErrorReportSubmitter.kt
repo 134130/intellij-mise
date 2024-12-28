@@ -1,5 +1,6 @@
 package com.github.l34130.mise.core
 
+import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.notification.MiseNotificationService
 import com.intellij.diagnostic.AbstractMessage
 import com.intellij.diagnostic.PluginException
@@ -23,15 +24,13 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 class MiseErrorReportSubmitter : ErrorReportSubmitter() {
-    override fun getReportActionText(): String {
-        return "Report to Author"
-    }
+    override fun getReportActionText(): String = "Report to Author"
 
     override fun submit(
         events: Array<out IdeaLoggingEvent>,
         additionalInfo: String?,
         parentComponent: Component,
-        consumer: Consumer<in SubmittedReportInfo>
+        consumer: Consumer<in SubmittedReportInfo>,
     ): Boolean {
         val context = DataManager.getInstance().getDataContext(parentComponent)
         val project = CommonDataKeys.PROJECT.getData(context)
@@ -59,43 +58,48 @@ class MiseErrorReportSubmitter : ErrorReportSubmitter() {
                         StringUtils.abbreviate(throwable.message, 80)
                     }"
 
-                    val body = buildString {
-                        appendLine("### Environment")
-                        appendLine("- IDE: ${applicationNamesInfo.productName} ${appInfo.fullVersion}")
-                        appendLine("- Plugin: ${pluginDescriptor.name} $${pluginDescriptor.releaseVersion}")
-                        appendLine("- OS: ${System.getProperty("os.name")} ${System.getProperty("os.version")}")
-                        appendLine("- Java: ${System.getProperty("java.version")} (${System.getProperty("java.vendor")})")
+                    val body =
+                        buildString {
+                            appendLine("### Environment")
+                            appendLine("- IDE: ${applicationNamesInfo.productName} ${appInfo.fullVersion}")
+                            appendLine("- Plugin: ${pluginDescriptor.name} ${pluginDescriptor.version}")
+                            appendLine("- Mise: mise@${MiseCommandLine.getMiseVersion()}")
+                            appendLine("- OS: ${System.getProperty("os.name")} ${System.getProperty("os.version")}")
+                            appendLine("- Java: ${System.getProperty("java.version")} (${System.getProperty("java.vendor")})")
 
-                        appendLine()
+                            appendLine()
 
-                        appendLine("### Description")
-                        appendLine("- $description")
+                            appendLine("### Description")
+                            appendLine("- $description")
 
-                        appendLine()
+                            appendLine()
 
-                        appendLine("### Stacktrace")
-                        appendLine("```")
-                        appendLine(throwable.message)
-                        appendLine(throwable.stackTrace.joinToString("\n"))
-                        appendLine("```")
+                            appendLine("### Stacktrace")
+                            appendLine("```")
+                            appendLine(throwable.message)
+                            appendLine(throwable.stackTrace.joinToString("\n").take(25))
+                            appendLine("```")
 
-                        appendLine()
+                            appendLine()
 
-                        appendLine("### Attachments")
-                        for (attachment in attachments) {
-                            appendLine("- $attachment")
+                            appendLine("### Attachments")
+                            for (attachment in attachments) {
+                                appendLine("- $attachment")
+                            }
                         }
-                    }
 
-                    Desktop.getDesktop()
+                    Desktop
+                        .getDesktop()
                         .browse(
                             URI.create(
                                 buildString {
-                                    append("https://github.com/134130/intellij-mise/issues/new?labels=bug,${applicationNamesInfo.productName}")
+                                    append(
+                                        "https://github.com/134130/intellij-mise/issues/new?labels=bug,${applicationNamesInfo.productName}",
+                                    )
                                     append("&title=${URLEncoder.encode(title, StandardCharsets.UTF_8)}")
                                     append("&body=${URLEncoder.encode(body, StandardCharsets.UTF_8)}")
-                                }
-                            )
+                                },
+                            ),
                         )
                 }
 
