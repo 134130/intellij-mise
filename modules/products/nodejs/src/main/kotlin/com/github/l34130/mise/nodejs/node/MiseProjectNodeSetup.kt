@@ -15,7 +15,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import kotlin.io.path.Path
 import kotlin.reflect.KClass
 
-class ProjectNodeSetup : AbstractProjectSdkSetup() {
+class MiseProjectNodeSetup : AbstractProjectSdkSetup() {
     override fun getDevToolName() = MiseDevToolName("node")
 
     override fun setupSdk(

@@ -10,7 +10,7 @@ import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.roots.ProjectRootManager
 import kotlin.reflect.KClass
 
-class ProjectJdkSetup : AbstractProjectSdkSetup() {
+class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
     override fun getDevToolName() = MiseDevToolName("java")
 
     override fun setupSdk(

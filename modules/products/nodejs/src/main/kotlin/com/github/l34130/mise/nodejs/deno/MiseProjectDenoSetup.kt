@@ -12,7 +12,7 @@ import com.intellij.openapi.util.io.FileUtil
 import kotlin.io.path.Path
 import kotlin.reflect.KClass
 
-class ProjectDenoSetup : AbstractProjectSdkSetup() {
+class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
     override fun getDevToolName() = MiseDevToolName("deno")
 
     override fun setupSdk(

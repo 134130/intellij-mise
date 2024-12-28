@@ -1,15 +1,15 @@
 <idea-plugin require-restart="false">
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.github.l34130.mise.nodejs.node.ProjectNodeSetup"/>
+        <postStartupActivity implementation="com.github.l34130.mise.nodejs.node.MiseProjectNodeSetup"/>
     </extensions>
     <extensions defaultExtensionNs="JavaScript">
         <nodeRunConfigurationExtension
-                implementation="com.github.l34130.mise.nodejs.run.NodeRunConfigurationExtension"
+                implementation="com.github.l34130.mise.nodejs.run.MiseNodeRunConfigurationExtension"
                                    id="miseNodeJS"/>
     </extensions>
     <actions>
-        <action id="com.github.l34130.mise.nodejs.node.ProjectNodeSetup"
-                class="com.github.l34130.mise.nodejs.node.ProjectNodeSetup"
+        <action id="com.github.l34130.mise.nodejs.node.MiseProjectNodeSetup"
+                class="com.github.l34130.mise.nodejs.node.MiseProjectNodeSetup"
                 text="Reload NodeJS Interpreter"
         >
             <add-to-group group-id="com.github.l34130.mise.actions"/>

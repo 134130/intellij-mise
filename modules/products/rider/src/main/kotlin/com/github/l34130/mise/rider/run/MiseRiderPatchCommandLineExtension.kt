@@ -16,7 +16,7 @@ import com.jetbrains.rider.runtime.DotNetRuntime
 import org.jetbrains.concurrency.Promise
 import org.jetbrains.concurrency.resolvedPromise
 
-class RiderPatchCommandLineExtension : PatchCommandLineExtension {
+class MiseRiderPatchCommandLineExtension : PatchCommandLineExtension {
     override fun patchDebugCommandLine(
         lifetime: Lifetime,
         workerRunInfo: WorkerRunInfo,
@@ -45,18 +45,20 @@ class RiderPatchCommandLineExtension : PatchCommandLineExtension {
             return
         }
 
-        val miseEnvVars = MiseCommandLineHelper.getEnvVars(
-            workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
-            configEnvironment = projectState.miseConfigEnvironment
-        ).fold(
-            onSuccess = { envVars -> envVars },
-            onFailure = {
-                if (it !is MiseCommandLineNotFoundException) {
-                    MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
-                }
-                emptyMap()
-            },
-        )
+        val miseEnvVars =
+            MiseCommandLineHelper
+                .getEnvVars(
+                    workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
+                    configEnvironment = projectState.miseConfigEnvironment,
+                ).fold(
+                    onSuccess = { envVars -> envVars },
+                    onFailure = {
+                        if (it !is MiseCommandLineNotFoundException) {
+                            MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                        }
+                        emptyMap()
+                    },
+                )
 
         commandLine.withEnvironment(miseEnvVars)
     }

@@ -1,5 +1,5 @@
 <idea-plugin require-restart="false">
     <extensions defaultExtensionNs="com.intellij">
-        <rider.patchCommandLine implementation="com.github.l34130.mise.rider.run.RiderPatchCommandLineExtension"/>
+        <rider.patchCommandLine implementation="com.github.l34130.mise.rider.run.MiseRiderPatchCommandLineExtension"/>
     </extensions>
 </idea-plugin>

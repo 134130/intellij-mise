@@ -13,7 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import kotlin.reflect.KClass
 
-class ProjectGoSdkSetup : AbstractProjectSdkSetup() {
+class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
     override fun getDevToolName() = MiseDevToolName("go")
 
     override fun setupSdk(

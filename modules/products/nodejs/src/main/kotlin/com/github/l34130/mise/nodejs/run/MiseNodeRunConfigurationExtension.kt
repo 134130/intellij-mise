@@ -16,9 +16,9 @@ import com.intellij.openapi.options.SettingsEditor
 import com.jetbrains.nodejs.run.NodeJsRunConfiguration
 import org.jdom.Element
 
-class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
+class MiseNodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
     companion object {
-        private val LOG = Logger.getInstance(NodeRunConfigurationExtension::class.java)
+        private val LOG = Logger.getInstance(MiseNodeRunConfigurationExtension::class.java)
     }
 
     override fun getEditorTitle(): String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
@@ -54,10 +54,11 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
             when {
                 projectState.useMiseDirEnv -> project.basePath to projectState.miseConfigEnvironment
                 runConfigState?.useMiseDirEnv == true -> {
-                    val nodejsWorkDir = when(configuration) {
-                        is NodeJsRunConfiguration -> configuration.workingDirectory
-                        else -> null
-                    }
+                    val nodejsWorkDir =
+                        when (configuration) {
+                            is NodeJsRunConfiguration -> configuration.workingDirectory
+                            else -> null
+                        }
 
                     (nodejsWorkDir ?: project.basePath) to runConfigState.miseConfigEnvironment
                 }
@@ -66,16 +67,18 @@ class NodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
 
         return object : NodeRunConfigurationLaunchSession() {
             override fun addNodeOptionsTo(targetRun: NodeTargetRun) {
-                val envVars = MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
-                    .fold(
-                        onSuccess = { envVars -> envVars },
-                        onFailure = {
-                            if (it !is MiseCommandLineNotFoundException) {
-                                MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
-                            }
-                            emptyMap()
-                        },
-                    )
+                val envVars =
+                    MiseCommandLineHelper
+                        .getEnvVars(workDir, configEnvironment)
+                        .fold(
+                            onSuccess = { envVars -> envVars },
+                            onFailure = {
+                                if (it !is MiseCommandLineNotFoundException) {
+                                    MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                                }
+                                emptyMap()
+                            },
+                        )
 
                 for ((key, value) in envVars) {
                     targetRun.commandLineBuilder.addEnvironmentVariable(key, value)

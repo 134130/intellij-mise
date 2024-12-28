@@ -19,7 +19,7 @@ import com.intellij.openapi.project.Project
 import org.jdom.Element
 import java.util.concurrent.ConcurrentHashMap
 
-class IdeaRunConfigurationExtension : RunConfigurationExtension() {
+class MiseIdeaRunConfigurationExtension : RunConfigurationExtension() {
     // Used for cleanup the configuration after the execution has ended.
     private val runningProcessEnvs = ConcurrentHashMap<Project, Map<String, String>>()
 

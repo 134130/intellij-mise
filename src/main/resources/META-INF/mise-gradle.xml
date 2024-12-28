@@ -1,6 +1,6 @@
 <idea-plugin require-restart="false">
     <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
-        <executionEnvironmentProvider implementation="com.github.l34130.mise.gradle.run.GradleEnvironmentProvider"
+        <executionEnvironmentProvider implementation="com.github.l34130.mise.gradle.run.MiseGradleEnvironmentProvider"
                                       order="first"/>
     </extensions>
 </idea-plugin>

@@ -14,7 +14,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.options.SettingsEditor
 import org.jdom.Element
 
-class GoLandRunConfigurationExtension : GoRunConfigurationExtension() {
+class MiseGoLandRunConfigurationExtension : GoRunConfigurationExtension() {
     override fun getEditorTitle(): String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
     override fun <P : GoRunConfigurationBase<*>> createEditor(configuration: P): SettingsEditor<P> =
@@ -48,13 +48,15 @@ class GoLandRunConfigurationExtension : GoRunConfigurationExtension() {
         val projectState = project.service<MiseSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
-        val (workDir, configEnvironment) = when {
-            projectState.useMiseDirEnv -> project.basePath to projectState.miseConfigEnvironment
-            runConfigState?.useMiseDirEnv == true -> configuration.getWorkingDirectory() to runConfigState.miseConfigEnvironment
-            else -> return
-        }
+        val (workDir, configEnvironment) =
+            when {
+                projectState.useMiseDirEnv -> project.basePath to projectState.miseConfigEnvironment
+                runConfigState?.useMiseDirEnv == true -> configuration.getWorkingDirectory() to runConfigState.miseConfigEnvironment
+                else -> return
+            }
 
-        MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
+        MiseCommandLineHelper
+            .getEnvVars(workDir, configEnvironment)
             .fold(
                 onSuccess = { envVars -> envVars },
                 onFailure = {

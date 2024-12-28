@@ -1,11 +1,11 @@
 <idea-plugin require-restart="false">
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.github.l34130.mise.nodejs.deno.ProjectDenoSetup"/>
+        <postStartupActivity implementation="com.github.l34130.mise.nodejs.deno.MiseProjectDenoSetup"/>
     </extensions>
 
     <actions>
-        <action id="com.github.l34130.mise.nodejs.deno.ProjectDenoSetup"
-                class="com.github.l34130.mise.nodejs.deno.ProjectDenoSetup"
+        <action id="com.github.l34130.mise.nodejs.deno.MiseProjectDenoSetup"
+                class="com.github.l34130.mise.nodejs.deno.MiseProjectDenoSetup"
                 text="Reload Deno"
         >
             <add-to-group group-id="com.github.l34130.mise.actions"/>
