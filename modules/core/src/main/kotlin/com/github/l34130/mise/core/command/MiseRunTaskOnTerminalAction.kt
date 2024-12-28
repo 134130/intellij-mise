@@ -2,6 +2,7 @@ package com.github.l34130.mise.core.command
 
 import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbAwareAction
@@ -15,6 +16,8 @@ class MiseRunTaskOnTerminalAction(
         "Execute the Mise task on Terminal",
         AllIcons.Actions.Execute,
     ) {
+    override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
+
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project
         if (project == null) {
