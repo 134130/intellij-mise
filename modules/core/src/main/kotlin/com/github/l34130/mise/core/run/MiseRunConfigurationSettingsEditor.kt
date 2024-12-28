@@ -16,6 +16,7 @@ import com.intellij.ui.layout.ComponentPredicate
 import com.intellij.ui.layout.and
 import com.intellij.ui.layout.not
 import com.intellij.ui.layout.selected
+import com.intellij.util.application
 import org.jdom.Element
 import java.awt.BorderLayout
 import javax.swing.JComponent
@@ -26,21 +27,21 @@ private val USER_DATA_KEY = Key<MiseRunConfigurationState>("Mise Run Settings")
 class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     private val project: Project,
 ) : SettingsEditor<T>() {
-    private val projectState = project.service<MiseSettings>().state
-    private val useProjectWideMiseConfig = projectState.useMiseDirEnv
-    private val useProjectWideMiseConfigPredicate = ComponentPredicate.fromValue(useProjectWideMiseConfig)
+    private val applicationState = application.service<MiseSettings>().state
+    private val useApplicationWideMiseConfig = applicationState.useMiseDirEnv
+    private val useApplicationWideMiseConfigPredicate = ComponentPredicate.fromValue(useApplicationWideMiseConfig)
 
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
     private val myMiseConfigEnvironmentTf = JBTextField()
 
-    override fun createEditor(): JComponent {
-        return JPanel(BorderLayout()).apply {
+    override fun createEditor(): JComponent =
+        JPanel(BorderLayout()).apply {
             add(
                 panel {
                     row {
                         cell(myMiseDirEnvCb)
                             .comment("Load environment variables from mise configuration file(s)")
-                    }.enabledIf(useProjectWideMiseConfigPredicate.not())
+                    }.enabledIf(useApplicationWideMiseConfigPredicate.not())
                     row("Config Environment:") {
                         cell(myMiseConfigEnvironmentTf)
                             .comment(
@@ -51,20 +52,19 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
                             ).columns(COLUMNS_LARGE)
                             .focused()
                             .resizableColumn()
-                    }.enabledIf(myMiseDirEnvCb.selected.and(useProjectWideMiseConfigPredicate.not()))
+                    }.enabledIf(myMiseDirEnvCb.selected.and(useApplicationWideMiseConfigPredicate.not()))
                     row {
                         icon(AllIcons.General.ShowWarning)
                         label("Using the configuration in Settings / Tools / Mise Settings")
                             .bold()
-                    }.visibleIf(useProjectWideMiseConfigPredicate)
+                    }.visibleIf(useApplicationWideMiseConfigPredicate)
                 },
             )
         }
-    }
 
     // Write to persistence from the UI
     override fun applyEditorTo(config: T) {
-        val projectState = project.service<MiseSettings>().state
+        val projectState = application.service<MiseSettings>().state
 
         // When the project is configured to use the project-wide mise configuration
         if (projectState.useMiseDirEnv) {
@@ -88,10 +88,10 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
         val useMiseDirEnv: Boolean
         val miseConfigEnvironment: String
 
-        when(useProjectWideMiseConfig) {
+        when (useApplicationWideMiseConfig) {
             true -> {
-                useMiseDirEnv = projectState.useMiseDirEnv
-                miseConfigEnvironment = projectState.miseConfigEnvironment
+                useMiseDirEnv = applicationState.useMiseDirEnv
+                miseConfigEnvironment = applicationState.miseConfigEnvironment
             }
             false -> {
                 useMiseDirEnv = runConfigurationState.useMiseDirEnv

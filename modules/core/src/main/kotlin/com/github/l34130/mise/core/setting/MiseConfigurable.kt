@@ -1,5 +1,6 @@
 package com.github.l34130.mise.core.setting
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
@@ -10,6 +11,7 @@ import com.intellij.ui.dsl.builder.COLUMNS_LARGE
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.selected
+import com.intellij.util.application
 import java.awt.BorderLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -17,14 +19,22 @@ import javax.swing.JPanel
 class MiseConfigurable(
     private val project: Project,
 ) : SearchableConfigurable {
+    private val myMiseExecutableTf =
+        textFieldWithHistoryWithBrowseButton(
+            project = project,
+            browseDialogTitle = "Select Mise Executable",
+            fileChooserDescriptor = FileChooserDescriptor(true, false, false, false, false, false),
+            historyProvider = { listOf("/opt/homebrew/bin/mise").distinct() },
+        )
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
     private val myMiseConfigEnvironmentTf = JBTextField()
 
     override fun getDisplayName(): String = "Mise Settings"
 
     override fun createComponent(): JComponent {
-        val service = MiseSettings.getService(project)
+        val service = application.service<MiseSettings>()
 
+        myMiseExecutableTf.setTextAndAddToHistory(service.state.executablePath)
         myMiseDirEnvCb.isSelected = service.state.useMiseDirEnv
         myMiseConfigEnvironmentTf.text = service.state.miseConfigEnvironment
 
@@ -33,20 +43,14 @@ class MiseConfigurable(
                 panel {
                     row("Mise Executable:") {
                         cell(
-                            textFieldWithHistoryWithBrowseButton(
-                                project = project,
-                                browseDialogTitle = "Select Mise Executable",
-                                fileChooserDescriptor = FileChooserDescriptor(true, false, false, false, false, false),
-                                historyProvider = { listOf("/opt/homebrew/bin/mise").distinct() },
-                            ).apply {
-                                setTextAndAddToHistory(service.state.executablePath)
+                            myMiseExecutableTf.apply {
                                 setTextFieldPreferredWidth(50)
-                            }
+                            },
                         ).comment(
                             """
                             Specify the path to the mise executable.</br>
                             Not installed? Visit the <a href='https://mise.jdx.dev/installing-mise.html'>mise installation</a>
-                            """.trimIndent()
+                            """.trimIndent(),
                         ).resizableColumn()
                     }
 
@@ -74,14 +78,16 @@ class MiseConfigurable(
     }
 
     override fun isModified(): Boolean {
-        val service = MiseSettings.getService(project)
-        return myMiseDirEnvCb.isSelected != service.state.useMiseDirEnv ||
-                myMiseConfigEnvironmentTf.text != service.state.miseConfigEnvironment
+        val service = application.service<MiseSettings>()
+        return myMiseExecutableTf.text != service.state.executablePath ||
+            myMiseDirEnvCb.isSelected != service.state.useMiseDirEnv ||
+            myMiseConfigEnvironmentTf.text != service.state.miseConfigEnvironment
     }
 
     override fun apply() {
         if (isModified) {
-            val service = MiseSettings.getService(project)
+            val service = application.service<MiseSettings>()
+            service.state.executablePath = myMiseExecutableTf.text
             service.state.useMiseDirEnv = myMiseDirEnvCb.isSelected
             service.state.miseConfigEnvironment = myMiseConfigEnvironmentTf.text
         }

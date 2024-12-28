@@ -6,6 +6,7 @@ import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.openapi.components.service
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafPsiElement
+import com.intellij.util.application
 import org.toml.lang.psi.TomlKey
 import org.toml.lang.psi.TomlKeySegment
 import org.toml.lang.psi.TomlKeyValue
@@ -21,7 +22,7 @@ class MiseRunLineMarkerProvider : RunLineMarkerContributor() {
 
         val taskName = getTaskInfo(element) ?: return null
 
-        val miseSettings = element.project.service<MiseSettings>()
+        val miseSettings = application.service<MiseSettings>()
         val configEnvironment = miseSettings.state.miseConfigEnvironment
 
         return Info(MiseRunTaskOnTerminalAction(taskName, configEnvironment))

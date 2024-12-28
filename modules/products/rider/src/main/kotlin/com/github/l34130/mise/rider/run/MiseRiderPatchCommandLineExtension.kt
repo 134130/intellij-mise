@@ -7,7 +7,9 @@ import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.ProcessInfo
 import com.intellij.execution.process.ProcessListener
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.util.application
 import com.jetbrains.rd.util.lifetime.Lifetime
 import com.jetbrains.rider.projectView.solutionDirectoryPath
 import com.jetbrains.rider.run.PatchCommandLineExtension
@@ -40,7 +42,7 @@ class MiseRiderPatchCommandLineExtension : PatchCommandLineExtension {
         commandLine: GeneralCommandLine,
         project: Project,
     ) {
-        val projectState = MiseSettings.getService(project).state
+        val projectState = application.service<MiseSettings>().state
         if (!projectState.useMiseDirEnv) {
             return
         }

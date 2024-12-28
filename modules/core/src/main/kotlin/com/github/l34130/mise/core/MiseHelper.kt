@@ -7,6 +7,7 @@ import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.components.service
+import com.intellij.util.application
 import java.util.function.Supplier
 
 object MiseHelper {
@@ -15,7 +16,7 @@ object MiseHelper {
         workingDirectory: Supplier<String?>,
     ): Map<String, String> {
         val project = configuration.project
-        val projectState = project.service<MiseSettings>().state
+        val projectState = application.service<MiseSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
         val (workDir, configEnvironment) =

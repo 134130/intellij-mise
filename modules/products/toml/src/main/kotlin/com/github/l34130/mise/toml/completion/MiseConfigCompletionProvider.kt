@@ -8,8 +8,10 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.openapi.components.service
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.ProcessingContext
+import com.intellij.util.application
 import kotlin.io.path.Path
 
 fun normalizePath(path: String) =
@@ -30,16 +32,18 @@ class MiseConfigCompletionProvider : CompletionProvider<CompletionParameters>() 
             return
         }
 
-        val configEnvironment = MiseSettings.getService(root.project).state.miseConfigEnvironment
+        val configEnvironment = application.service<MiseSettings>().state.miseConfigEnvironment
         // TODO: Store the tasks in a cache and update them only when the file changes
         //    This will prevent unnecessary calls to the CLI or when the file is an invalid state
-        val tasksFromMise = MiseCommandLineHelper.getTasks(
-            workDir = root.project.basePath,
-            configEnvironment = configEnvironment,
-        ).fold(
-            onSuccess = { tasks -> tasks },
-            onFailure = { emptyList() },
-        )
+        val tasksFromMise =
+            MiseCommandLineHelper
+                .getTasks(
+                    workDir = root.project.basePath,
+                    configEnvironment = configEnvironment,
+                ).fold(
+                    onSuccess = { tasks -> tasks },
+                    onFailure = { emptyList() },
+                )
 
         val tasksInFile = MiseConfigPsiUtils.getMiseTasks(root)
         val uniqueTasks = HashMap<String, MiseTask>()

@@ -6,20 +6,14 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
-import com.intellij.openapi.components.service
 import com.intellij.openapi.options.ShowSettingsUtil
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.EnvironmentUtil
 import java.io.File
 
-
-@Service(Service.Level.PROJECT)
+@Service(Service.Level.APP)
 @State(name = "com.github.l34130.mise.settings.MiseSettings", storages = [Storage("mise.xml")])
-class MiseSettings(
-    private val project: Project,
-) : PersistentStateComponent<MiseSettings.MyState> {
-
+class MiseSettings : PersistentStateComponent<MiseSettings.MyState> {
     private var myState = MyState()
 
     override fun getState() = myState
@@ -29,25 +23,28 @@ class MiseSettings(
     }
 
     override fun noStateLoaded() {
-        myState = MyState().also {
-            it.executablePath = getMiseExecutablePath() ?: ""
-        }
+        myState =
+            MyState().also {
+                it.executablePath = getMiseExecutablePath() ?: ""
+            }
     }
 
     override fun initializeComponent() {
-        myState = MyState().also {
-            it.executablePath = myState.executablePath.takeIf { it.isNotEmpty() } ?: getMiseExecutablePath() ?: ""
-            it.useMiseDirEnv = myState.useMiseDirEnv
-            it.miseConfigEnvironment = myState.miseConfigEnvironment
-        }
+        myState =
+            MyState().also {
+                it.executablePath = myState.executablePath.takeIf { it.isNotEmpty() } ?: getMiseExecutablePath() ?: ""
+                it.useMiseDirEnv = myState.useMiseDirEnv
+                it.miseConfigEnvironment = myState.miseConfigEnvironment
+            }
 
         if (myState.executablePath.isEmpty()) {
-            MiseNotificationService.getInstance(project).warn(
+            MiseNotificationService.getInstance(null).warn(
                 title = "Mise Executable Not Found",
-                htmlText = """
+                htmlText =
+                    """
                     Mise executable not found in PATH.<br/>
                     Please specify the path to the mise executable in the settings.
-                """.trimIndent(),
+                    """.trimIndent(),
                 actionProvider = {
                     NotificationAction.createSimple(
                         "Open settings",
@@ -60,8 +57,6 @@ class MiseSettings(
     }
 
     companion object {
-        fun getService(project: Project): MiseSettings = project.service<MiseSettings>()
-
         private fun getMiseExecutablePath(): String? {
             val path = EnvironmentUtil.getValue("PATH") ?: return null
 
@@ -81,12 +76,11 @@ class MiseSettings(
         var useMiseDirEnv: Boolean = true
         var miseConfigEnvironment: String = ""
 
-        public override fun clone(): MyState {
-            return MyState().also {
+        public override fun clone(): MyState =
+            MyState().also {
                 it.executablePath = executablePath
                 it.useMiseDirEnv = useMiseDirEnv
                 it.miseConfigEnvironment = miseConfigEnvironment
             }
-        }
     }
 }

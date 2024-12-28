@@ -20,6 +20,7 @@ import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.util.application
 import kotlin.reflect.KClass
 
 abstract class AbstractProjectSdkSetup :
@@ -51,7 +52,7 @@ abstract class AbstractProjectSdkSetup :
             val devToolName = getDevToolName()
             val miseNotificationService = project.service<MiseNotificationService>()
 
-            val configEnvironment = MiseSettings.getService(project).state.miseConfigEnvironment
+            val configEnvironment = application.service<MiseSettings>().state.miseConfigEnvironment
             val toolsResult =
                 MiseCommandLineHelper.getDevTools(workDir = project.basePath, configEnvironment = configEnvironment)
             val tools =
