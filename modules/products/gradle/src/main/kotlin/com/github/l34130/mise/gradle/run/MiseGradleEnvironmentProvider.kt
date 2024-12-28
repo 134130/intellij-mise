@@ -1,14 +1,9 @@
 package com.github.l34130.mise.gradle.run
 
-import com.github.l34130.mise.core.command.MiseCommandLineHelper
-import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
-import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
-import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
-import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.MiseHelper
 import com.intellij.execution.Executor
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
-import com.intellij.openapi.components.service
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.task.ExecuteRunConfigurationTask
@@ -49,33 +44,11 @@ class MiseGradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
         }
 
         if (environment?.runProfile is GradleRunConfiguration) {
-            val runProfile = task.runProfile as GradleRunConfiguration
-            val projectState = project.service<MiseSettings>().state
-            val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(runProfile)
-
-            val (workDir, configEnvironment) =
-                when {
-                    projectState.useMiseDirEnv -> project.basePath to projectState.miseConfigEnvironment
-                    runConfigState?.useMiseDirEnv == true -> {
-                        (runProfile.projectPathOnTarget ?: runProfile.project.basePath) to
-                            runConfigState.miseConfigEnvironment
-                    }
-
-                    else -> return environment
-                }
-
             val miseEnvVars =
-                MiseCommandLineHelper
-                    .getEnvVars(workDir, configEnvironment)
-                    .fold(
-                        onSuccess = { envVars -> envVars },
-                        onFailure = {
-                            if (it !is MiseCommandLineNotFoundException) {
-                                MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
-                            }
-                            emptyMap()
-                        },
-                    )
+                MiseHelper.getMiseEnvVarsOrNotify(
+                    configuration = runProfile,
+                    workingDirectory = { runProfile.projectPathOnTarget },
+                )
 
             val settings = (environment.runProfile as GradleRunConfiguration).settings
             settings.env = settings.env + miseEnvVars
