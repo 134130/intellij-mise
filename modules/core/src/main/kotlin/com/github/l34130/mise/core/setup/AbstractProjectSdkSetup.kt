@@ -115,13 +115,13 @@ abstract class AbstractProjectSdkSetup :
                     val updated = setupSdk(tool, project)
                     if (updated || isUserInteraction) {
                         miseNotificationService.info(
-                            "${devToolName.canonicalName()} configured to $devToolName@${tool.version}",
+                            "${devToolName.canonicalName()} configured to ${devToolName.value}@${tool.version}",
                             tool.source?.absolutePath?.let(FileUtil::getLocationRelativeToUserHome) ?: "unknown source",
                         )
                     }
                 } catch (e: Exception) {
                     miseNotificationService.error(
-                        "Failed to set ${devToolName.canonicalName()} to $devToolName@${tool.version}",
+                        "Failed to set ${devToolName.canonicalName()} to ${devToolName.value}@${tool.version}",
                         e.message ?: e.javaClass.simpleName,
                     )
                 }
