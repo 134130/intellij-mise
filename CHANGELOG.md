@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [3.3.0-python] - 2024-12-28
+
+**Full Changelog**: https://github.com/134130/intellij-mise/compare/v3.2.3...v3.3.0-pycharm
+
 ## [3.2.3] - 2024-12-26
 
 ### Fixed
@@ -165,7 +169,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.2.3...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.3.0-python...HEAD
+[3.3.0-python]: https://github.com/134130/intellij-mise/compare/v3.2.3...v3.3.0-python
 [3.2.3]: https://github.com/134130/intellij-mise/compare/v3.2.2...v3.2.3
 [3.2.2]: https://github.com/134130/intellij-mise/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/134130/intellij-mise/compare/v3.2.0...v3.2.1
