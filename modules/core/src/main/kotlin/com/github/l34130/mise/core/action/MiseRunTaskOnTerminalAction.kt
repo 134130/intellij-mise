@@ -1,4 +1,4 @@
-package com.github.l34130.mise.core.command
+package com.github.l34130.mise.core.action
 
 import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.icons.AllIcons

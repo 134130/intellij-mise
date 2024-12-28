@@ -1,6 +1,6 @@
 package com.github.l34130.mise.toml.editor
 
-import com.github.l34130.mise.core.command.MiseRunTaskOnTerminalAction
+import com.github.l34130.mise.core.action.MiseRunTaskOnTerminalAction
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.openapi.components.service
