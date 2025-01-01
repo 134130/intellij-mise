@@ -49,6 +49,7 @@ internal class MiseCommandLine(
             ObjectMapper()
                 .registerKotlinModule()
                 .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
                 .readValue(it, typeReference)
         }
