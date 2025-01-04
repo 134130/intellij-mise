@@ -1,0 +1,1457 @@
+{
+  "$id": "https://mise.jdx.dev/schema/mise.json",
+  "$schema": "http://json-schema.org/2019-09/schema#",
+  "title": "mise",
+  "type": "object",
+  "$defs": {
+    "env": {
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "tools": {
+                "type": "boolean",
+                "description": "load tools before resolving"
+              },
+              "redact": {
+                "type": "boolean",
+                "description": "redact the value from logs"
+              }
+            }
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      },
+      "description": "environment variables",
+      "properties": {
+        "_": {
+          "description": "environment modules",
+          "additionalProperties": true,
+          "properties": {
+            "file": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      ]
+                    },
+                    "tools": {
+                      "type": "boolean",
+                      "description": "load tools before resolving"
+                    },
+                    "redact": {
+                      "type": "boolean",
+                      "description": "redact the value from logs"
+                    }
+                  }
+                },
+                {
+                  "description": "dotenv file to load",
+                  "type": "string"
+                },
+                {
+                  "description": "dotenv files to load",
+                  "items": {
+                    "description": "dotenv file to load",
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "path": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      ]
+                    },
+                    "redact": {
+                      "type": "boolean",
+                      "description": "redact the value from logs"
+                    }
+                  }
+                },
+                {
+                  "description": "PATH entry to add",
+                  "type": "string"
+                },
+                {
+                  "description": "PATH entries to add",
+                  "items": {
+                    "description": "PATH entry to add",
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "python": {
+              "description": "python environment",
+              "properties": {
+                "venv": {
+                  "oneOf": [
+                    {
+                      "description": "path to python virtual environment to use",
+                      "type": "string"
+                    },
+                    {
+                      "description": "virtualenv options",
+                      "properties": {
+                        "create": {
+                          "default": false,
+                          "description": "create a new virtual environment if one does not exist",
+                          "type": "boolean"
+                        },
+                        "path": {
+                          "description": "path to python virtual environment to use",
+                          "type": "string"
+                        },
+                        "python": {
+                          "description": "python version to use",
+                          "type": "string"
+                        },
+                        "python_create_args": {
+                          "description": "additional arguments to pass to python when creating a virtual environment",
+                          "type": "string"
+                        },
+                        "uv_create_args": {
+                          "description": "additional arguments to pass to uv when creating a virtual environment",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["path"],
+                      "type": "object"
+                    }
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "source": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      ]
+                    },
+                    "tools": {
+                      "type": "boolean",
+                      "description": "load tools before resolving"
+                    },
+                    "redact": {
+                      "type": "boolean",
+                      "description": "redact the value from logs"
+                    }
+                  }
+                },
+                {
+                  "description": "bash script to load",
+                  "type": "string"
+                },
+                {
+                  "description": "bash scripts to load",
+                  "items": {
+                    "description": "bash script to load",
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "settings": {
+      "properties": {
+        "activate_aggressive": {
+          "description": "Pushes tools' bin-paths to the front of PATH instead of allowing modifications of PATH after activation to take precedence.",
+          "type": "boolean"
+        },
+        "all_compile": {
+          "description": "do not use precompiled binaries for any tool",
+          "type": "boolean"
+        },
+        "always_keep_download": {
+          "description": "should mise keep downloaded files after installation",
+          "type": "boolean"
+        },
+        "always_keep_install": {
+          "description": "should mise keep install files after installation even if the installation fails",
+          "type": "boolean"
+        },
+        "aqua": {
+          "additionalProperties": false,
+          "properties": {
+            "cosign": {
+              "default": true,
+              "description": "Use cosign to verify aqua tool signatures.",
+              "type": "boolean"
+            },
+            "minisign": {
+              "default": true,
+              "description": "Use minisign to verify aqua tool signatures.",
+              "type": "boolean"
+            },
+            "registry_url": {
+              "description": "URL to fetch aqua registry from.",
+              "type": "string"
+            },
+            "slsa": {
+              "default": true,
+              "description": "Use SLSA to verify aqua tool signatures.",
+              "type": "boolean"
+            }
+          }
+        },
+        "arch": {
+          "description": "Architecture to use for precompiled binaries.",
+          "type": "string"
+        },
+        "asdf": {
+          "description": "use asdf as a default plugin backend",
+          "type": "boolean",
+          "deprecated": true
+        },
+        "asdf_compat": {
+          "description": "set to true to ensure .tool-versions will be compatible with asdf",
+          "type": "boolean",
+          "deprecated": true
+        },
+        "auto_install": {
+          "default": true,
+          "description": "Automatically install missing tools when running `mise x`, `mise run`, or as part of the 'not found' handler.",
+          "type": "boolean"
+        },
+        "auto_install_disable_tools": {
+          "description": "List of tools to skip automatically installing when running `mise x`, `mise run`, or as part of the 'not found' handler.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cache_prune_age": {
+          "default": "30d",
+          "description": "Delete files in cache that have not been accessed in this duration",
+          "type": "string"
+        },
+        "cargo": {
+          "additionalProperties": false,
+          "properties": {
+            "binstall": {
+              "default": true,
+              "description": "Use cargo-binstall instead of cargo install if available",
+              "type": "boolean"
+            }
+          }
+        },
+        "cargo_binstall": {
+          "description": "Use cargo-binstall instead of cargo install if available",
+          "type": "boolean",
+          "deprecated": true
+        },
+        "cd": {
+          "description": "Path to change to after launching mise",
+          "type": "string"
+        },
+        "ci": {
+          "description": "Set to true if running in a CI environment",
+          "type": "boolean"
+        },
+        "color": {
+          "default": true,
+          "description": "Use color in mise terminal output",
+          "type": "boolean"
+        },
+        "debug": {
+          "description": "Sets log level to debug",
+          "type": "boolean"
+        },
+        "default_config_filename": {
+          "default": "mise.toml",
+          "description": "The default config filename read. `mise use` and other commands that create new config files will use this value. This must be an env var.",
+          "type": "string"
+        },
+        "default_tool_versions_filename": {
+          "default": ".tool-versions",
+          "description": "The default .tool-versions filename read. This will not ignore .tool-versions—use override_tool_versions_filename for that. This must be an env var.",
+          "type": "string"
+        },
+        "disable_backends": {
+          "default": [],
+          "description": "Backends to disable such as `asdf` or `pipx`",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "disable_default_registry": {
+          "description": "Disable the default mapping of short tool names like `go` -> `vfox:version-fox/vfox-golang`",
+          "type": "boolean"
+        },
+        "disable_default_shorthands": {
+          "description": "Disables built-in shorthands to asdf/vfox plugins",
+          "type": "boolean",
+          "deprecated": true
+        },
+        "disable_hints": {
+          "default": [],
+          "description": "Turns off helpful hints when using different mise features",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "disable_tools": {
+          "default": [],
+          "description": "Tools defined in mise.toml that should be ignored",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dotnet": {
+          "additionalProperties": false,
+          "properties": {
+            "package_flags": {
+              "default": [],
+              "description": "Extends dotnet search and install abilities.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "registry_url": {
+              "default": "https://api.nuget.org/v3/index.json",
+              "description": "URL to fetch dotnet tools from.",
+              "type": "string"
+            }
+          }
+        },
+        "env": {
+          "default": [],
+          "description": "Env to use for mise.<MISE_ENV>.toml files.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env_file": {
+          "description": "Path to a file containing environment variables to automatically load.",
+          "type": "string"
+        },
+        "erlang": {
+          "additionalProperties": false,
+          "properties": {
+            "compile": {
+              "description": "If true, compile erlang from source. If false, use precompiled binaries. If not set, use precompiled binaries if available.",
+              "type": "boolean"
+            }
+          }
+        },
+        "exec_auto_install": {
+          "default": true,
+          "description": "Automatically install missing tools when running `mise x`.",
+          "type": "boolean"
+        },
+        "experimental": {
+          "description": "Enable experimental mise features which are incomplete or unstable—breakings changes may occur",
+          "type": "boolean"
+        },
+        "fetch_remote_versions_cache": {
+          "default": "1h",
+          "description": "How long to cache remote versions for tools.",
+          "type": "string"
+        },
+        "fetch_remote_versions_timeout": {
+          "default": "5s",
+          "description": "Timeout in seconds for HTTP requests to fetch new tool versions in mise.",
+          "type": "string"
+        },
+        "global_config_file": {
+          "description": "Path to the global mise config file. Default is `~/.config/mise/config.toml`. This must be an env var.",
+          "type": "string"
+        },
+        "global_config_root": {
+          "description": "Path which is used as `{{config_root}}` for the global config file. Default is `$HOME`. This must be an env var.",
+          "type": "string"
+        },
+        "go_default_packages_file": {
+          "default": "~/.default-go-packages",
+          "description": "Path to a file containing default go packages to install when installing go",
+          "type": "string"
+        },
+        "go_download_mirror": {
+          "default": "https://dl.google.com/go",
+          "description": "Mirror to download go sdk tarballs from.",
+          "type": "string"
+        },
+        "go_repo": {
+          "default": "https://github.com/golang/go",
+          "description": "URL to fetch go from.",
+          "type": "string"
+        },
+        "go_set_gobin": {
+          "description": "Changes where `go install` installs binaries to.",
+          "type": "boolean"
+        },
+        "go_set_gopath": {
+          "description": "[deprecated] Set to true to set GOPATH=~/.local/share/mise/installs/go/.../packages.",
+          "type": "boolean",
+          "deprecated": true
+        },
+        "go_set_goroot": {
+          "default": true,
+          "description": "Sets GOROOT=~/.local/share/mise/installs/go/.../.",
+          "type": "boolean"
+        },
+        "go_skip_checksum": {
+          "description": "Set to true to skip checksum verification when downloading go sdk tarballs.",
+          "type": "boolean"
+        },
+        "http_timeout": {
+          "default": "30s",
+          "description": "Timeout in seconds for all HTTP requests in mise.",
+          "type": "string"
+        },
+        "idiomatic_version_file": {
+          "default": true,
+          "description": "Set to false to disable the idiomatic version files such as .node-version, .ruby-version, etc.",
+          "type": "boolean"
+        },
+        "idiomatic_version_file_disable_tools": {
+          "default": [],
+          "description": "Specific tools to disable idiomatic version files for.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ignored_config_paths": {
+          "default": [],
+          "description": "This is a list of config paths that mise will ignore.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "jobs": {
+          "default": 8,
+          "description": "How many jobs to run concurrently such as tool installs.",
+          "type": "number"
+        },
+        "legacy_version_file": {
+          "default": true,
+          "description": "Set to false to disable the idiomatic version files such as .node-version, .ruby-version, etc.",
+          "type": "boolean",
+          "deprecated": true
+        },
+        "legacy_version_file_disable_tools": {
+          "default": [],
+          "description": "Specific tools to disable idiomatic version files for.",
+          "type": "array",
+          "deprecated": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "libgit2": {
+          "default": true,
+          "description": "Use libgit2 for git operations, set to false to shell out to git.",
+          "type": "boolean"
+        },
+        "lockfile": {
+          "default": true,
+          "description": "Create and read lockfiles for tool versions.",
+          "type": "boolean"
+        },
+        "log_level": {
+          "default": "info",
+          "description": "Show more/less output.",
+          "type": "string",
+          "enum": ["trace", "debug", "info", "warn", "error"]
+        },
+        "node": {
+          "additionalProperties": false,
+          "properties": {
+            "compile": {
+              "description": "Compile node from source.",
+              "type": "boolean"
+            },
+            "flavor": {
+              "description": "Install a specific node flavor like glibc-217 or musl. Use with unofficial node build repo.",
+              "type": "string"
+            },
+            "gpg_verify": {
+              "description": "Use gpg to verify node tool signatures.",
+              "type": "boolean"
+            },
+            "mirror_url": {
+              "description": "Mirror to download node tarballs from.",
+              "type": "string"
+            }
+          }
+        },
+        "not_found_auto_install": {
+          "default": true,
+          "description": "Set to false to disable the \"command not found\" handler to autoinstall missing tool versions.",
+          "type": "boolean"
+        },
+        "npm": {
+          "additionalProperties": false,
+          "properties": {
+            "bun": {
+              "description": "Use bun instead of npm if bun is installed and on PATH.",
+              "type": "boolean"
+            }
+          }
+        },
+        "override_config_filenames": {
+          "default": [],
+          "description": "If set, mise will ignore default config files like `mise.toml` and use these filenames instead. This must be an env var.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "override_tool_versions_filename": {
+          "default": [],
+          "description": "If set, mise will ignore .tool-versions files and use these filename instead. Can be set to `none` to disable .tool-versions. This must be an env var.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "paranoid": {
+          "description": "Enables extra-secure behavior.",
+          "type": "boolean"
+        },
+        "pin": {
+          "description": "Default to pinning versions when running `mise use` in mise.toml files.",
+          "type": "boolean"
+        },
+        "pipx": {
+          "additionalProperties": false,
+          "properties": {
+            "uvx": {
+              "description": "Use uvx instead of pipx if uv is installed and on PATH.",
+              "type": "boolean"
+            }
+          }
+        },
+        "pipx_uvx": {
+          "description": "Use uvx instead of pipx if uv is installed and on PATH.",
+          "type": "boolean"
+        },
+        "plugin_autoupdate_last_check_duration": {
+          "default": "7d",
+          "description": "How long to wait before updating plugins automatically (note this isn't currently implemented).",
+          "type": "string"
+        },
+        "profile": {
+          "description": "Profile to use for mise.${MISE_PROFILE}.toml files.",
+          "type": "string",
+          "deprecated": true
+        },
+        "python": {
+          "additionalProperties": false,
+          "properties": {
+            "compile": {
+              "description": "If true, compile python from source. If false, use precompiled binaries. If not set, use precompiled binaries if available.",
+              "type": "boolean"
+            },
+            "default_packages_file": {
+              "description": "Path to a file containing default python packages to install when installing a python version.",
+              "type": "string"
+            },
+            "patch_url": {
+              "description": "URL to fetch python patches from to pass to python-build.",
+              "type": "string"
+            },
+            "patches_directory": {
+              "description": "Directory to fetch python patches from.",
+              "type": "string"
+            },
+            "precompiled_arch": {
+              "description": "Specify the architecture to use for precompiled binaries.",
+              "type": "string"
+            },
+            "precompiled_flavor": {
+              "description": "Specify the flavor to use for precompiled binaries.",
+              "type": "string"
+            },
+            "precompiled_os": {
+              "description": "Specify the OS to use for precompiled binaries.",
+              "type": "string"
+            },
+            "pyenv_repo": {
+              "default": "https://github.com/pyenv/pyenv.git",
+              "description": "URL to fetch pyenv from for compiling python with python-build.",
+              "type": "string"
+            },
+            "uv_venv_auto": {
+              "description": "Integrate with uv to automatically create/source venvs if uv.lock is present.",
+              "type": "boolean"
+            },
+            "uv_venv_create_args": {
+              "description": "Arguments to pass to uv when creating a venv.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "venv_auto_create": {
+              "description": "Automatically create virtualenvs for python tools.",
+              "type": "boolean",
+              "deprecated": true
+            },
+            "venv_create_args": {
+              "description": "Arguments to pass to python when creating a venv. (not used for uv venv creation)",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "venv_stdlib": {
+              "description": "Prefer to use venv from Python's standard library.",
+              "type": "boolean"
+            }
+          }
+        },
+        "python_compile": {
+          "description": "If true, compile python from source. If false, use precompiled binaries. If not set, use precompiled binaries if available.",
+          "type": "boolean",
+          "deprecated": true
+        },
+        "python_default_packages_file": {
+          "description": "Path to a file containing default python packages to install when installing python.",
+          "type": "string",
+          "deprecated": true
+        },
+        "python_patch_url": {
+          "description": "URL to fetch python patches from.",
+          "type": "string",
+          "deprecated": true
+        },
+        "python_patches_directory": {
+          "description": "Directory to fetch python patches from.",
+          "type": "string",
+          "deprecated": true
+        },
+        "python_precompiled_arch": {
+          "description": "Specify the architecture to use for precompiled binaries.",
+          "type": "string",
+          "deprecated": true
+        },
+        "python_precompiled_os": {
+          "description": "Specify the OS to use for precompiled binaries.",
+          "type": "string",
+          "deprecated": true
+        },
+        "python_pyenv_repo": {
+          "description": "URL to fetch pyenv from for compiling python.",
+          "type": "string",
+          "deprecated": true
+        },
+        "python_venv_auto_create": {
+          "description": "Automatically create virtualenvs for python tools.",
+          "type": "boolean",
+          "deprecated": true
+        },
+        "python_venv_stdlib": {
+          "description": "Prefer to use venv from Python's standard library.",
+          "type": "boolean",
+          "deprecated": true
+        },
+        "quiet": {
+          "description": "Suppress all output except errors.",
+          "type": "boolean"
+        },
+        "raw": {
+          "description": "Connect stdin/stdout/stderr to child processes.",
+          "type": "boolean"
+        },
+        "ruby": {
+          "additionalProperties": false,
+          "properties": {
+            "apply_patches": {
+              "description": "A list of patch files or URLs to apply to ruby source.",
+              "type": "string"
+            },
+            "default_packages_file": {
+              "default": "~/.default-gems",
+              "description": "Path to a file containing default ruby gems to install when installing ruby.",
+              "type": "string"
+            },
+            "ruby_build_opts": {
+              "description": "Options to pass to ruby-build.",
+              "type": "string"
+            },
+            "ruby_build_repo": {
+              "default": "https://github.com/rbenv/ruby-build.git",
+              "description": "URL to fetch ruby-build from.",
+              "type": "string"
+            },
+            "ruby_install": {
+              "description": "Use ruby-install instead of ruby-build.",
+              "type": "boolean"
+            },
+            "ruby_install_opts": {
+              "description": "Options to pass to ruby-install.",
+              "type": "string"
+            },
+            "ruby_install_repo": {
+              "default": "https://github.com/postmodern/ruby-install.git",
+              "description": "URL to fetch ruby-install from.",
+              "type": "string"
+            },
+            "verbose_install": {
+              "description": "Set to true to enable verbose output during ruby installation.",
+              "type": "boolean"
+            }
+          }
+        },
+        "rust": {
+          "additionalProperties": false,
+          "properties": {
+            "cargo_home": {
+              "description": "Path to the cargo home directory. Defaults to ~/.cargo or %USERPROFILE%\\.cargo",
+              "type": "string"
+            },
+            "rustup_home": {
+              "description": "Path to the rustup home directory. Defaults to ~/.rustup or %USERPROFILE%\\.rustup",
+              "type": "string"
+            }
+          }
+        },
+        "shorthands_file": {
+          "description": "Path to a file containing custom tool shorthands.",
+          "type": "string"
+        },
+        "silent": {
+          "description": "Suppress all `mise run|watch` output except errors—including what tasks output.",
+          "type": "boolean"
+        },
+        "sops": {
+          "additionalProperties": false,
+          "properties": {
+            "age_key": {
+              "description": "The age private key to use for sops secret decryption.",
+              "type": "string"
+            },
+            "age_key_file": {
+              "description": "Path to the age private key file to use for sops secret decryption.",
+              "type": "string"
+            },
+            "age_recipients": {
+              "description": "The age public keys to use for sops secret encryption.",
+              "type": "string"
+            },
+            "rops": {
+              "default": true,
+              "description": "Use rops to decrypt sops files. Disable to shell out to `sops` which will slow down mise but sops may offer features not available in rops.",
+              "type": "boolean"
+            }
+          }
+        },
+        "status": {
+          "additionalProperties": false,
+          "properties": {
+            "missing_tools": {
+              "default": "if_other_versions_installed",
+              "description": "Show a warning if tools are not installed when entering a directory with a mise.toml file.",
+              "type": "string"
+            },
+            "show_env": {
+              "description": "Show configured env vars when entering a directory with a mise.toml file.",
+              "type": "boolean"
+            },
+            "show_tools": {
+              "description": "Show configured env vars when entering a directory with a mise.toml file.",
+              "type": "boolean"
+            }
+          }
+        },
+        "swift": {
+          "additionalProperties": false,
+          "properties": {
+            "gpg_verify": {
+              "description": "Use gpg to verify swift tool signatures.",
+              "type": "boolean"
+            },
+            "platform": {
+              "description": "Override the platform to use for precompiled binaries.",
+              "type": "string"
+            }
+          }
+        },
+        "system_config_file": {
+          "description": "Path to the system mise config file. Default is `/etc/mise/config.toml`. This must be an env var.",
+          "type": "string"
+        },
+        "task_disable_paths": {
+          "default": [],
+          "description": "Paths that mise will not look for tasks in.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "task_output": {
+          "description": "Change output style when executing tasks.",
+          "type": "string",
+          "enum": [
+            "prefix",
+            "interleave",
+            "keep-order",
+            "replacing",
+            "timed",
+            "quiet",
+            "silent"
+          ]
+        },
+        "task_run_auto_install": {
+          "default": true,
+          "description": "Automatically install missing tools when executing tasks.",
+          "type": "boolean"
+        },
+        "task_skip": {
+          "default": [],
+          "description": "Tasks to skip when running `mise run`.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "task_timings": {
+          "description": "Show completion message with elapsed time for each task on `mise run`. Default shows when output type is `prefix`.",
+          "type": "boolean"
+        },
+        "trace": {
+          "description": "Sets log level to trace",
+          "type": "boolean"
+        },
+        "trusted_config_paths": {
+          "default": [],
+          "description": "This is a list of config paths that mise will automatically mark as trusted.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unix_default_file_shell_args": {
+          "default": "sh",
+          "description": "List of default shell arguments for unix to be used with `file`. For example `sh`.",
+          "type": "string"
+        },
+        "unix_default_inline_shell_args": {
+          "default": "sh -c -o errexit",
+          "description": "List of default shell arguments for unix to be used with inline commands. For example, `sh`, `-c` for sh.",
+          "type": "string"
+        },
+        "use_file_shell_for_executable_tasks": {
+          "default": false,
+          "description": "Determines whether to use a specified shell for executing tasks in the tasks directory. When set to true, the shell defined in the file will be used, or the default shell specified by `windows_default_file_shell_args` or `unix_default_file_shell_args` will be applied. If set to false, tasks will be executed directly as programs.",
+          "type": "boolean"
+        },
+        "use_versions_host": {
+          "default": true,
+          "description": "Set to false to disable using the mise-versions API as a quick way for mise to query for new versions.",
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Shows more verbose output such as installation logs when installing tools.",
+          "type": "boolean"
+        },
+        "vfox": {
+          "description": "Use vfox as a default plugin backend instead of asdf.",
+          "type": "boolean",
+          "deprecated": true
+        },
+        "windows_default_file_shell_args": {
+          "default": "cmd /c",
+          "description": "List of default shell arguments for Windows to be used for file commands. For example, `cmd`, `/c` for cmd.exe.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "windows_default_inline_shell_args": {
+          "default": "cmd /c",
+          "description": "List of default shell arguments for Windows to be used for inline commands. For example, `cmd`, `/c` for cmd.exe.",
+          "type": "string"
+        },
+        "windows_executable_extensions": {
+          "default": ["exe", "bat", "cmd", "com", "ps1", "vbs"],
+          "description": "List of executable extensions for Windows. For example, `exe` for .exe files, `bat` for .bat files, and so on.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "yes": {
+          "description": "This will automatically answer yes or no to prompts. This is useful for scripting.",
+          "type": "boolean"
+        }
+      }
+    },
+    "task": {
+      "oneOf": [
+        {
+          "description": "script to run",
+          "type": "string"
+        },
+        {
+          "description": "script to run",
+          "items": {
+            "description": "script to run",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "alias": {
+              "oneOf": [
+                {
+                  "description": "alias for this task",
+                  "type": "string"
+                },
+                {
+                  "description": "alias for this task",
+                  "items": {
+                    "description": "alias for this task",
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "depends": {
+              "description": "other tasks to run before this task",
+              "items": {
+                "oneOf": [
+                  {
+                    "description": "task with args to run before this task",
+                    "type": "string"
+                  },
+                  {
+                    "description": "task with args to run before this task",
+                    "items": {
+                      "description": "task name and args",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "depends_post": {
+              "description": "other tasks to run after this task",
+              "items": {
+                "oneOf": [
+                  {
+                    "description": "task with args to run after this task",
+                    "type": "string"
+                  },
+                  {
+                    "description": "task with args to run after this task",
+                    "items": {
+                      "description": "task name and args",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "wait_for": {
+              "description": "if these tasks run, wait for them to complete first",
+              "items": {
+                "description": "task to run before this task",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "description": {
+              "description": "description of task",
+              "type": "string"
+            },
+            "dir": {
+              "description": "directory to run script in, default is current working directory",
+              "type": "string"
+            },
+            "env": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [false],
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "description": "environment variables",
+              "type": "object"
+            },
+            "tools": {
+              "description": "tools to install/activate before running this task",
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "description": "version of the tool to install",
+                    "type": "string"
+                  },
+                  {
+                    "properties": {
+                      "version": {
+                        "description": "version of the tool to install",
+                        "type": "string"
+                      },
+                      "os": {
+                        "oneOf": [
+                          {
+                            "description": "operating system to install on",
+                            "type": "array"
+                          },
+                          {
+                            "description": "option to pass to tool",
+                            "type": "string"
+                          },
+                          {
+                            "description": "option to pass to tool",
+                            "type": "boolean"
+                          }
+                        ]
+                      }
+                    },
+                    "required": ["version"],
+                    "type": "object",
+                    "additionalProperties": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "hide": {
+              "description": "do not display this task",
+              "type": "boolean"
+            },
+            "outputs": {
+              "description": "files created by this task",
+              "items": {
+                "description": "glob pattern or path to files created by this task",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "quiet": {
+              "description": "do not display mise information for this task",
+              "type": "boolean"
+            },
+            "raw": {
+              "description": "directly connect task to stdin/stdout/stderr",
+              "type": "boolean"
+            },
+            "run": {
+              "oneOf": [
+                {
+                  "description": "script to run",
+                  "type": "string"
+                },
+                {
+                  "description": "script to run",
+                  "items": {
+                    "description": "script to run",
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "run_windows": {
+              "oneOf": [
+                {
+                  "description": "script to run on windows",
+                  "type": "string"
+                },
+                {
+                  "description": "script to run on windows",
+                  "items": {
+                    "description": "script to run on windows",
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "file": {
+              "description": "Execute an external script",
+              "type": "string"
+            },
+            "sources": {
+              "description": "files that this task depends on",
+              "items": {
+                "description": "glob pattern or path to files that this task depends on",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "shell": {
+              "description": "specify a shell command to run the script with",
+              "type": "string",
+              "default": "sh -c"
+            },
+            "usage": {
+              "description": "Specify usage (https://usage.jdx.dev/) specs for the task",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "vars": {
+      "description": "variables to set",
+      "type": "object",
+      "properties": {
+        "_": {
+          "description": "vars modules",
+          "additionalProperties": true,
+          "properties": {
+            "file": {
+              "oneOf": [
+                {
+                  "description": "dotenv file to load",
+                  "type": "string"
+                },
+                {
+                  "description": "dotenv files to load",
+                  "items": {
+                    "description": "dotenv file to load",
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "source": {
+              "oneOf": [
+                {
+                  "description": "bash script to load",
+                  "type": "string"
+                },
+                {
+                  "description": "bash scripts to load",
+                  "items": {
+                    "description": "bash script to load",
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": {
+        "description": "value of variable",
+        "type": "string"
+      }
+    },
+    "task_config": {
+      "description": "configuration for task execution/management",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dir": {
+          "description": "default directory to run tasks in defined in this file",
+          "type": "string"
+        },
+        "includes": {
+          "description": "files/directories to include searching for tasks",
+          "items": {
+            "description": "file/directory root to include in task execution",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "tool": {
+      "oneOf": [
+        {
+          "description": "version of the tool to install",
+          "type": "string"
+        },
+        {
+          "properties": {
+            "version": {
+              "description": "version of the tool to install",
+              "type": "string"
+            },
+            "os": {
+              "oneOf": [
+                {
+                  "description": "operating system to install on",
+                  "type": "array"
+                },
+                {
+                  "description": "option to pass to tool",
+                  "type": "string"
+                },
+                {
+                  "description": "option to pass to tool",
+                  "type": "boolean"
+                }
+              ]
+            }
+          },
+          "required": ["version"],
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "hooks": {
+      "description": "hooks to run",
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "description": "script to run",
+            "type": "string"
+          },
+          {
+            "description": "script to run",
+            "items": {
+              "description": "script to run",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "script": {
+                "description": "script to run",
+                "type": "string"
+              },
+              "shell": {
+                "description": "specify the shell to run the script inside of",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        ]
+      }
+    },
+    "watch_files": {
+      "description": "files to watch for changes",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "file to watch for changes",
+        "additionalProperties": false,
+        "properties": {
+          "run": {
+            "type": "string",
+            "description": "script to run when file changes",
+            "items": {
+              "type": "string"
+            }
+          },
+          "patterns": {
+            "type": "array",
+            "description": "patterns to watch for",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "description": "config file for mise version manager (mise.toml)",
+  "properties": {
+    "alias": {
+      "description": "custom shorthands",
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "description": "where the alias goes",
+            "type": "string"
+          },
+          {
+            "description": "tool to set aliases for",
+            "type": "object",
+            "additionalProperties": {
+              "description": "version alias points to",
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "env": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/env"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/env"
+          }
+        }
+      ]
+    },
+    "min_version": {
+      "description": "minimum version of mise required to use this config",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "type": "string"
+    },
+    "redactions": {
+      "description": "env or vars keys to redact from logs",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "plugins": {
+      "additionalProperties": {
+        "description": "url to plugin repository",
+        "type": "string"
+      },
+      "description": "plugins to use",
+      "type": "object"
+    },
+    "settings": {
+      "$ref": "#/$defs/settings",
+      "additionalProperties": false,
+      "description": "mise settings",
+      "type": "object"
+    },
+    "task_config": {
+      "$ref": "#/$defs/task_config"
+    },
+    "tasks": {
+      "additionalProperties": {
+        "$ref": "#/$defs/task"
+      },
+      "description": "task runner tasks",
+      "type": "object"
+    },
+    "tools": {
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/tool"
+            },
+            "type": "array"
+          },
+          {
+            "$ref": "#/$defs/tool"
+          }
+        ]
+      },
+      "description": "dev tools to use",
+      "type": "object"
+    },
+    "hooks": {
+      "$ref": "#/$defs/hooks"
+    },
+    "vars": {
+      "$ref": "#/$defs/vars"
+    },
+    "watch_files": {
+      "$ref": "#/$defs/watch_files"
+    },
+    "_": {
+      "additionalProperties": true
+    }
+  }
+}
