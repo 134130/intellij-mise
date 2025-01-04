@@ -22,7 +22,6 @@
 
         <completion.contributor order="first" language="TOML" id="MiseToml"
                                 implementationClass="com.github.l34130.mise.core.lang.completion.MiseTomlCompletionContributor"/>
-<!--        <json.jsonSchemaEnabler implementation="com.github.l34130.mise.core.lang.json.MiseTomlJsonSchemaEnabler"/>-->
         <json.jsonLikePsiWalkerFactory implementation="com.github.l34130.mise.core.lang.json.MiseTomlPsiWalkerFactory"/>
     </extensions>
     <extensions defaultExtensionNs="JavaScript">
