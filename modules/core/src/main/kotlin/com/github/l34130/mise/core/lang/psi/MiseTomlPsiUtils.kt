@@ -1,5 +1,7 @@
 package com.github.l34130.mise.core.lang.psi
 
+import com.intellij.psi.PsiElementResolveResult
+import com.intellij.psi.ResolveResult
 import com.intellij.psi.util.childrenOfType
 import org.toml.lang.psi.TomlKeySegment
 import org.toml.lang.psi.TomlKeyValueOwner
@@ -31,6 +33,11 @@ fun MiseTomlFile.allTasks(): Sequence<TomlKeySegment> {
             }
         }.constrainOnce()
 }
+
+fun MiseTomlFile.resolveTask(taskName: String): Sequence<ResolveResult> =
+    allTasks()
+        .filter { it.name == taskName }
+        .map { PsiElementResolveResult(it) }
 
 val TomlTable.taskName: String?
     get() {

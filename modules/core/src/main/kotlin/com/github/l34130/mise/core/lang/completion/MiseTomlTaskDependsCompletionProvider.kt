@@ -35,7 +35,7 @@ import org.toml.lang.psi.TomlTable
  *           #^ Provides completion for "foo"
  * ```
  */
-class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>() {
+class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
         parameters: CompletionParameters,
         context: ProcessingContext,
