@@ -71,7 +71,7 @@ object MiseTomlPsiPatterns {
      *          #^
      * ```
      */
-    private val onTaskDependsArray =
+    val onTaskDependsArray =
         StandardPatterns.or(
             psiElement<TomlArray>()
                 .withParent(taskProperty("depends")),
@@ -93,7 +93,7 @@ object MiseTomlPsiPatterns {
      *          #^
      * ```
      */
-    private val onTaskDependsString =
+    val onTaskDependsString =
         StandardPatterns.or(
             miseTomlStringLiteral()
                 .withParent(taskProperty("depends")),

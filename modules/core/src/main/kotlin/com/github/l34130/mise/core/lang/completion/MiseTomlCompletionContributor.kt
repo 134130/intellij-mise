@@ -10,7 +10,7 @@ class MiseTomlCompletionContributor : CompletionContributor() {
         extend(
             CompletionType.BASIC,
             StandardPatterns.or(MiseTomlPsiPatterns.inTaskDependsArray, MiseTomlPsiPatterns.inTaskDependsString),
-            MiseTomlTaskCompletionProvider(),
+            MiseTomlTaskDependsCompletionProvider(),
         )
     }
 }
