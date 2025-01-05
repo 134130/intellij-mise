@@ -35,6 +35,7 @@
     <!-- Execution Support -->
     <extensions defaultExtensionNs="com.intellij">
         <configurationType implementation="com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationType"/>
+        <runLineMarkerContributor language="TOML" implementationClass="com.github.l34130.mise.core.execution.MiseTomlTaskRunLineMarkerContributor"/>
         <runConfigurationProducer implementation="com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationProducer"/>
     </extensions>
 
