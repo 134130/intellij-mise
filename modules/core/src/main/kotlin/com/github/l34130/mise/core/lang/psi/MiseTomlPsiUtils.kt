@@ -1,7 +1,6 @@
 package com.github.l34130.mise.core.lang.psi
 
 import com.intellij.psi.util.childrenOfType
-import org.toml.lang.psi.TomlInlineTable
 import org.toml.lang.psi.TomlKeySegment
 import org.toml.lang.psi.TomlKeyValueOwner
 import org.toml.lang.psi.TomlLiteral
@@ -19,16 +18,6 @@ fun MiseTomlFile.allTasks(): Sequence<TomlKeySegment> {
         .flatMap { table ->
             val header = table.header
             when {
-                // [tasks]
-                // <task-name> = { ... }
-                header.isTaskListHeader -> {
-                    table.entries
-                        .asSequence()
-                        .filter { (it.value as? TomlInlineTable) != null }
-                        .mapNotNull { it.key.segments.singleOrNull() }
-                        .filter { it.name !in explicitTasks }
-                }
-
                 // [tasks.<task-name>]
                 header.isSpecificTaskTableHeader -> {
                     val lastKey = header.key?.segments?.last()
@@ -51,9 +40,6 @@ val TomlTable.taskName: String?
         }
         return null
     }
-
-val TomlTableHeader.isTaskListHeader: Boolean
-    get() = key?.segments?.lastOrNull()?.name == "tasks"
 
 val TomlTableHeader.isSpecificTaskTableHeader: Boolean
     get() {
