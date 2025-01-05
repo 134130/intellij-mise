@@ -29,7 +29,7 @@ class MiseTomlTaskRunConfiguration(
     private val settings = application.service<MiseSettings>().state
 
     var miseExecutablePath: String = settings.executablePath
-    var miseConfigEnvironment: String? = settings.miseConfigEnvironment
+    var miseConfigEnvironment: String = settings.miseConfigEnvironment
     var miseTaskName: String = ""
     var workingDirectory: String? = project.basePath
     var envVars: EnvironmentVariablesData = EnvironmentVariablesData.DEFAULT
@@ -46,8 +46,8 @@ class MiseTomlTaskRunConfiguration(
                         ?: project.basePath
 
                 val params = mutableListOf<String>()
-                miseConfigEnvironment?.let {
-                    params += listOf("--env", it)
+                if (miseConfigEnvironment.isNotBlank()) {
+                    params += listOf("--env", miseConfigEnvironment)
                 }
                 params += listOf("run", miseTaskName)
 
