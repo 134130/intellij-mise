@@ -21,6 +21,7 @@ import org.toml.lang.psi.TomlTable
  * [tasks.<task-name>]
  * depends = [ "f<caret>" ]
  *             #^ Provides completion for "foo"
+ * ```
  */
 class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
