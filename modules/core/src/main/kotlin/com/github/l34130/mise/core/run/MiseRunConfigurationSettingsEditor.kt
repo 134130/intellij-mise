@@ -18,9 +18,7 @@ import com.intellij.ui.layout.not
 import com.intellij.ui.layout.selected
 import com.intellij.util.application
 import org.jdom.Element
-import java.awt.BorderLayout
 import javax.swing.JComponent
-import javax.swing.JPanel
 
 private val USER_DATA_KEY = Key<MiseRunConfigurationState>("Mise Run Settings")
 
@@ -35,31 +33,27 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     private val myMiseConfigEnvironmentTf = JBTextField()
 
     override fun createEditor(): JComponent =
-        JPanel(BorderLayout()).apply {
-            add(
-                panel {
-                    row {
-                        cell(myMiseDirEnvCb)
-                            .comment("Load environment variables from mise configuration file(s)")
-                    }.enabledIf(useApplicationWideMiseConfigPredicate.not())
-                    row("Config Environment:") {
-                        cell(myMiseConfigEnvironmentTf)
-                            .comment(
-                                """
-                                Specify the mise configuration environment to use (leave empty for default) <br/>
-                                <a href='https://mise.jdx.dev/configuration/environments.html'>Learn more about mise configuration environments</a>
-                                """.trimIndent(),
-                            ).columns(COLUMNS_LARGE)
-                            .focused()
-                            .resizableColumn()
-                    }.enabledIf(myMiseDirEnvCb.selected.and(useApplicationWideMiseConfigPredicate.not()))
-                    row {
-                        icon(AllIcons.General.ShowWarning)
-                        label("Using the configuration in Settings / Tools / Mise Settings")
-                            .bold()
-                    }.visibleIf(useApplicationWideMiseConfigPredicate)
-                },
-            )
+        panel {
+            row {
+                cell(myMiseDirEnvCb)
+                    .comment("Load environment variables from mise configuration file(s)")
+            }.enabledIf(useApplicationWideMiseConfigPredicate.not())
+            row("Config Environment:") {
+                cell(myMiseConfigEnvironmentTf)
+                    .comment(
+                        """
+                        Specify the mise configuration environment to use (leave empty for default) <br/>
+                        <a href='https://mise.jdx.dev/configuration/environments.html'>Learn more about mise configuration environments</a>
+                        """.trimIndent(),
+                    ).columns(COLUMNS_LARGE)
+                    .focused()
+                    .resizableColumn()
+            }.enabledIf(myMiseDirEnvCb.selected.and(useApplicationWideMiseConfigPredicate.not()))
+            row {
+                icon(AllIcons.General.ShowWarning)
+                label("Using the configuration in Settings / Tools / Mise Settings")
+                    .bold()
+            }.visibleIf(useApplicationWideMiseConfigPredicate)
         }
 
     // Write to persistence from the UI
