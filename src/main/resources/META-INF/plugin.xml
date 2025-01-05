@@ -5,6 +5,28 @@
     <vendor>134130</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.toml.lang</depends>
+
+    <!-- Language Support -->
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="mise"
+                  language="MiseToml"
+                  implementationClass="com.github.l34130.mise.core.lang.MiseTomlFileType"
+                  fieldName="INSTANCE"
+                  patterns=".mise.toml;.mise.*.toml;mise.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
+        />
+
+        <lang.parserDefinition language="MiseToml"
+                               implementationClass="com.github.l34130.mise.core.lang.psi.MiseTomlParserDefinition"/>
+
+
+        <completion.contributor order="first" language="TOML" id="MiseToml"
+                                implementationClass="com.github.l34130.mise.core.lang.completion.MiseTomlCompletionContributor"/>
+        <json.jsonLikePsiWalkerFactory implementation="com.github.l34130.mise.core.lang.json.MiseTomlPsiWalkerFactory"/>
+    </extensions>
+    <extensions defaultExtensionNs="JavaScript">
+        <JsonSchema.ProviderFactory order="first" implementation="com.github.l34130.mise.core.lang.json.MiseTomlJsonSchemaFileProviderFactory"/>
+    </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable id="com.github.l34130.mise.core.setting.MiseConfigurable"
@@ -38,5 +60,4 @@
     <depends optional="true" config-file="mise-idea.xml">com.intellij.java</depends>
     <depends optional="true" config-file="mise-javascript.xml">JavaScript</depends>
     <depends optional="true" config-file="mise-rider.xml">com.intellij.modules.rider</depends>
-    <depends optional="true" config-file="mise-toml.xml">org.toml.lang</depends>
 </idea-plugin>
