@@ -8,6 +8,7 @@ gradleIdeaExt = "1.1.9"
 kotlin = "2.1.0"
 kover = "0.9.0"
 qodana = "2024.2.6"
+detekt = "1.23.7"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -18,3 +19,4 @@ gradleIdeaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "gr
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 qodana = { id = "org.jetbrains.qodana", version.ref = "qodana" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
