@@ -80,6 +80,28 @@ object MiseTomlPsiPatterns {
         )
     val inTaskDependsArray = miseTomlPsiElement<PsiElement>().inside(onTaskDependsArray)
 
+    /**
+     * ```
+     * [tasks]
+     * foo = { version = "*", depends = "" }
+     *                                 #^
+     * ```
+     *
+     * ```
+     * [tasks.foo]
+     * depends = ""
+     *          #^
+     * ```
+     */
+    private val onTaskDependsString =
+        StandardPatterns.or(
+            miseTomlStringLiteral()
+                .withParent(taskProperty("depends")),
+            miseTomlStringLiteral()
+                .withParent(taskProperty("depends_post")),
+        )
+    val inTaskDependsString = miseTomlPsiElement<PsiElement>().inside(onTaskDependsString)
+
     inline fun <reified I : PsiElement> psiElement() = PlatformPatterns.psiElement(I::class.java)
 
     fun <T : Any, Self : ObjectPattern<T, Self>> ObjectPattern<T, Self>.with(
