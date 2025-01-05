@@ -16,11 +16,23 @@ import org.toml.lang.psi.TomlTable
 /**
  * ```
  * [tasks.foo]
- * ...
+ * run = "..."
+ * ```
  *
+ * then
+ *
+ * ```
  * [tasks.<task-name>]
  * depends = [ "f<caret>" ]
  *             #^ Provides completion for "foo"
+ * ```
+ *
+ * or
+ *
+ * ```
+ * [tasks.<task-name>]
+ * depends = "f<caret>"
+ *           #^ Provides completion for "foo"
  * ```
  */
 class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>() {
@@ -32,14 +44,14 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
         val element = parameters.position
         val miseTomlFile = element.containingFile as? MiseTomlFile ?: return
 
-        val dependsArray = (element.parent.parent as? TomlArray) ?: return
+        val dependsArray = (element.parent.parent as? TomlArray)
 
         val parentTable = element.parentOfType<TomlTable>() ?: return
         val parentTaskName = parentTable.taskName
 
         for (task in miseTomlFile.allTasks()) {
             val taskName = task.name ?: continue
-            if (dependsArray.elements.any { it.stringValue == taskName }) continue
+            if (dependsArray?.elements?.any { it.stringValue == taskName } == true) continue
             if (taskName == parentTaskName) continue
 
             result.addElement(
@@ -49,6 +61,4 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
             )
         }
     }
-
-    // TODO: Need to support literal string completion
 }
