@@ -32,6 +32,12 @@
         <JsonSchema.ProviderFactory order="first" implementation="com.github.l34130.mise.core.lang.json.MiseTomlJsonSchemaFileProviderFactory"/>
     </extensions>
 
+    <!-- Execution Support -->
+    <extensions defaultExtensionNs="com.intellij">
+        <configurationType implementation="com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationType"/>
+        <runConfigurationProducer implementation="com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationProducer"/>
+    </extensions>
+
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable id="com.github.l34130.mise.core.setting.MiseConfigurable"
                              instance="com.github.l34130.mise.core.setting.MiseConfigurable"
