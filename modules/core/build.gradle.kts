@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 fun properties(key: String) = project.findProperty(key).toString()
 
@@ -18,5 +19,7 @@ dependencies {
         bundledPlugin("org.toml.lang")
 
         jetbrainsRuntime()
+
+        testFramework(TestFrameworkType.Platform)
     }
 }
