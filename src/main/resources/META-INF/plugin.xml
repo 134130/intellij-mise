@@ -10,14 +10,16 @@
     <!-- Language Support -->
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="mise"
-                  language="MiseToml"
+                  language="TOML"
                   implementationClass="com.github.l34130.mise.core.lang.MiseTomlFileType"
                   fieldName="INSTANCE"
-                  patterns=".mise.toml;.mise.*.toml;mise.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
+                  fileNames=".mise.toml;mise.toml"
+                  patterns=".mise.*.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
         />
 
         <lang.parserDefinition
-                language="MiseToml"
+                order="first"
+                language="TOML"
                 implementationClass="com.github.l34130.mise.core.lang.psi.MiseTomlParserDefinition"/>
 
         <psi.referenceContributor

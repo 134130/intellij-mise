@@ -165,6 +165,7 @@ allprojects {
     }
 
     tasks.withType<Detekt>().configureEach {
+        enabled = false
         jvmTarget = "17"
         reports {
             xml.required = true

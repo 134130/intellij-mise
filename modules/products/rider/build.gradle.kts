@@ -9,11 +9,14 @@ plugins {
 
 dependencies {
     implementation(project(":mise-core"))
+//    testImplementation(libs.junit)
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
         create(IntelliJPlatformType.Rider, properties("platformVersion"))
 
         jetbrainsRuntime()
+
+//        testFramework(TestFrameworkType.Platform)
     }
 }
