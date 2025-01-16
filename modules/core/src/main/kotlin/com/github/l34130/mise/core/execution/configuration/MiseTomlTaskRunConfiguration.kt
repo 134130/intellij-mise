@@ -6,6 +6,7 @@ import com.intellij.execution.configuration.EnvironmentVariablesData
 import com.intellij.execution.configurations.CommandLineState
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.configurations.LocatableConfigurationBase
+import com.intellij.execution.configurations.PtyCommandLine
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunProfileState
 import com.intellij.execution.process.ColoredProcessHandler
@@ -16,6 +17,7 @@ import com.intellij.openapi.components.PathMacroManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.vfs.encoding.EncodingManager
 import com.intellij.util.EnvironmentUtil
 import com.intellij.util.application
@@ -51,14 +53,19 @@ class MiseTomlTaskRunConfiguration(
                 }
                 params += listOf("run", miseTaskName)
 
-                val commandLine =
-                    GeneralCommandLine()
-                        .withExePath(miseExecutablePath)
-                        .withWorkDirectory(workDirectory)
-                        .withEnvironment(EnvironmentUtil.getEnvironmentMap() + envVars.envs)
-                        .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-                        .withParameters(params)
-                        .withCharset(EncodingManager.getInstance().defaultConsoleEncoding)
+                val commandLine = PtyCommandLine()
+                if(!SystemInfo.isWindows) {
+                    commandLine.withEnvironment("TERM", "xterm-256color")
+                }
+                commandLine.withConsoleMode(false)
+                commandLine.withInitialColumns(120)
+                commandLine.withCharset(EncodingManager.getInstance().defaultConsoleEncoding)
+                commandLine.withEnvironment(EnvironmentUtil.getEnvironmentMap() + envVars.envs)
+                commandLine.withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+                commandLine.withWorkDirectory(workDirectory)
+
+                commandLine.withExePath(miseExecutablePath)
+                commandLine.withParameters(params)
 
                 return ColoredProcessHandler(commandLine).apply {
                     setShouldKillProcessSoftly(true)
