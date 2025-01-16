@@ -187,7 +187,7 @@ jobs:
           cache-default-branch-only: true
 
   detekt:
-    permission:
+    permissions:
       contents: read
       security-events: write
     runs-on: ubuntu-latest
