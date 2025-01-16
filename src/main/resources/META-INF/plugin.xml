@@ -10,16 +10,21 @@
     <!-- Language Support -->
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="mise"
-                  language="MiseToml"
+                  language="TOML"
                   implementationClass="com.github.l34130.mise.core.lang.MiseTomlFileType"
                   fieldName="INSTANCE"
-                  patterns=".mise.toml;.mise.*.toml;mise.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
+                  fileNames=".mise.toml;mise.toml"
+                  patterns=".mise.*.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
         />
 
         <lang.parserDefinition
-                language="MiseToml"
+                order="first"
+                language="TOML"
                 implementationClass="com.github.l34130.mise.core.lang.psi.MiseTomlParserDefinition"/>
 
+        <completion.contributor
+                order="first" language="TOML" id="MiseToml"
+                implementationClass="com.github.l34130.mise.core.lang.completion.MiseTomlCompletionContributor"/>
         <psi.referenceContributor
                 order="first" language="TOML" id="MiseToml"
                 implementation="com.github.l34130.mise.core.lang.resolve.MiseTomlReferenceContributor"/>
@@ -35,6 +40,7 @@
     <!-- Execution Support -->
     <extensions defaultExtensionNs="com.intellij">
         <configurationType implementation="com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationType"/>
+        <runLineMarkerContributor language="TOML" implementationClass="com.github.l34130.mise.core.execution.MiseTomlTaskRunLineMarkerContributor"/>
         <runConfigurationProducer implementation="com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationProducer"/>
     </extensions>
 

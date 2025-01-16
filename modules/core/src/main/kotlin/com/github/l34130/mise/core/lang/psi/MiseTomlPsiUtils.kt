@@ -48,6 +48,15 @@ val TomlTable.taskName: String?
         return null
     }
 
+val TomlTableHeader.miseTomlTask: TomlKeySegment?
+    get() {
+        if (isSpecificTaskTableHeader) {
+            val headerKey = key ?: return null
+            return headerKey.segments.lastOrNull()
+        }
+        return null
+    }
+
 val TomlTableHeader.isSpecificTaskTableHeader: Boolean
     get() {
         val names = key?.segments.orEmpty()

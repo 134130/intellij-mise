@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+## [3.3.0] - 2025-01-16
+
+### Added
+
+- Run Mise task as a run configuration.
+- Unit tests for Mise code completion.
+
+### Fixed
+
+- Code completion is not working on `depends` single string.
+- Mise task with quoted string cannot escape the quotes.
+
 ## [3.2.6] - 2025-01-01
 
 ### Fixed
@@ -190,7 +202,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.2.6...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/134130/intellij-mise/compare/v3.2.6...v3.3.0
 [3.2.6]: https://github.com/134130/intellij-mise/compare/v3.2.5...v3.2.6
 [3.2.5]: https://github.com/134130/intellij-mise/compare/v3.2.4...v3.2.5
 [3.2.4]: https://github.com/134130/intellij-mise/compare/v3.2.3...v3.2.4

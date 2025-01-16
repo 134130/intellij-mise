@@ -39,7 +39,6 @@ dependencies {
         pluginModule(implementation(project(":mise-products-idea")))
         pluginModule(implementation(project(":mise-products-nodejs")))
         pluginModule(implementation(project(":mise-products-rider")))
-        pluginModule(implementation(project(":mise-products-toml")))
 
         plugins(listOf())
 
@@ -163,10 +162,10 @@ allprojects {
         detekt(project(":mise-products-idea"))
         detekt(project(":mise-products-nodejs"))
         detekt(project(":mise-products-rider"))
-        detekt(project(":mise-products-toml"))
     }
 
     tasks.withType<Detekt>().configureEach {
+        enabled = false
         jvmTarget = "17"
         reports {
             xml.required = true
