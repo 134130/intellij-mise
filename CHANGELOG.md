@@ -4,6 +4,57 @@
 
 ## [Unreleased]
 
+## [3.3.0] - 2025-01-16
+
+### Added
+
+- Run Mise task as a run configuration.
+- Unit tests for Mise code completion.
+
+### Fixed
+
+- Code completion is not working on `depends` single string.
+- Mise task with quoted string cannot escape the quotes.
+
+## [3.2.6] - 2025-01-01
+
+### Fixed
+
+- Jackson Deserialization failing on Unknown properties
+
+## [3.2.5] - 2024-12-28
+
+### Fixed
+
+- Mise executable customization is not working
+- Address new version of `mise tasks --json` output
+
+## [3.2.4] - 2024-12-28
+
+### Fixed
+
+- Error report submitter cannot report an error when the error is too long.
+- Mise Tools name is not showing correctly.
+- Escape long-running tasks running on EDT.
+
+### Added
+
+- Add a mise cli version to the error report.
+
+## [3.2.3] - 2024-12-26
+
+### Fixed
+
+- Fix environment variables are not loaded onto Gradle Task when triggered on Gradle Tool Window.
+
+## [3.2.2] - 2024-12-25
+
+### Fixed
+
+- Fix runConfiguration cannot be saved
+- Fix runConfiguration cannot load envvars when it doesn't have working directory.
+  - When the working directory is not set, it will use the project's base directory.
+
 ## [3.2.1] - 2024-12-16
 
 ### Added
@@ -151,7 +202,13 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.2.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/134130/intellij-mise/compare/v3.2.6...v3.3.0
+[3.2.6]: https://github.com/134130/intellij-mise/compare/v3.2.5...v3.2.6
+[3.2.5]: https://github.com/134130/intellij-mise/compare/v3.2.4...v3.2.5
+[3.2.4]: https://github.com/134130/intellij-mise/compare/v3.2.3...v3.2.4
+[3.2.3]: https://github.com/134130/intellij-mise/compare/v3.2.2...v3.2.3
+[3.2.2]: https://github.com/134130/intellij-mise/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/134130/intellij-mise/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/134130/intellij-mise/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/134130/intellij-mise/compare/v3.0.0...v3.1.0

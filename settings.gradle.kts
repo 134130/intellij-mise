@@ -1,7 +1,7 @@
 import org.jetbrains.intellij.platform.gradle.extensions.intellijPlatform
 
 plugins {
-    id("org.jetbrains.intellij.platform.settings") version "2.2.0"
+    id("org.jetbrains.intellij.platform.settings") version "2.2.1"
 }
 
 dependencyResolutionManagement {
@@ -23,7 +23,6 @@ include(
     "modules/products/idea",
     "modules/products/nodejs",
     "modules/products/rider",
-    "modules/products/toml",
 )
 
 rootProject.name = "mise"

@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 fun properties(key: String) = project.findProperty(key).toString()
 
@@ -9,6 +10,7 @@ plugins {
 
 dependencies {
     implementation(project(":mise-core"))
+    testImplementation(libs.junit)
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
@@ -18,6 +20,6 @@ dependencies {
 
         jetbrainsRuntime()
 
-        instrumentationTools()
+        testFramework(TestFrameworkType.Platform)
     }
 }

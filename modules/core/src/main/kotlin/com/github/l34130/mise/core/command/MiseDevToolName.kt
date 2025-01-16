@@ -34,4 +34,6 @@ value class MiseDevToolName(
                 "docker" to "Docker",
             )
     }
+
+    override fun toString(): String = canonicalName()
 }

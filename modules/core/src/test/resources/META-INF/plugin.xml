@@ -1,0 +1,21 @@
+<idea-plugin url="https://github.com/l34130/intellij-mise" require-restart="false">
+    <id>com.github.l34130.mise</id>
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="mise"
+                  language="TOML"
+                  implementationClass="com.github.l34130.mise.core.lang.MiseTomlFileType"
+                  fieldName="INSTANCE"
+                  fileNames=".mise.toml;mise.toml"
+                  patterns=".mise.*.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
+        />
+
+        <lang.parserDefinition
+                order="first"
+                language="TOML"
+                implementationClass="com.github.l34130.mise.core.lang.psi.MiseTomlParserDefinition"/>
+
+        <completion.contributor
+                order="first" language="TOML" id="MiseToml"
+                implementationClass="com.github.l34130.mise.core.lang.completion.MiseTomlCompletionContributor"/>
+    </extensions>
+</idea-plugin>

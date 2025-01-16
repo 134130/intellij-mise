@@ -1,8 +1,14 @@
 package com.github.l34130.mise.core.command
 
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
+
 object MiseCommandLineHelper {
     // mise env
-    fun getEnvVars(workDir: String?, configEnvironment: String?): Result<Map<String, String>> {
+    @RequiresBackgroundThread
+    fun getEnvVars(
+        workDir: String?,
+        configEnvironment: String?,
+    ): Result<Map<String, String>> {
         val commandLineArgs = mutableListOf("env", "--json")
 
         val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
@@ -10,7 +16,11 @@ object MiseCommandLineHelper {
     }
 
     // mise ls
-    fun getDevTools(workDir: String?, configEnvironment: String?): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
+    @RequiresBackgroundThread
+    fun getDevTools(
+        workDir: String?,
+        configEnvironment: String?,
+    ): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
         val commandLineArgs = mutableListOf("ls", "--current", "--json")
 
         val miseVersion = MiseCommandLine.getMiseVersion()
@@ -22,14 +32,19 @@ object MiseCommandLineHelper {
         }
 
         val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
-        return miseCommandLine.runCommandLine<Map<String, List<MiseDevTool>>>(commandLineArgs)
+        return miseCommandLine
+            .runCommandLine<Map<String, List<MiseDevTool>>>(commandLineArgs)
             .map { devTools ->
                 devTools.mapKeys { (toolName, _) -> MiseDevToolName(toolName) }
             }
     }
 
     // mise task ls
-    fun getTasks(workDir: String?, configEnvironment: String?): Result<List<MiseTask>> {
+    @RequiresBackgroundThread
+    fun getTasks(
+        workDir: String?,
+        configEnvironment: String?,
+    ): Result<List<MiseTask>> {
         val commandLineArgs = mutableListOf("task", "ls", "--json")
 
         val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
@@ -37,6 +52,7 @@ object MiseCommandLineHelper {
     }
 
     // mise trust
+    @RequiresBackgroundThread
     fun trustConfigFile(configFilePath: String): Result<Unit> {
         val commandLineArgs = mutableListOf("trust", configFilePath)
 

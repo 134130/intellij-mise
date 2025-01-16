@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.command.MiseRunTaskOnTerminalAction
+import com.github.l34130.mise.core.action.MiseRunTaskOnTerminalAction
 import com.github.l34130.mise.core.command.MiseTask
 import com.github.l34130.mise.core.toolwindow.DoubleClickable
 import com.intellij.icons.AllIcons

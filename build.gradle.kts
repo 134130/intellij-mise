@@ -1,3 +1,6 @@
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.Constants.Constraints
@@ -13,6 +16,7 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
+    alias(libs.plugins.detekt) // Gradle Detekt Plugin
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -35,11 +39,9 @@ dependencies {
         pluginModule(implementation(project(":mise-products-idea")))
         pluginModule(implementation(project(":mise-products-nodejs")))
         pluginModule(implementation(project(":mise-products-rider")))
-        pluginModule(implementation(project(":mise-products-toml")))
 
         plugins(listOf())
 
-        instrumentationTools()
         pluginVerifier()
         zipSigner()
         testFramework(TestFrameworkType.Platform)
@@ -136,6 +138,48 @@ tasks {
 
     publishPlugin {
         dependsOn(patchChangelog)
+    }
+}
+
+val detektReportMergeSarif by tasks.registering(ReportMergeTask::class) {
+    output = layout.buildDirectory.file("reports/detekt/merge.sarif.json")
+}
+
+allprojects {
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+
+    detekt {
+        buildUponDefaultConfig = true
+        baseline = file("$rootDir/config/detekt/baseline.xml")
+    }
+
+    dependencies {
+        detekt("io.gitlab.arturbosch.detekt:detekt-cli:${rootProject.libs.versions.detekt.get()}")
+        detekt("io.gitlab.arturbosch.detekt:detekt-formatting:${rootProject.libs.versions.detekt.get()}")
+        detekt(project(":mise-core"))
+        detekt(project(":mise-products-goland"))
+        detekt(project(":mise-products-gradle"))
+        detekt(project(":mise-products-idea"))
+        detekt(project(":mise-products-nodejs"))
+        detekt(project(":mise-products-rider"))
+    }
+
+    tasks.withType<Detekt>().configureEach {
+        enabled = false
+        jvmTarget = "17"
+        reports {
+            xml.required = true
+            html.required = true
+            sarif.required = true
+            md.required = true
+        }
+        basePath = rootDir.absolutePath
+    }
+    detektReportMergeSarif {
+        input.from(tasks.withType<Detekt>().map { it.reports.sarif.outputLocation })
+    }
+    tasks.withType<DetektCreateBaselineTask>().configureEach {
+        jvmTarget = "17"
     }
 }
 

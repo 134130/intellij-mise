@@ -45,6 +45,10 @@ from Mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
   Download the [latest release](https://github.com/134130/intellij-mise/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
+## Ecosystem
+
+- See [mise-vscode](https://github.com/hverlin/mise-vscode/) if you are looking for a similar plugin for VSCode
+- [Mise documentation](https://mise.jdx.dev/)
 
 ---
 Plugin based on the [IntelliJ Platform Plugin Template][template].
