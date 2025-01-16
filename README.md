@@ -15,6 +15,7 @@ from Mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 - **Tool Integration**: Set project's SDK automatically from `mise.toml` files.
   - `java`, `go`, `node`, `deno` SDKs are supported.
 - **Environment Variables**: Set environment variables for your run configurations from `mise.toml` files.
+- **Autocomplete**: Autocomplete suggestions for `mise.toml` files.
 
 ## Supported Platforms
 - **IntelliJ IDEA**
