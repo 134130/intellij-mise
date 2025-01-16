@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.AlignX
+import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.application
 import com.intellij.util.ui.JBUI
@@ -55,8 +56,8 @@ class MiseTomlTaskRunConfigurationEditor(
             row("Working directory:") {
                 cell(workingDirectoryTf).align(AlignX.FILL)
             }
-            row("Environment variables:") {
-                cell(envVarsComponent).align(AlignX.FILL)
+            row(envVarsComponent.label) {
+                cell(envVarsComponent.component).align(AlignX.FILL)
             }
         }.apply {
             border = JBUI.Borders.empty(6, 16, 16, 16)
