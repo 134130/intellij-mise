@@ -22,6 +22,9 @@
                 language="TOML"
                 implementationClass="com.github.l34130.mise.core.lang.psi.MiseTomlParserDefinition"/>
 
+        <completion.contributor
+                order="first" language="TOML" id="MiseToml"
+                implementationClass="com.github.l34130.mise.core.lang.completion.MiseTomlCompletionContributor"/>
         <psi.referenceContributor
                 order="first" language="TOML" id="MiseToml"
                 implementation="com.github.l34130.mise.core.lang.resolve.MiseTomlReferenceContributor"/>
