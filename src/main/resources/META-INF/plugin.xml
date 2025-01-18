@@ -31,12 +31,8 @@
         <completion.contributor
                 order="first" language="TOML" id="MiseToml"
                 implementationClass="com.github.l34130.mise.core.lang.completion.MiseTomlCompletionContributor"/>
-        <json.jsonLikePsiWalkerFactory implementation="com.github.l34130.mise.core.lang.json.MiseTomlPsiWalkerFactory"/>
 
         <iconProvider implementation="com.github.l34130.mise.core.MiseIconProvider"/>
-    </extensions>
-    <extensions defaultExtensionNs="JavaScript">
-        <JsonSchema.ProviderFactory order="first" implementation="com.github.l34130.mise.core.lang.json.MiseTomlJsonSchemaFileProviderFactory"/>
     </extensions>
 
     <!-- Execution Support -->
