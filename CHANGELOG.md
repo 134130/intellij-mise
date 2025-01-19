@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [3.4.0] - 2025-01-19
+
+### Added
+
+- Support code completion for mise file tasks.
+
+### Fixed
+
+- Remove JsonSchema Provider for Mise file which is not working properly.
+- Use IconProvider for Mise file to correctly show the icon.
+
 ## [3.3.0] - 2025-01-16
 
 ### Added
@@ -202,7 +213,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.4.0...HEAD
+[3.4.0]: https://github.com/134130/intellij-mise/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/134130/intellij-mise/compare/v3.2.6...v3.3.0
 [3.2.6]: https://github.com/134130/intellij-mise/compare/v3.2.5...v3.2.6
 [3.2.5]: https://github.com/134130/intellij-mise/compare/v3.2.4...v3.2.5
