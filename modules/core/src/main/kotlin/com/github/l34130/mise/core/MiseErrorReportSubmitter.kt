@@ -77,7 +77,7 @@ class MiseErrorReportSubmitter : ErrorReportSubmitter() {
                             appendLine("### Stacktrace")
                             appendLine("```")
                             appendLine(throwable.message)
-                            appendLine(throwable.stackTrace.joinToString("\n").take(25))
+                            appendLine(throwable.stackTrace.take(25).joinToString("\n"))
                             appendLine("```")
 
                             appendLine()
