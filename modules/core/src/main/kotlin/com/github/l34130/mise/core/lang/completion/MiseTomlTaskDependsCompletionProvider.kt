@@ -9,6 +9,8 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.openapi.components.service
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.util.parentOfType
@@ -69,16 +71,29 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
         // TODO: get all tasks from all toml files
 
         // get all tasks from the task directories
-        val fileTaskDirs = MiseTaskService.getFileTaskDirectories(element.project)
+        val fileTaskDirs = element.project.service<MiseTaskService>().getFileTaskDirectories()
         for (dir in fileTaskDirs) {
-            dir.children
+            val dirPath = dir.toNioPath()
+            dir
+                .leafChildren()
                 .filter { it.toNioPathOrNull()?.isExecutable() == true }
                 .forEach {
+                    val taskName = dirPath.relativize(it.toNioPath()).joinToString(":")
                     LookupElementBuilder
-                        .createWithSmartPointer(it.name, it.findPsiFile(element.project)!!)
+                        .createWithSmartPointer(taskName, it.findPsiFile(element.project)!!)
                         .withInsertHandler(StringLiteralInsertionHandler())
+                        .withIcon(it.fileType.icon)
                         .let(result::addElement)
                 }
         }
     }
+
+    private fun VirtualFile.leafChildren(): Sequence<VirtualFile> =
+        children.asSequence().flatMap {
+            if (it.isDirectory) {
+                it.leafChildren()
+            } else {
+                sequenceOf(it)
+            }
+        }
 }

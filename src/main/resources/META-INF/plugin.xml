@@ -40,6 +40,8 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="com.github.l34130.mise.core.MiseStartupActivity"/>
+
         <projectConfigurable id="com.github.l34130.mise.core.setting.MiseConfigurable"
                              instance="com.github.l34130.mise.core.setting.MiseConfigurable"
                              groupId="tools"
