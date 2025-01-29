@@ -1,10 +1,12 @@
 package com.github.l34130.mise.core.lang.completion
 
 import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.collapsePath
 import com.github.l34130.mise.core.lang.psi.MiseTomlFile
 import com.github.l34130.mise.core.lang.psi.allTasks
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.lang.psi.taskName
+import com.github.l34130.mise.core.model.MiseTask
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
@@ -13,17 +15,14 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.service
-import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
-import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.util.parentOfType
 import com.intellij.util.ProcessingContext
 import io.kinference.utils.runBlocking
 import kotlinx.coroutines.Dispatchers
 import org.toml.lang.psi.TomlArray
 import org.toml.lang.psi.TomlTable
-import kotlin.io.path.isExecutable
 
 /**
  * ```
@@ -79,41 +78,23 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
                     )
                 }
 
-                // get all tasks from all toml files in the project
-                for (virtualFile in project.service<MiseService>().getMiseTomlFiles()) {
-                    val psiFile = virtualFile.findPsiFile(project) as? MiseTomlFile ?: continue
-                    if (psiFile == currentPsiFile) continue // FIXME: This doesn't work as expected (LightVirtualFile vs VirtualFile)
+                for (task in project.service<MiseService>().getTasks()) {
+                    if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
+                    if (task.name == currentTaskName) continue
 
-                    val allTasks = psiFile.allTasks().toList()
-                    for ((i, task) in allTasks.withIndex()) {
-                        if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
-
-                        result.addElement(
-                            LookupElementBuilder
-                                .createWithSmartPointer(task.name, task.keySegment)
-                                .withInsertHandler(StringLiteralInsertionHandler())
-                                .withTypeText(FileUtil.getRelativePath(project.basePath!!, virtualFile.path, '/'))
-                                .withPriority(currentTasks.size + allTasks.size - i.toDouble()),
-                        )
-                    }
-                }
-
-                // get all tasks from the task directories
-                val fileTaskDirs = project.service<MiseService>().getFileTaskDirectories()
-                for ((i, dir) in fileTaskDirs.withIndex()) {
-                    val dirPath = dir.toNioPath()
-                    dir
-                        .leafChildren()
-                        .filter { it.toNioPathOrNull()?.isExecutable() == true }
-                        .forEach {
-                            val taskName = dirPath.relativize(it.toNioPath()).joinToString(":")
-                            LookupElementBuilder
-                                .createWithSmartPointer(taskName, it.findPsiFile(element.project)!!)
-                                .withInsertHandler(StringLiteralInsertionHandler())
-                                .withIcon(it.fileType.icon)
-                                .withPriority(currentTasks.size + 10000 - fileTaskDirs.size.toDouble())
-                                .let(result::addElement)
+                    val psiElement =
+                        when (task) {
+                            is MiseTask.ShellScript -> task.file.findPsiFile(project)!!
+                            is MiseTask.TomlTable -> task.keySegment
                         }
+
+                    result.addElement(
+                        LookupElementBuilder
+                            .createWithSmartPointer(task.name, psiElement)
+                            .withInsertHandler(StringLiteralInsertionHandler())
+                            .withTypeText(collapsePath(psiElement.containingFile, project))
+                            .withPriority(currentTasks.size.toDouble()),
+                    )
                 }
             }
         }
