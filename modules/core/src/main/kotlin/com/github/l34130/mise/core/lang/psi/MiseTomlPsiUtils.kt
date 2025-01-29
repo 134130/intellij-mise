@@ -1,9 +1,11 @@
 package com.github.l34130.mise.core.lang.psi
 
+import com.github.l34130.mise.core.model.MiseTask
 import com.intellij.psi.PsiElementResolveResult
 import com.intellij.psi.ResolveResult
 import com.intellij.psi.util.childrenOfType
 import com.intellij.util.concurrency.annotations.RequiresReadLock
+import org.toml.lang.psi.TomlArray
 import org.toml.lang.psi.TomlKeySegment
 import org.toml.lang.psi.TomlKeyValueOwner
 import org.toml.lang.psi.TomlLiteral
@@ -12,9 +14,10 @@ import org.toml.lang.psi.TomlTableHeader
 import org.toml.lang.psi.TomlValue
 import org.toml.lang.psi.ext.TomlLiteralKind
 import org.toml.lang.psi.ext.kind
+import kotlin.to
 
 @RequiresReadLock
-fun MiseTomlFile.allTasks(): Sequence<TomlKeySegment> {
+fun MiseTomlFile.allTasks(): Sequence<MiseTask.TomlTable> {
     val explicitTasks = hashSetOf<String>()
 
     return childrenOfType<TomlTable>()
@@ -26,13 +29,20 @@ fun MiseTomlFile.allTasks(): Sequence<TomlKeySegment> {
                 header.isSpecificTaskTableHeader -> {
                     val lastKey = header.key?.segments?.last()
                     if (lastKey != null && lastKey.name !in explicitTasks) {
-                        sequenceOf(lastKey)
+                        sequenceOf(table to lastKey)
                     } else {
                         emptySequence()
                     }
                 }
                 else -> emptySequence()
             }
+        }.mapNotNull { (table, keySegment) ->
+            MiseTask.TomlTable(
+                name = keySegment.name ?: return@mapNotNull null,
+                description = table.getValueWithKey("description")?.stringValue,
+                aliases = table.getValueWithKey("alias")?.stringArray,
+                keySegment = keySegment,
+            )
         }.constrainOnce()
 }
 
@@ -40,7 +50,7 @@ fun MiseTomlFile.allTasks(): Sequence<TomlKeySegment> {
 fun MiseTomlFile.resolveTask(taskName: String): Sequence<ResolveResult> =
     allTasks()
         .filter { it.name == taskName }
-        .map { PsiElementResolveResult(it) }
+        .map { PsiElementResolveResult(it.keySegment) }
 
 @get:RequiresReadLock
 val TomlTable.taskName: String?
@@ -77,4 +87,14 @@ val TomlValue.stringValue: String?
     get() {
         val kind = (this as? TomlLiteral)?.kind
         return (kind as? TomlLiteralKind.String)?.value
+    }
+
+@get:RequiresReadLock
+val TomlValue.stringArray: List<String>?
+    get() {
+        return when (this) {
+            is TomlLiteral -> stringValue?.let { listOf(it) }
+            is TomlArray -> elements.mapNotNull { it.stringValue }
+            else -> null
+        }
     }

@@ -8,9 +8,12 @@ import com.github.l34130.mise.core.lang.psi.taskName
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
+import com.intellij.codeInsight.completion.PrioritizedLookupElement
+import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.service
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.openapi.vfs.toNioPathOrNull
@@ -62,15 +65,17 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
         runBlocking(Dispatchers.IO) {
             smartReadAction(project) {
                 // get all tasks from the current toml file
-                for (task in currentPsiFile.allTasks()) {
-                    val taskName = task.name ?: continue
-                    if (dependsArray?.elements?.any { it.stringValue == taskName } == true) continue
-                    if (taskName == currentTaskName) continue
+                val currentTasks = currentPsiFile.allTasks().toList()
+                for ((i, task) in currentTasks.withIndex()) {
+                    if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
+                    if (task.name == currentTaskName) continue
 
                     result.addElement(
                         LookupElementBuilder
-                            .createWithSmartPointer(taskName, task)
-                            .withInsertHandler(StringLiteralInsertionHandler()),
+                            .createWithSmartPointer(task.name, task.keySegment)
+                            .withInsertHandler(StringLiteralInsertionHandler())
+                            .withTypeText("current file")
+                            .withPriority(currentTasks.size - i.toDouble()),
                     )
                 }
 
@@ -79,21 +84,23 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
                     val psiFile = virtualFile.findPsiFile(project) as? MiseTomlFile ?: continue
                     if (psiFile == currentPsiFile) continue // FIXME: This doesn't work as expected (LightVirtualFile vs VirtualFile)
 
-                    for (task in psiFile.allTasks()) {
-                        val taskName = task.name ?: continue
-                        if (dependsArray?.elements?.any { it.stringValue == taskName } == true) continue
+                    val allTasks = psiFile.allTasks().toList()
+                    for ((i, task) in allTasks.withIndex()) {
+                        if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
 
                         result.addElement(
                             LookupElementBuilder
-                                .createWithSmartPointer(taskName, task)
-                                .withInsertHandler(StringLiteralInsertionHandler()),
+                                .createWithSmartPointer(task.name, task.keySegment)
+                                .withInsertHandler(StringLiteralInsertionHandler())
+                                .withTypeText(FileUtil.getRelativePath(project.basePath!!, virtualFile.path, '/'))
+                                .withPriority(currentTasks.size + allTasks.size - i.toDouble()),
                         )
                     }
                 }
 
                 // get all tasks from the task directories
                 val fileTaskDirs = project.service<MiseService>().getFileTaskDirectories()
-                for (dir in fileTaskDirs) {
+                for ((i, dir) in fileTaskDirs.withIndex()) {
                     val dirPath = dir.toNioPath()
                     dir
                         .leafChildren()
@@ -104,12 +111,15 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
                                 .createWithSmartPointer(taskName, it.findPsiFile(element.project)!!)
                                 .withInsertHandler(StringLiteralInsertionHandler())
                                 .withIcon(it.fileType.icon)
+                                .withPriority(currentTasks.size + 10000 - fileTaskDirs.size.toDouble())
                                 .let(result::addElement)
                         }
                 }
             }
         }
     }
+
+    private fun LookupElementBuilder.withPriority(priority: Double): LookupElement = PrioritizedLookupElement.withPriority(this, priority)
 
     private fun VirtualFile.leafChildren(): Sequence<VirtualFile> =
         children.asSequence().flatMap {
