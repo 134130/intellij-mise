@@ -1,26 +1,29 @@
 package com.github.l34130.mise.core.lang.completion
 
 import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.collapsePath
 import com.github.l34130.mise.core.lang.psi.MiseTomlFile
-import com.github.l34130.mise.core.lang.psi.allTasks
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.lang.psi.taskName
+import com.github.l34130.mise.core.model.MiseTask
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
+import com.intellij.codeInsight.completion.PrioritizedLookupElement
+import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.service
+import com.intellij.openapi.util.Iconable
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
-import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.util.parentOfType
+import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.ProcessingContext
 import io.kinference.utils.runBlocking
 import kotlinx.coroutines.Dispatchers
 import org.toml.lang.psi.TomlArray
 import org.toml.lang.psi.TomlTable
-import kotlin.io.path.isExecutable
 
 /**
  * ```
@@ -52,7 +55,8 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
     ) {
         val element = parameters.position
         val project = element.project
-        val currentPsiFile = element.containingFile as? MiseTomlFile ?: return
+        val currentPsiFile = element.containingFile as? MiseTomlFile ?: return // element.containingFile is in memory file
+        val originalFile = (currentPsiFile.viewProvider.virtualFile as LightVirtualFile).originalFile
 
         val dependsArray = (element.parent.parent as? TomlArray)
 
@@ -61,55 +65,36 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
 
         runBlocking(Dispatchers.IO) {
             smartReadAction(project) {
-                // get all tasks from the current toml file
-                for (task in currentPsiFile.allTasks()) {
-                    val taskName = task.name ?: continue
-                    if (dependsArray?.elements?.any { it.stringValue == taskName } == true) continue
-                    if (taskName == currentTaskName) continue
+                for (task in project.service<MiseService>().getTasks()) {
+                    if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
+                    if (task.name == currentTaskName) continue
+
+                    val psiElement =
+                        when (task) {
+                            is MiseTask.ShellScript -> task.file.findPsiFile(project)!!
+                            is MiseTask.TomlTable -> task.keySegment
+                        }
+
+                    val path =
+                        when {
+                            task is MiseTask.TomlTable && task.keySegment.containingFile.virtualFile == originalFile -> "current file"
+                            else -> collapsePath(psiElement.containingFile, project)
+                        }
 
                     result.addElement(
                         LookupElementBuilder
-                            .createWithSmartPointer(taskName, task)
-                            .withInsertHandler(StringLiteralInsertionHandler()),
+                            .createWithSmartPointer(task.name, psiElement)
+                            .withInsertHandler(StringLiteralInsertionHandler())
+                            .withIcon(psiElement.getIcon(Iconable.ICON_FLAG_VISIBILITY))
+                            .withTypeText(path)
+                            .withPriority(-path.length - 100.0),
                     )
-                }
-
-                // get all tasks from all toml files in the project
-                for (virtualFile in project.service<MiseService>().getMiseTomlFiles()) {
-                    val psiFile = virtualFile.findPsiFile(project) as? MiseTomlFile ?: continue
-                    if (psiFile == currentPsiFile) continue // FIXME: This doesn't work as expected (LightVirtualFile vs VirtualFile)
-
-                    for (task in psiFile.allTasks()) {
-                        val taskName = task.name ?: continue
-                        if (dependsArray?.elements?.any { it.stringValue == taskName } == true) continue
-
-                        result.addElement(
-                            LookupElementBuilder
-                                .createWithSmartPointer(taskName, task)
-                                .withInsertHandler(StringLiteralInsertionHandler()),
-                        )
-                    }
-                }
-
-                // get all tasks from the task directories
-                val fileTaskDirs = project.service<MiseService>().getFileTaskDirectories()
-                for (dir in fileTaskDirs) {
-                    val dirPath = dir.toNioPath()
-                    dir
-                        .leafChildren()
-                        .filter { it.toNioPathOrNull()?.isExecutable() == true }
-                        .forEach {
-                            val taskName = dirPath.relativize(it.toNioPath()).joinToString(":")
-                            LookupElementBuilder
-                                .createWithSmartPointer(taskName, it.findPsiFile(element.project)!!)
-                                .withInsertHandler(StringLiteralInsertionHandler())
-                                .withIcon(it.fileType.icon)
-                                .let(result::addElement)
-                        }
                 }
             }
         }
     }
+
+    private fun LookupElementBuilder.withPriority(priority: Double): LookupElement = PrioritizedLookupElement.withPriority(this, priority)
 
     private fun VirtualFile.leafChildren(): Sequence<VirtualFile> =
         children.asSequence().flatMap {

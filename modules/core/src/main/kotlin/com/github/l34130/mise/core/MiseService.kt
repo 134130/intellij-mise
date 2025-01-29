@@ -1,6 +1,8 @@
 package com.github.l34130.mise.core
 
 import com.github.l34130.mise.core.lang.psi.MiseTomlFile
+import com.github.l34130.mise.core.lang.psi.allTasks
+import com.github.l34130.mise.core.model.MiseTask
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.Service
@@ -10,11 +12,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.openapi.vfs.resolveFromRootOrRelative
+import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.util.containers.addIfNotNull
 import com.jetbrains.rd.util.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.io.path.isExecutable
 
 @Service(Service.Level.PROJECT)
 class MiseService(
@@ -23,6 +27,7 @@ class MiseService(
 ) : Disposable {
     private val miseTomlFiles: MutableSet<VirtualFile> = ConcurrentHashMap.newKeySet<VirtualFile>()
     private val taskConfigDirectories: MutableSet<VirtualFile> = ConcurrentHashMap.newKeySet<VirtualFile>()
+    private val tasks: MutableSet<MiseTask> = ConcurrentHashMap.newKeySet<MiseTask>()
 
     init {
         project.messageBus.connect(this).let {
@@ -42,11 +47,16 @@ class MiseService(
 
     fun getFileTaskDirectories(): Set<VirtualFile> = taskConfigDirectories
 
+    fun getTasks(): Set<MiseTask> = tasks
+
     suspend fun refresh() {
         miseTomlFiles.clear()
+        taskConfigDirectories.clear()
+        tasks.clear()
 
         loadMiseTomlFiles()
         loadFileTaskDirectories()
+        loadTasks()
     }
 
     override fun dispose() {
@@ -114,6 +124,42 @@ class MiseService(
             taskConfigDirectories.addAll(result)
         }
     }
+
+    private suspend fun loadTasks() {
+        readAction {
+            val result = mutableListOf<MiseTask>()
+
+            // get all tasks from all toml files in the project
+            for (virtualFile in miseTomlFiles) {
+                val psiFile = virtualFile.findPsiFile(project) as? MiseTomlFile ?: continue
+                result.addAll(psiFile.allTasks())
+            }
+
+            // get all tasks from the task directories
+            for (directory in taskConfigDirectories) {
+                val dirNioPath = directory.toNioPath()
+                directory
+                    .leafChildren()
+                    .filter { it.toNioPathOrNull()?.isExecutable() == true }
+                    .mapTo(result) {
+                        MiseTask.ShellScript(
+                            name = dirNioPath.relativize(it.toNioPath()).joinToString(":"),
+                            file = it,
+                        )
+                    }
+            }
+            tasks.addAll(result)
+        }
+    }
+
+    private fun VirtualFile.leafChildren(): Sequence<VirtualFile> =
+        children.asSequence().flatMap {
+            if (it.isDirectory) {
+                it.leafChildren()
+            } else {
+                sequenceOf(it)
+            }
+        }
 
     companion object {
         private val MISE_TOML_NAME_REGEX = "^\\.?mise\\.(\\w+\\.)?toml$".toRegex()
