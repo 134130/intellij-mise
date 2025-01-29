@@ -37,7 +37,7 @@ class MiseTomlFileVfsListener private constructor(
 
         fun startListening(
             project: Project,
-            service: MiseTomlService,
+            service: MiseService,
             connection: MessageBusConnection,
         ) {
             val updater = MiseLocalIndexUpdater(project, service)
@@ -57,7 +57,7 @@ class MiseTomlFileVfsListener private constructor(
 
     class MiseLocalIndexUpdater(
         val project: Project,
-        val service: MiseTomlService,
+        val service: MiseService,
     ) {
         private val updater = ZipperUpdater(200, Alarm.ThreadToUse.POOLED_THREAD, application)
         private val taskExecutor = SequentialTaskExecutor.createSequentialApplicationPoolExecutor("MiseLocalIndexVfsListener")
@@ -66,10 +66,8 @@ class MiseTomlFileVfsListener private constructor(
             Runnable {
                 if (project.isDisposed) return@Runnable
                 val scope = HashSet(dirtyTomlFiles)
-                if (scope.any { f: VirtualFile -> service.possiblyHasReference(f.name) }) {
-                    project.messageBus.syncPublisher(MISE_TOML_CHANGED).run()
-                    dirtyTomlFiles.removeAll(scope)
-                }
+                project.messageBus.syncPublisher(MISE_TOML_CHANGED).run()
+                dirtyTomlFiles.removeAll(scope)
 
                 val analyzer = DaemonCodeAnalyzer.getInstance(project)
                 val psiManager = PsiManager.getInstance(project)
