@@ -3,7 +3,6 @@ package com.github.l34130.mise.core.lang.completion
 import com.github.l34130.mise.core.MiseService
 import com.github.l34130.mise.core.collapsePath
 import com.github.l34130.mise.core.lang.psi.MiseTomlFile
-import com.github.l34130.mise.core.lang.psi.allTasks
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.lang.psi.taskName
 import com.github.l34130.mise.core.model.MiseTask
@@ -15,9 +14,11 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.service
+import com.intellij.openapi.util.Iconable
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.util.parentOfType
+import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.ProcessingContext
 import io.kinference.utils.runBlocking
 import kotlinx.coroutines.Dispatchers
@@ -54,7 +55,8 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
     ) {
         val element = parameters.position
         val project = element.project
-        val currentPsiFile = element.containingFile as? MiseTomlFile ?: return
+        val currentPsiFile = element.containingFile as? MiseTomlFile ?: return // element.containingFile is in memory file
+        val originalFile = (currentPsiFile.viewProvider.virtualFile as LightVirtualFile).originalFile
 
         val dependsArray = (element.parent.parent as? TomlArray)
 
@@ -63,21 +65,6 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
 
         runBlocking(Dispatchers.IO) {
             smartReadAction(project) {
-                // get all tasks from the current toml file
-                val currentTasks = currentPsiFile.allTasks().toList()
-                for ((i, task) in currentTasks.withIndex()) {
-                    if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
-                    if (task.name == currentTaskName) continue
-
-                    result.addElement(
-                        LookupElementBuilder
-                            .createWithSmartPointer(task.name, task.keySegment)
-                            .withInsertHandler(StringLiteralInsertionHandler())
-                            .withTypeText("current file")
-                            .withPriority(currentTasks.size - i.toDouble()),
-                    )
-                }
-
                 for (task in project.service<MiseService>().getTasks()) {
                     if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
                     if (task.name == currentTaskName) continue
@@ -88,12 +75,19 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
                             is MiseTask.TomlTable -> task.keySegment
                         }
 
+                    val path =
+                        when {
+                            task is MiseTask.TomlTable && task.keySegment.containingFile.virtualFile == originalFile -> "current file"
+                            else -> collapsePath(psiElement.containingFile, project)
+                        }
+
                     result.addElement(
                         LookupElementBuilder
                             .createWithSmartPointer(task.name, psiElement)
                             .withInsertHandler(StringLiteralInsertionHandler())
-                            .withTypeText(collapsePath(psiElement.containingFile, project))
-                            .withPriority(currentTasks.size.toDouble()),
+                            .withIcon(psiElement.getIcon(Iconable.ICON_FLAG_VISIBILITY))
+                            .withTypeText(path)
+                            .withPriority(-path.length - 100.0),
                     )
                 }
             }
