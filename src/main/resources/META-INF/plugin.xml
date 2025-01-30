@@ -9,13 +9,7 @@
 
     <!-- Language Support -->
     <extensions defaultExtensionNs="com.intellij">
-        <fileType name="mise"
-                  language="TOML"
-                  implementationClass="com.github.l34130.mise.core.lang.MiseTomlFileType"
-                  fieldName="INSTANCE"
-                  fileNames=".mise.toml;mise.toml"
-                  patterns=".mise.*.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
-        />
+        <iconProvider implementation="com.github.l34130.mise.core.icon.MiseIconProvider"/>
 
         <psi.referenceContributor
                 order="first" language="TOML"
@@ -24,7 +18,7 @@
                 order="first" language="TOML"
                 implementationClass="com.github.l34130.mise.core.lang.completion.MiseTomlCompletionContributor"/>
 
-        <iconProvider implementation="com.github.l34130.mise.core.MiseIconProvider"/>
+        <iconProvider implementation="com.github.l34130.mise.core.icon.MiseIconProvider"/>
     </extensions>
 
     <!-- Execution Support -->

@@ -3,18 +3,29 @@ package com.github.l34130.mise.core
 import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.lang.LanguageCommenters
 import com.intellij.lang.injection.InjectedLanguageManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Document
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.math.min
 
 abstract class MiseTomlTestBase : BasePlatformTestCase() {
+
     protected fun InlineFile(
         text: String,
         fileName: String = "mise.toml",
-    ): PsiFile = myFixture.configureByText(fileName, text.trimIndent())
+    ): PsiFile {
+        val file = myFixture.configureByText(fileName, text.trimIndent())
+        runBlocking {
+            launch { project.service<MiseService>().refresh() }
+            launch { file.virtualFile.refresh(false, false) }
+        }
+        return file
+    }
 
     protected inline fun <reified T : PsiElement> findElementInEditor(marker: String = "^"): T = findElementInEditor(T::class.java, marker)
 

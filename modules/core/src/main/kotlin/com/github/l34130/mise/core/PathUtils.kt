@@ -6,6 +6,8 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 
+fun Project.baseDirectory(): String = this.presentableUrl ?: this.service<PathMacroManager>().collapsePath("\$PROJECT_DIR$")
+
 fun collapsePath(
     path: String,
     project: Project,
