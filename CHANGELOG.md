@@ -4,10 +4,25 @@
 
 ## [Unreleased]
 
+## [3.5.0] - 2024-01-30
+
+### Added
+
+- Use index for Mise task code completion.
+- Support file task code completion.
+- Support task code completion over project's base directory. (was only working on the `mise.toml` file)
+- Support documentation for Mise task code completion.
+
+### Fixed
+
+- Refactoring `mise.toml` files are not working properly.
+
 ## [3.4.1] - 2024-01-22
 
-- fix: Failed to load `MiseTomlDocumentationProvider`
-- fix: stacktrace for error reporter is too short
+### Fixed
+
+- Failed to load `MiseTomlDocumentationProvider`
+- stacktrace for error reporter is too short
 
 ## [3.4.0] - 2025-01-19
 
@@ -218,7 +233,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.4.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v3.5.0...HEAD
+[3.5.0]: https://github.com/134130/intellij-mise/compare/v3.4.1...v3.5.0
 [3.4.1]: https://github.com/134130/intellij-mise/compare/v3.4.0...v3.4.1
 [3.4.0]: https://github.com/134130/intellij-mise/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/134130/intellij-mise/compare/v3.2.6...v3.3.0
