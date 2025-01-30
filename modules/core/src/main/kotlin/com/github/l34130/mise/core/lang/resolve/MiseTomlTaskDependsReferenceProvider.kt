@@ -1,7 +1,6 @@
 package com.github.l34130.mise.core.lang.resolve
 
 import com.github.l34130.mise.core.MiseService
-import com.github.l34130.mise.core.lang.psi.MiseTomlFile
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.model.MiseTask
 import com.intellij.openapi.components.service
@@ -13,6 +12,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
 import com.intellij.psi.ResolveResult
 import com.intellij.util.ProcessingContext
+import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlLiteral
 
 /**
@@ -41,7 +41,7 @@ class MiseTomlTaskDependsReferenceProvider : PsiReferenceProvider() {
     ) : PsiPolyVariantReferenceBase<TomlLiteral>(element) {
         override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
             val literalValue = element.stringValue ?: return ResolveResult.EMPTY_ARRAY
-            if (element.containingFile !is MiseTomlFile) return ResolveResult.EMPTY_ARRAY
+            if (element.containingFile !is TomlFile) return ResolveResult.EMPTY_ARRAY
 
             val project = element.project
             val tasks = project.service<MiseService>().getTasks()

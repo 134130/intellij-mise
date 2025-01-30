@@ -2,7 +2,6 @@ package com.github.l34130.mise.core.lang.completion
 
 import com.github.l34130.mise.core.MiseService
 import com.github.l34130.mise.core.collapsePath
-import com.github.l34130.mise.core.lang.psi.MiseTomlFile
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.lang.psi.taskName
 import com.github.l34130.mise.core.model.MiseTask
@@ -23,6 +22,7 @@ import com.intellij.util.ProcessingContext
 import io.kinference.utils.runBlocking
 import kotlinx.coroutines.Dispatchers
 import org.toml.lang.psi.TomlArray
+import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlTable
 
 /**
@@ -55,7 +55,7 @@ class MiseTomlTaskDependsCompletionProvider : CompletionProvider<CompletionParam
     ) {
         val element = parameters.position
         val project = element.project
-        val currentPsiFile = element.containingFile as? MiseTomlFile ?: return // element.containingFile is in memory file
+        val currentPsiFile = element.containingFile as? TomlFile ?: return // element.containingFile is in memory file
         val originalFile = (currentPsiFile.viewProvider.virtualFile as LightVirtualFile).originalFile
 
         val dependsArray = (element.parent.parent as? TomlArray)

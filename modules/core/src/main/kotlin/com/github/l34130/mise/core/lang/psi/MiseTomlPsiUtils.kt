@@ -6,6 +6,7 @@ import com.intellij.psi.ResolveResult
 import com.intellij.psi.util.childrenOfType
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import org.toml.lang.psi.TomlArray
+import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlKeySegment
 import org.toml.lang.psi.TomlKeyValueOwner
 import org.toml.lang.psi.TomlLiteral
@@ -17,7 +18,7 @@ import org.toml.lang.psi.ext.kind
 import kotlin.to
 
 @RequiresReadLock
-fun MiseTomlFile.allTasks(): Sequence<MiseTask.TomlTable> {
+fun TomlFile.allTasks(): Sequence<MiseTask.TomlTable> {
     val explicitTasks = hashSetOf<String>()
 
     return childrenOfType<TomlTable>()
@@ -47,7 +48,7 @@ fun MiseTomlFile.allTasks(): Sequence<MiseTask.TomlTable> {
 }
 
 @RequiresReadLock
-fun MiseTomlFile.resolveTask(taskName: String): Sequence<ResolveResult> =
+fun TomlFile.resolveTask(taskName: String): Sequence<ResolveResult> =
     allTasks()
         .filter { it.name == taskName }
         .map { PsiElementResolveResult(it.keySegment) }

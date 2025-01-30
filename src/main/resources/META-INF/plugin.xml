@@ -17,11 +17,6 @@
                   patterns=".mise.*.toml;mise.*.toml;**/.mise/config.toml;**/mise/config.toml"
         />
 
-        <lang.parserDefinition
-                order="first"
-                language="TOML"
-                implementationClass="com.github.l34130.mise.core.lang.psi.MiseTomlParserDefinition"/>
-
         <psi.referenceContributor
                 order="first" language="TOML"
                 implementation="com.github.l34130.mise.core.lang.resolve.MiseTomlReferenceContributor"/>

@@ -1,6 +1,5 @@
 package com.github.l34130.mise.core.execution.configuration
 
-import com.github.l34130.mise.core.lang.psi.MiseTomlFile
 import com.github.l34130.mise.core.lang.psi.taskName
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.LazyRunConfigurationProducer
@@ -9,6 +8,7 @@ import com.intellij.openapi.components.PathMacroManager
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.parentOfType
+import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlTable
 
 class MiseTomlTaskRunConfigurationProducer : LazyRunConfigurationProducer<MiseTomlTaskRunConfiguration>() {
@@ -25,7 +25,7 @@ class MiseTomlTaskRunConfigurationProducer : LazyRunConfigurationProducer<MiseTo
         context: ConfigurationContext,
         sourceElement: Ref<PsiElement>,
     ): Boolean {
-        if (context.psiLocation?.containingFile !is MiseTomlFile) return false
+        if (context.psiLocation?.containingFile !is TomlFile) return false
 
         val taskName = findTaskName(context) ?: return false
         configuration.miseTaskName = taskName
