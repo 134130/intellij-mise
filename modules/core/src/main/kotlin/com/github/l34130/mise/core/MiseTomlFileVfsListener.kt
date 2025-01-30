@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core
 
-import com.github.l34130.mise.core.lang.MiseTomlFileType
+import com.github.l34130.mise.core.model.MiseTomlFile
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ZipperUpdater
@@ -83,7 +83,7 @@ class MiseTomlFileVfsListener private constructor(
             }
 
         fun onFileChange(file: VirtualFile) {
-            if (MiseTomlFileType.isMiseTomlFile(project, file)) {
+            if (MiseTomlFile.isMiseTomlFile(project, file)) {
                 dirtyTomlFiles.add(file)
                 updater.queue(runnable)
             }
