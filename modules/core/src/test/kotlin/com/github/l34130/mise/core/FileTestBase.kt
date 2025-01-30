@@ -13,11 +13,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.math.min
 
-abstract class MiseTomlTestBase : BasePlatformTestCase() {
-
+abstract class FileTestBase : BasePlatformTestCase() {
     protected fun InlineFile(
         text: String,
-        fileName: String = "mise.toml",
+        fileName: String,
     ): PsiFile {
         val file = myFixture.configureByText(fileName, text.trimIndent())
         runBlocking {
