@@ -1,9 +1,13 @@
 package com.github.l34130.mise.core.lang.resolve
 
+import com.github.l34130.mise.core.MiseService
 import com.github.l34130.mise.core.lang.psi.MiseTomlFile
-import com.github.l34130.mise.core.lang.psi.resolveTask
 import com.github.l34130.mise.core.lang.psi.stringValue
+import com.github.l34130.mise.core.model.MiseTask
+import com.intellij.openapi.components.service
+import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElementResolveResult
 import com.intellij.psi.PsiPolyVariantReferenceBase
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
@@ -37,9 +41,18 @@ class MiseTomlTaskDependsReferenceProvider : PsiReferenceProvider() {
     ) : PsiPolyVariantReferenceBase<TomlLiteral>(element) {
         override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
             val literalValue = element.stringValue ?: return ResolveResult.EMPTY_ARRAY
-            val miseTomlFile = element.containingFile as? MiseTomlFile ?: return ResolveResult.EMPTY_ARRAY
+            if (element.containingFile !is MiseTomlFile) return ResolveResult.EMPTY_ARRAY
 
-            return miseTomlFile.resolveTask(literalValue).toList().toTypedArray()
+            val project = element.project
+            val tasks = project.service<MiseService>().getTasks()
+            return tasks
+                .filter { it.name == literalValue }
+                .map {
+                    when (it) {
+                        is MiseTask.ShellScript -> PsiElementResolveResult(it.file.findPsiFile(project)!!)
+                        is MiseTask.TomlTable -> PsiElementResolveResult(it.keySegment)
+                    }
+                }.toTypedArray()
         }
     }
 }
