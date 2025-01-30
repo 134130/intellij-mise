@@ -138,15 +138,11 @@ class MiseService(
 
             // get all tasks from the task directories
             for (directory in taskConfigDirectories) {
-                val dirNioPath = directory.toNioPath()
                 directory
                     .leafChildren()
                     .filter { it.toNioPathOrNull()?.isExecutable() == true }
-                    .mapTo(result) {
-                        MiseTask.ShellScript(
-                            name = dirNioPath.relativize(it.toNioPath()).joinToString(":"),
-                            file = it,
-                        )
+                    .mapNotNullTo(result) {
+                        MiseTask.ShellScript.resolveOrNull(directory, it)
                     }
             }
             tasks.addAll(result)
