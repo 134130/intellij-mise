@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.lang.psi
 
-import com.github.l34130.mise.core.MiseTomlTestBase
+import com.github.l34130.mise.core.FileTestBase
 import com.github.l34130.mise.core.lang.psi.MiseTomlPsiPatterns.inTaskDependsArray
 import com.github.l34130.mise.core.lang.psi.MiseTomlPsiPatterns.inTaskDependsString
 import com.intellij.patterns.ElementPattern
@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement
 import com.jetbrains.rd.util.assert
 import org.intellij.lang.annotations.Language
 
-class MiseTomlPsiPatternsTest : MiseTomlTestBase() {
+class MiseTomlPsiPatternsTest : FileTestBase() {
     fun `test inTaskDependsArray`() = testPattern(inTaskDependsArray, """
         [tasks.foo]
         depends = ["bar", ""]

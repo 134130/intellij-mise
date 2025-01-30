@@ -4,10 +4,10 @@ import com.github.l34130.mise.core.FileTestBase
 import com.intellij.codeInsight.lookup.LookupElement
 import org.intellij.lang.annotations.Language
 
-internal abstract class MiseTomlCompletionTestBase : FileTestBase() {
+internal abstract class MiseShCompletionTestBase : FileTestBase() {
     protected fun testSingleCompletion(
-        @Language("TOML") before: String,
-        @Language("TOML") after: String,
+        @Language("Shell Script") before: String,
+        @Language("Shell Script") after: String,
     ) {
         check(hasCaretMarker(before)) { "Please, add `/*caret*/` or `<caret>` marker to\n$before" }
         check(hasCaretMarker(after)) { "Please, add `/*caret*/` or `<caret>` marker to\n$after" }
@@ -16,9 +16,9 @@ internal abstract class MiseTomlCompletionTestBase : FileTestBase() {
 
     protected fun testCompletion(
         lookupString: String,
-        @Language("TOML") before: String,
-        @Language("TOML") after: String,
-        completionChar: Char,
+        @Language("Shell Script") before: String,
+        @Language("Shell Script") after: String,
+        completionChar: Char = '\n',
     ) {
         check(hasCaretMarker(before)) { "Please, add `/*caret*/` or `<caret>` marker to\n$before" }
         check(hasCaretMarker(after)) { "Please, add `/*caret*/` or `<caret>` marker to\n$after" }
@@ -37,7 +37,7 @@ internal abstract class MiseTomlCompletionTestBase : FileTestBase() {
         after: String,
         action: () -> Unit,
     ) {
-        InlineFile(code, "mise.toml")
+        InlineFile(code, "shellscript")
         action()
         myFixture.checkResult(replaceCaretMarker(after))
     }
