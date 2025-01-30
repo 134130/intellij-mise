@@ -1,8 +1,8 @@
 package com.github.l34130.mise.core
 
-import com.github.l34130.mise.core.lang.psi.MiseTomlFile
 import com.github.l34130.mise.core.lang.psi.allTasks
 import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.model.MiseTomlFile
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.Service
@@ -18,6 +18,7 @@ import com.jetbrains.rd.util.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.toml.lang.psi.TomlFile
 import kotlin.io.path.isExecutable
 
 @Service(Service.Level.PROJECT)
@@ -107,7 +108,7 @@ class MiseService(
 
                 val miseTomlFiles = project.service<MiseService>().getMiseTomlFiles()
                 for (miseToml in miseTomlFiles) {
-                    val psiFile = miseToml.findPsiFile(project) as? MiseTomlFile ?: continue
+                    val psiFile = miseToml.findPsiFile(project) as? TomlFile ?: continue
 
                     val taskConfig = MiseTomlFile.TaskConfig.resolveOrNull(psiFile) ?: continue
                     val taskTomlOrDirs = taskConfig.includes ?: continue
@@ -131,7 +132,7 @@ class MiseService(
 
             // get all tasks from all toml files in the project
             for (virtualFile in miseTomlFiles) {
-                val psiFile = virtualFile.findPsiFile(project) as? MiseTomlFile ?: continue
+                val psiFile = virtualFile.findPsiFile(project) as? TomlFile ?: continue
                 result.addAll(psiFile.allTasks())
             }
 
