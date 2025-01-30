@@ -15,7 +15,6 @@ import org.toml.lang.psi.TomlTableHeader
 import org.toml.lang.psi.TomlValue
 import org.toml.lang.psi.ext.TomlLiteralKind
 import org.toml.lang.psi.ext.kind
-import kotlin.to
 
 @RequiresReadLock
 fun TomlFile.allTasks(): Sequence<MiseTask.TomlTable> {
@@ -30,21 +29,15 @@ fun TomlFile.allTasks(): Sequence<MiseTask.TomlTable> {
                 header.isSpecificTaskTableHeader -> {
                     val lastKey = header.key?.segments?.last()
                     if (lastKey != null && lastKey.name !in explicitTasks) {
-                        sequenceOf(table to lastKey)
+                        sequenceOf(lastKey)
                     } else {
                         emptySequence()
                     }
                 }
                 else -> emptySequence()
             }
-        }.mapNotNull { (table, keySegment) ->
-            MiseTask.TomlTable(
-                name = keySegment.name ?: return@mapNotNull null,
-                description = table.getValueWithKey("description")?.stringValue,
-                aliases = table.getValueWithKey("alias")?.stringArray,
-                keySegment = keySegment,
-            )
-        }.constrainOnce()
+        }.mapNotNull { keySegment -> MiseTask.TomlTable.resolveOrNull(keySegment) }
+        .constrainOnce()
 }
 
 @RequiresReadLock
