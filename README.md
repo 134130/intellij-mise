@@ -7,15 +7,16 @@
 
 **[GitHub](https://github.com/134130/intellij-mise)** | **[Issue](https://github.com/134130/intellij-mise/issues)** | **[Changelog](https://github.com/134130/intellij-mise/blob/main/CHANGELOG.md)**
 
-**Mise** is a plugin for JetBrains IDEs that allows you to set environment variables for your run configurations
-from Mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
+**Mise** is a plugin for JetBrains IDEs that provides integration with [mise-en-place](https://mise.jdx.dev)
+
 
 ## Features
 
 - **Tool Integration**: Set project's SDK automatically from `mise.toml` files.
   - `java`, `go`, `node`, `deno` SDKs are supported.
 - **Environment Variables**: Set environment variables for your run configurations from `mise.toml` files.
-- **Autocomplete**: Autocomplete suggestions for `mise.toml` files.
+- **Language Support**: Provides language features for `mise.toml` files
+  - Code completion
 
 ## Supported Platforms
 - **IntelliJ IDEA**
@@ -29,6 +30,11 @@ from Mise config files. see: **[mise-en-place](https://mise.jdx.dev)**
 ## Screenshots
 
 ![main](https://github.com/user-attachments/assets/e668d651-9d39-497e-b1b6-d9f05d5c3232)
+
+![language-completion](https://github.com/user-attachments/assets/073644b8-2189-411d-b3a9-64c207ac44e4)
+
+
+![language-reference](https://github.com/user-attachments/assets/426f0f1b-6824-4dc5-8ab9-e52f76cd9f69)
 
 ![run](https://github.com/user-attachments/assets/6b5ef885-17d0-4865-ac3e-150a588d4d02)
 
