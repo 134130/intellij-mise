@@ -19,8 +19,8 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.util.parentOfType
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.ProcessingContext
-import io.kinference.utils.runBlocking
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.toml.lang.psi.TomlArray
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlTable
