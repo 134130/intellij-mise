@@ -38,6 +38,7 @@ dependencies {
         pluginModule(implementation(project(":mise-products-gradle")))
         pluginModule(implementation(project(":mise-products-idea")))
         pluginModule(implementation(project(":mise-products-nodejs")))
+        pluginModule(implementation(project(":mise-products-pycharm")))
         pluginModule(implementation(project(":mise-products-rider")))
 
         plugins(listOf())
@@ -161,6 +162,7 @@ allprojects {
         detekt(project(":mise-products-gradle"))
         detekt(project(":mise-products-idea"))
         detekt(project(":mise-products-nodejs"))
+        detekt(project(":mise-products-pycharm"))
         detekt(project(":mise-products-rider"))
     }
 
@@ -215,7 +217,7 @@ val runIdePlatformTypes =
 runIdePlatformTypes.forEach { platformType ->
     intellijPlatformTesting.runIde.register("run${platformType.name}") {
         type = platformType
-        version = "2024.1"
+        version = "2024.3"
 
         plugins {
 //            plugin("pluginId", "1.0.0")
