@@ -7,7 +7,11 @@ import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.components.service
+import com.intellij.platform.ide.progress.TaskCancellation
+import com.intellij.platform.ide.progress.withBackgroundProgress
 import com.intellij.util.application
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import java.util.function.Supplier
 
 object MiseHelper {
@@ -30,16 +34,20 @@ object MiseHelper {
                 else -> return emptyMap()
             }
 
-        return MiseCommandLineHelper
-            .getEnvVars(workDir, configEnvironment)
-            .fold(
-                onSuccess = { envVars -> envVars },
-                onFailure = {
-                    if (it !is MiseCommandLineNotFoundException) {
-                        MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
-                    }
-                    emptyMap()
-                },
-            )
+        return runBlocking(Dispatchers.IO) {
+            withBackgroundProgress(configuration.project, "Getting Mise envvars", TaskCancellation.nonCancellable()) {
+                MiseCommandLineHelper
+                    .getEnvVars(workDir, configEnvironment)
+                    .fold(
+                        onSuccess = { envVars -> envVars },
+                        onFailure = {
+                            if (it !is MiseCommandLineNotFoundException) {
+                                MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                            }
+                            mapOf()
+                        },
+                    )
+            }
+        }
     }
 }
