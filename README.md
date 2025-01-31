@@ -12,15 +12,17 @@
 
 ## Features
 
+- **Environment Variables**: Set environment variables for your run configurations from `mise.toml` files.
+  - See [Supported Platforms](#supported-platforms) for the list of supported IDEs.
 - **Tool Integration**: Set project's SDK automatically from `mise.toml` files.
   - `java`, `go`, `node`, `deno` SDKs are supported.
-- **Environment Variables**: Set environment variables for your run configurations from `mise.toml` files.
 - **Language Support**: Provides language features for `mise.toml` files
   - Code completion
 
 ## Supported Platforms
 - **IntelliJ IDEA**
 - **GoLand**
+- **PyCharm**
 - **WebStorm**
 - **Rider**
 - _Submit issue if you need other IDE_
@@ -32,7 +34,6 @@
 ![main](https://github.com/user-attachments/assets/e668d651-9d39-497e-b1b6-d9f05d5c3232)
 
 ![language-completion](https://github.com/user-attachments/assets/073644b8-2189-411d-b3a9-64c207ac44e4)
-
 
 ![language-reference](https://github.com/user-attachments/assets/426f0f1b-6824-4dc5-8ab9-e52f76cd9f69)
 

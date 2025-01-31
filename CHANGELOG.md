@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [4.1.0] - 2024-02-01
+
+### Added
+
+- Support run configuration for PyCharm Community & Professional
+
 ## [4.0.0] - 2024-01-31
 
 ### BREAKING CHANGE
@@ -239,7 +245,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.1.0...HEAD
+[4.1.0]: https://github.com/134130/intellij-mise/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/134130/intellij-mise/compare/v3.5.0...v4.0.0
 [3.5.0]: https://github.com/134130/intellij-mise/compare/v3.4.1...v3.5.0
 [3.4.1]: https://github.com/134130/intellij-mise/compare/v3.4.0...v3.4.1
