@@ -6,6 +6,7 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.Constants.Constraints
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 
 plugins {
     id("java") // Java support
@@ -106,7 +107,7 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-//            recommended()
+            recommended()
         }
     }
 
@@ -166,7 +167,7 @@ allprojects {
 
     tasks.withType<Detekt>().configureEach {
         enabled = false
-        jvmTarget = "17"
+        jvmTarget = "21"
         reports {
             xml.required = true
             html.required = true
@@ -179,7 +180,7 @@ allprojects {
         input.from(tasks.withType<Detekt>().map { it.reports.sarif.outputLocation })
     }
     tasks.withType<DetektCreateBaselineTask>().configureEach {
-        jvmTarget = "17"
+        jvmTarget = "21"
     }
 }
 
