@@ -24,7 +24,7 @@ version = providers.gradleProperty("pluginVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
@@ -32,7 +32,7 @@ dependencies {
     testImplementation(libs.junit)
 
     intellijPlatform {
-        create(IntelliJPlatformType.IntellijIdeaCommunity, "2022.3.3", false)
+        create(IntelliJPlatformType.IntellijIdeaCommunity, providers.gradleProperty("platformVersion"), false)
 
         pluginModule(implementation(project(":mise-products-goland")))
         pluginModule(implementation(project(":mise-products-gradle")))
@@ -106,7 +106,7 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-//            recommended()
+            recommended()
         }
     }
 
@@ -166,7 +166,7 @@ allprojects {
 
     tasks.withType<Detekt>().configureEach {
         enabled = false
-        jvmTarget = "17"
+        jvmTarget = "21"
         reports {
             xml.required = true
             html.required = true
@@ -179,7 +179,7 @@ allprojects {
         input.from(tasks.withType<Detekt>().map { it.reports.sarif.outputLocation })
     }
     tasks.withType<DetektCreateBaselineTask>().configureEach {
-        jvmTarget = "17"
+        jvmTarget = "21"
     }
 }
 
