@@ -9,7 +9,7 @@ class MiseTomlReferenceContributor : PsiReferenceContributor() {
     override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
         registrar.registerReferenceProvider(
             PlatformPatterns.or(
-                MiseTomlPsiPatterns.miseTomlStringLiteral().withParent(MiseTomlPsiPatterns.onTaskDependsArray),
+                MiseTomlPsiPatterns.miseTomlStringLiteral.withParent(MiseTomlPsiPatterns.onTaskDependsArray),
                 MiseTomlPsiPatterns.onTaskDependsString,
             ),
             MiseTomlTaskDependsReferenceProvider(),

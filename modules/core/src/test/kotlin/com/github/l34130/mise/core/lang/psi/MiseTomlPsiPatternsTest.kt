@@ -1,3 +1,5 @@
+@file:Suppress("ktlint")
+
 package com.github.l34130.mise.core.lang.psi
 
 import com.github.l34130.mise.core.FileTestBase
