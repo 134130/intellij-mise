@@ -22,7 +22,7 @@ import org.toml.lang.psi.ext.kind
 import org.toml.lang.psi.ext.name
 
 object MiseTomlPsiPatterns {
-    private inline fun <reified I : PsiElement> tomlPsiElement(): PsiElementPattern.Capture<I> =
+    inline fun <reified I : PsiElement> tomlPsiElement(): PsiElementPattern.Capture<I> =
         psiElement<I>().inVirtualFile(
             VirtualFilePattern().ofType(TomlFileType),
         )

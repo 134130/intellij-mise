@@ -79,9 +79,12 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
         val dependsArray = (element.parent.parent as? TomlArray)
 
         var currentTaskSegment: TomlKeySegment? = null
-        (element.parent.parent.parent as? TomlTable)?.let { tomlTable ->
+        // [tasks.<task-name>]
+        (element.parent.parent.parent as? TomlTable ?: element.parent.parent.parent.parent as? TomlTable)?.let { tomlTable ->
             tomlTable.header.key?.segments?.getOrNull(1)?.let { currentTaskSegment = it }
         }
+        // [tasks]
+        // <task-name> = { ... }
         (element.parent.parent.parent.parent as? TomlInlineTable)?.let { tomlInlineTable ->
             (tomlInlineTable.parent as? TomlKeyValue)?.key?.segments?.singleOrNull()?.let { currentTaskSegment = it }
         }

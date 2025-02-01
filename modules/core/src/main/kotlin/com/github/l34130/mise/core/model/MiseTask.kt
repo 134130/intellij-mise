@@ -66,13 +66,21 @@ sealed interface MiseTask {
         companion object {
             @Suppress("ktlint:standard:chain-method-continuation")
             fun resolveOrNull(psiElement: PsiElement): TomlTable? {
-                if (!(MiseTomlPsiPatterns.miseTomlStringLiteral or MiseTomlPsiPatterns.miseTomlLeafPsiElement)
-                        .accepts(psiElement)
+                if (!(
+                        MiseTomlPsiPatterns.miseTomlStringLiteral or
+                            MiseTomlPsiPatterns.miseTomlLeafPsiElement or
+                            MiseTomlPsiPatterns.tomlPsiElement<TomlKeySegment>()
+                    ).accepts(psiElement)
                 ) {
                     return null
                 }
 
-                val tomlKey = psiElement.parent.parent as? TomlKey ?: return null
+                val tomlKey =
+                    if (psiElement is TomlKeySegment) {
+                        psiElement.parent as? TomlKey
+                    } else {
+                        psiElement.parent.parent as? TomlKey
+                    } ?: return null
 
                 // CASE: [tasks.<TASK_NAME>]
                 (tomlKey.parent as? TomlTableHeader)?.let { tomlTableHeader ->
