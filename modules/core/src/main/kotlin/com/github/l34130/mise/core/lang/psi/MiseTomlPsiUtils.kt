@@ -1,7 +1,6 @@
 package com.github.l34130.mise.core.lang.psi
 
 import com.github.l34130.mise.core.model.MiseTask
-import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.childrenOfType
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import org.toml.lang.psi.TomlArray
@@ -11,7 +10,6 @@ import org.toml.lang.psi.TomlKeyValueOwner
 import org.toml.lang.psi.TomlLiteral
 import org.toml.lang.psi.TomlTable
 import org.toml.lang.psi.TomlTableHeader
-import org.toml.lang.psi.TomlTokenType
 import org.toml.lang.psi.TomlValue
 import org.toml.lang.psi.ext.TomlLiteralKind
 import org.toml.lang.psi.ext.kind
@@ -71,22 +69,6 @@ val TomlTableHeader.isSpecificTaskTableHeader: Boolean
     get() {
         val names = key?.segments.orEmpty()
         return names.getOrNull(names.size - 2)?.name == "tasks"
-    }
-
-/**
- * ```
- * [tasks]
- * foo = {  }
- * ```
- */
-@get:RequiresReadLock
-val LeafPsiElement.isInlineTaskKey: Boolean
-    get() {
-        if (this.elementType !is TomlTokenType) return false
-        val table = this.parent.parent.parent.parent as? TomlTable ?: return false
-        val header = table.header
-        val segments = header.key?.segments ?: return false
-        return segments.singleOrNull()?.textMatches("tasks") == true
     }
 
 @RequiresReadLock

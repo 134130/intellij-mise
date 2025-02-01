@@ -3,7 +3,6 @@
 package com.github.l34130.mise.core.lang.psi
 
 import com.github.l34130.mise.core.FileTestBase
-import com.intellij.psi.impl.source.tree.LeafPsiElement
 import org.intellij.lang.annotations.Language
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlTableHeader
@@ -35,18 +34,6 @@ class MiseTomlPsiUtilsTest : FileTestBase() {
         )
         val element = findElementInEditor<TomlTableHeader>()
         assert(element.isSpecificTaskTableHeader)
-    }
-
-    fun `test TomlTableHeader_isInlineTaskKey`() {
-        InlineTomlFile(
-            """
-            [tasks]
-            foo = {  }
-             #^
-            """.trimIndent(),
-        )
-        val element = findElementInEditor<LeafPsiElement>()
-        assert(element.isInlineTaskKey)
     }
 
     private fun InlineTomlFile(@Language("TOML") code: String, fileName: String = "mise.toml"): TomlFile =
