@@ -64,6 +64,9 @@ sealed interface MiseTask {
         val keySegment: TomlKeySegment,
     ) : MiseTask {
         companion object {
+            /**
+             * If the given [psiElement] is a key segment(or literal) of a task table, returns the [TomlTable] instance.
+             */
             @Suppress("ktlint:standard:chain-method-continuation")
             fun resolveOrNull(psiElement: PsiElement): TomlTable? {
                 if (!(
