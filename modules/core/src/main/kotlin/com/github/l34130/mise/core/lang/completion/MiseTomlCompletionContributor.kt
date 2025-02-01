@@ -13,7 +13,7 @@ class MiseTomlCompletionContributor : CompletionContributor() {
                 MiseTomlPsiPatterns.inTaskDependsString or
                 MiseTomlPsiPatterns.inTaskWaitForArray or
                 MiseTomlPsiPatterns.inTaskWaitForString,
-            MiseTomlTaskDependsCompletionProvider(),
+            MiseTomlTaskCompletionProvider(),
         )
     }
 }

@@ -7,9 +7,11 @@ import com.github.l34130.mise.core.lang.psi.or
 import com.github.l34130.mise.core.lang.psi.stringArray
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.intellij.openapi.actionSystem.DataKey
+import com.intellij.openapi.util.UserDataHolder
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
+import com.intellij.testFramework.LightVirtualFile
 import org.toml.lang.psi.TomlInlineTable
 import org.toml.lang.psi.TomlKey
 import org.toml.lang.psi.TomlKeySegment
@@ -119,5 +121,12 @@ sealed interface MiseTask {
                 return null
             }
         }
+
+        private val PsiElement.originalContainingFile: UserDataHolder?
+            get() {
+                val containingFile = this.containingFile
+                return (containingFile.viewProvider.virtualFile as? LightVirtualFile)?.originalFile
+                    ?: containingFile
+            }
     }
 }
