@@ -9,7 +9,6 @@ import com.intellij.openapi.components.PathMacroManager
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.parentOfType
-import org.toml.lang.psi.TomlKeySegment
 import org.toml.lang.psi.TomlTable
 
 internal class MiseTomlTaskRunConfigurationProducer : LazyRunConfigurationProducer<MiseTomlTaskRunConfiguration>() {
@@ -26,9 +25,7 @@ internal class MiseTomlTaskRunConfigurationProducer : LazyRunConfigurationProduc
         context: ConfigurationContext,
         sourceElement: Ref<PsiElement>,
     ): Boolean {
-        val tomlKeySegment = context.psiLocation as? TomlKeySegment ?: return false
-
-        val task = MiseTask.TomlTable.resolveOrNull(tomlKeySegment) ?: return false
+        val task = context.dataContext.getData(MiseTask.DATA_KEY) ?: return false
         configuration.miseTaskName = task.name
 
         val macroManager = PathMacroManager.getInstance(context.project)

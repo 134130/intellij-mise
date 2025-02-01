@@ -21,11 +21,18 @@ internal class RunMiseTomlTaskAction(
         AllIcons.Actions.Execute,
     ) {
     override fun actionPerformed(event: AnActionEvent) {
-        val dataContext =
+        var dataContext =
             SimpleDataContext.getSimpleContext(
                 Location.DATA_KEY,
                 PsiLocation((miseTask as MiseTask.TomlTable).keySegment),
                 event.dataContext,
+            )
+
+        dataContext =
+            SimpleDataContext.getSimpleContext(
+                MiseTask.DATA_KEY,
+                miseTask,
+                dataContext,
             )
 
         val context = ConfigurationContext.getFromContext(dataContext, event.place)
