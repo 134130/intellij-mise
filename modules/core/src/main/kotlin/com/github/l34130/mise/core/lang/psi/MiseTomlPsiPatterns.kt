@@ -76,6 +76,10 @@ object MiseTomlPsiPatterns {
             psiElement<TomlArray>().withParent(taskProperty("depends_post"))
     val inTaskDependsArray = tomlPsiElement<PsiElement>().inside(onTaskDependsArray)
 
+    val onTaskWaitForArray =
+        psiElement<TomlArray>().withParent(taskProperty("wait_for"))
+    val inTaskWaitForArray = tomlPsiElement<PsiElement>().inside(onTaskWaitForArray)
+
     /**
      * ```
      * [tasks]
@@ -92,8 +96,11 @@ object MiseTomlPsiPatterns {
     val onTaskDependsString =
         miseTomlStringLiteral().withParent(taskProperty("depends")) or
             miseTomlStringLiteral().withParent(taskProperty("depends_post"))
-
     val inTaskDependsString = tomlPsiElement<PsiElement>().inside(onTaskDependsString)
+
+    val onTaskWaitForString =
+        miseTomlStringLiteral().withParent(taskProperty("wait_for"))
+    val inTaskWaitForString = tomlPsiElement<PsiElement>().inside(onTaskWaitForString)
 
     val onTaskRunString = miseTomlStringLiteral().withParent(taskProperty("run"))
     val inTaskRunString = tomlPsiElement<PsiElement>().inside(onTaskRunString)
