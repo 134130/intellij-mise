@@ -1,11 +1,13 @@
 package com.github.l34130.mise.core.model
 
+import com.github.l34130.mise.core.collapsePath
 import com.github.l34130.mise.core.lang.psi.MiseTomlPsiPatterns
 import com.github.l34130.mise.core.lang.psi.getValueWithKey
 import com.github.l34130.mise.core.lang.psi.or
 import com.github.l34130.mise.core.lang.psi.stringArray
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.intellij.openapi.actionSystem.DataKey
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import org.toml.lang.psi.TomlInlineTable
@@ -13,12 +15,18 @@ import org.toml.lang.psi.TomlKey
 import org.toml.lang.psi.TomlKeySegment
 import org.toml.lang.psi.TomlKeyValue
 import org.toml.lang.psi.TomlTableHeader
+import java.io.File
 
 sealed interface MiseTask {
     val name: String
     val aliases: List<String>?
     val depends: List<String>?
     val description: String?
+
+    /**
+     * Relative path from the project root. (without ./)
+     */
+    val source: String?
 
     companion object {
         val DATA_KEY = DataKey.create<MiseTask>(javaClass.simpleName)
@@ -29,6 +37,7 @@ sealed interface MiseTask {
         override val aliases: List<String>? = null,
         override val depends: List<String>? = null,
         override val description: String? = null,
+        override val source: String? = null,
         val file: VirtualFile,
     ) : MiseTask {
         companion object {
@@ -39,6 +48,7 @@ sealed interface MiseTask {
                 ShellScript(
                     name = baseDir.toNioPath().relativize(file.toNioPath()).joinToString(":"),
                     file = file,
+                    source = FileUtil.getRelativePath(baseDir.presentableUrl, file.presentableUrl, File.separatorChar),
                 )
         }
     }
@@ -48,6 +58,7 @@ sealed interface MiseTask {
         override val aliases: List<String>? = null,
         override val depends: List<String>? = null,
         override val description: String? = null,
+        override val source: String? = null,
         val keySegment: TomlKeySegment,
     ) : MiseTask {
         companion object {
@@ -75,6 +86,7 @@ sealed interface MiseTask {
                         description = table.getValueWithKey("description")?.stringValue,
                         depends = table.getValueWithKey("depends")?.stringArray,
                         aliases = table.getValueWithKey("alias")?.stringArray,
+                        source = collapsePath(psiElement.containingFile, psiElement.project),
                         keySegment = keySegment,
                     )
                 }
@@ -99,6 +111,7 @@ sealed interface MiseTask {
                         description = table.getValueWithKey("description")?.stringValue,
                         depends = table.getValueWithKey("depends")?.stringArray,
                         aliases = table.getValueWithKey("alias")?.stringArray,
+                        source = collapsePath(psiElement.containingFile, psiElement.project),
                         keySegment = keySegment,
                     )
                 }
