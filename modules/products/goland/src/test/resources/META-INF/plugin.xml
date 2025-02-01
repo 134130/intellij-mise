@@ -1,0 +1,12 @@
+<idea-plugin url="https://github.com/l34130/intellij-mise" require-restart="false">
+    <id>com.github.l34130.mise</id>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.toml.lang</depends>
+
+    <depends>org.jetbrains.plugins.go</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+    </extensions>
+</idea-plugin>
