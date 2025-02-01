@@ -30,7 +30,7 @@ object MiseTomlPsiPatterns {
         tomlPsiElement<TomlTable>()
             .withChild(
                 psiElement<TomlTableHeader>()
-                    .with("specificTaskCondition") { header, _ ->
+                    .with("specificTaskCondition") { header: TomlTableHeader, _ ->
                         header.isSpecificTaskTableHeader
                     },
             )
@@ -94,6 +94,9 @@ object MiseTomlPsiPatterns {
             miseTomlStringLiteral().withParent(taskProperty("depends_post"))
 
     val inTaskDependsString = tomlPsiElement<PsiElement>().inside(onTaskDependsString)
+
+    val onTaskRunString = miseTomlStringLiteral().withParent(taskProperty("run"))
+    val inTaskRunString = tomlPsiElement<PsiElement>().inside(onTaskRunString)
 
     fun <T : Any, Self : ObjectPattern<T, Self>> ObjectPattern<T, Self>.with(
         name: String,
