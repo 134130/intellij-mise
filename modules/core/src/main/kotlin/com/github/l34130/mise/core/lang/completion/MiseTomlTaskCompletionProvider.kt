@@ -85,7 +85,7 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
         }
         // [tasks]
         // <task-name> = { ... }
-        (element.parent.parent.parent.parent as? TomlInlineTable)?.let { tomlInlineTable ->
+        (element.parent.parent.parent as? TomlInlineTable ?: element.parent.parent.parent.parent as? TomlInlineTable)?.let { tomlInlineTable ->
             (tomlInlineTable.parent as? TomlKeyValue)?.key?.segments?.singleOrNull()?.let { currentTaskSegment = it }
         }
         if (currentTaskSegment == null) return
