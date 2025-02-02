@@ -1,3 +1,5 @@
+@file:Suppress("ktlint")
+
 package com.github.l34130.mise.core.lang.psi
 
 import com.github.l34130.mise.core.FileTestBase
@@ -9,6 +11,18 @@ import com.jetbrains.rd.util.assert
 import org.intellij.lang.annotations.Language
 
 class MiseTomlPsiPatternsTest : FileTestBase() {
+    fun `test onTaskProperty(name) on task specific table`() = testPattern(MiseTomlPsiPatterns.onTaskProperty("name"), """
+        [tasks.foo]
+        name = []
+        #^
+    """)
+
+    fun `test onTaskProperty(name) on task table`() = testPattern(MiseTomlPsiPatterns.onTaskProperty("name"), """
+        [tasks]
+        foo = { name = [] }
+                #^
+    """)
+
     fun `test inTaskDependsArray`() = testPattern(inTaskDependsArray, """
         [tasks.foo]
         depends = ["bar", ""]
