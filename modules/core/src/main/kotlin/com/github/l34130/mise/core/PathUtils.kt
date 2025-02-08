@@ -4,6 +4,7 @@ import ai.grazie.utils.dropPrefix
 import com.intellij.openapi.components.PathMacroManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiFile
 
 fun Project.baseDirectory(): String = this.presentableUrl ?: this.service<PathMacroManager>().collapsePath("\$PROJECT_DIR$")
@@ -21,5 +22,13 @@ fun collapsePath(
     project: Project,
 ): String {
     val virtualFile = psiFile.virtualFile ?: psiFile.viewProvider.virtualFile
+    return collapsePath(virtualFile, project)
+}
+
+fun collapsePath(
+    virtualFile: VirtualFile,
+    project: Project,
+): String {
+    val virtualFile = virtualFile
     return collapsePath(virtualFile.path, project)
 }

@@ -1,10 +1,10 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
+import com.github.l34130.mise.core.MiseService
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
-import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
-import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
+import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -13,7 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.application
 
 class MiseRootNode(
-    private val nodeProject: Project,
+    nodeProject: Project,
 ) : AbstractTreeNode<Any>(nodeProject, Object()) {
     override fun update(presentation: PresentationData) {
         presentation.presentableText = "Mise"
@@ -23,9 +23,18 @@ class MiseRootNode(
         val settings = application.service<MiseSettings>()
 
         return listOf(
-            MiseToolServiceNode(project, getToolNodes(settings)),
-            MiseTaskServiceNode(project, getTaskNodes(settings)),
-            MiseEnvironmentServiceNode(project, getEnvironmentNodes(settings)),
+            runCatching { getToolNodes(settings) }.fold(
+                onSuccess = { tools -> MiseToolServiceNode(project, tools) },
+                onFailure = { e -> MiseErrorNode(project, e) },
+            ),
+            runCatching { getTaskNodes(settings) }.fold(
+                onSuccess = { tasks -> MiseTaskServiceNode(project, tasks) },
+                onFailure = { e -> MiseErrorNode(project, e) },
+            ),
+            runCatching { getEnvironmentNodes(settings) }.fold(
+                onSuccess = { envs -> MiseEnvironmentServiceNode(project, envs) },
+                onFailure = { e -> MiseErrorNode(project, e) },
+            ),
         )
     }
 
@@ -33,17 +42,9 @@ class MiseRootNode(
         val toolsByToolNames =
             MiseCommandLineHelper
                 .getDevTools(
-                    workDir = nodeProject.basePath,
+                    workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
-                ).fold(
-                    onSuccess = { tools -> tools },
-                    onFailure = {
-                        if (it !is MiseCommandLineNotFoundException) {
-                            MiseNotificationServiceUtils.notifyException("Failed to load dev tools", it)
-                        }
-                        emptyMap()
-                    },
-                )
+                ).getOrThrow()
 
         val toolsBySourcePaths = mutableMapOf<String, MutableList<Pair<MiseDevToolName, MiseDevTool>>>()
         for ((toolName, toolInfos) in toolsByToolNames.entries) {
@@ -56,7 +57,7 @@ class MiseRootNode(
 
         return toolsBySourcePaths.map { (sourcePath, tools) ->
             MiseToolConfigDirectoryNode(
-                project = nodeProject,
+                project = project,
                 configDirPath = sourcePath,
                 tools = tools,
             )
@@ -67,21 +68,13 @@ class MiseRootNode(
         val envs =
             MiseCommandLineHelper
                 .getEnvVars(
-                    workDir = nodeProject.basePath,
+                    workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
-                ).fold(
-                    onSuccess = { envs -> envs },
-                    onFailure = {
-                        if (it !is MiseCommandLineNotFoundException) {
-                            MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
-                        }
-                        emptyMap()
-                    },
-                )
+                ).getOrThrow()
 
         return envs.map { (key, value) ->
             MiseEnvironmentNode(
-                project = nodeProject,
+                project = project,
                 key = key,
                 value = value,
             )
@@ -89,26 +82,38 @@ class MiseRootNode(
     }
 
     private fun getTaskNodes(settings: MiseSettings): Collection<MiseTaskNode> {
-        val tasks =
+        val service = project.service<MiseService>()
+
+        val psiTasks = service.getTasks() // the tasks loaded from psi elements
+        val cliTasks =
             MiseCommandLineHelper
                 .getTasks(
-                    workDir = nodeProject.basePath,
+                    workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
-                ).fold(
-                    onSuccess = { tasks -> tasks },
-                    onFailure = {
-                        if (it !is MiseCommandLineNotFoundException) {
-                            MiseNotificationServiceUtils.notifyException("Failed to load tasks", it)
-                        }
-                        emptyList()
-                    },
-                )
+                ).getOrThrow() // the tasks loaded from command line
 
-        return tasks.map { task ->
+        val filteredCliTasks =
+            cliTasks
+                .filterNot { task -> psiTasks.any { it.name == task.name } } // the tasks that are not loaded from psi elements
+
+        return psiTasks.map {
             MiseTaskNode(
-                project = nodeProject,
-                taskInfo = task,
+                project = project,
+                taskInfo = it,
             )
-        }
+        } +
+            filteredCliTasks.map {
+                MiseTaskNode(
+                    project = project,
+                    taskInfo =
+                        MiseTask.Unknown(
+                            name = it.name,
+                            aliases = it.aliases,
+                            depends = it.depends,
+                            description = it.description,
+                            source = it.source,
+                        ),
+                )
+            }
     }
 }
