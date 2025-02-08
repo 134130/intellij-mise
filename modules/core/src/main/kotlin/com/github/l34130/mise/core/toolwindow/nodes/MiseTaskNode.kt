@@ -1,10 +1,13 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.action.MiseRunTaskOnTerminalAction
+import com.github.l34130.mise.core.execution.RunMiseTomlTaskAction
 import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.toolwindow.DoubleClickable
 import com.intellij.icons.AllIcons
+import com.intellij.ide.DataManager
 import com.intellij.ide.projectView.PresentationData
+import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.runBlocking
@@ -42,6 +45,15 @@ class MiseTaskNode(
         }
 
     override fun onDoubleClick(event: MouseEvent) {
-        MiseRunTaskOnTerminalAction.executeTask(project, taskInfo.name)
+        val action = RunMiseTomlTaskAction(taskInfo)
+        val actionEvent =
+            AnActionEvent.createFromAnAction(
+                action,
+                event,
+                ActionPlaces.TOOLWINDOW_CONTENT,
+                DataManager.getInstance().getDataContext(event.getComponent()),
+            )
+
+        action.actionPerformed(actionEvent)
     }
 }
