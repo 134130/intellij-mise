@@ -1,11 +1,13 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
 import com.github.l34130.mise.core.action.MiseRunTaskOnTerminalAction
-import com.github.l34130.mise.core.command.MiseTask
+import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.toolwindow.DoubleClickable
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.runBlocking
 import java.awt.event.MouseEvent
 
 class MiseTaskServiceNode(
@@ -31,14 +33,12 @@ class MiseTaskNode(
     override fun displayName(): String = taskInfo.name
 
     override fun createPresentation(): PresentationData =
-        PresentationData().apply {
-            tooltip =
-                buildString {
-                    append(taskInfo.description)
-                    taskInfo.depends?.let {
-                        append("<br>${it.joinToString(prefix = "[", postfix = "]")}")
-                    }
+        runBlocking {
+            readAction {
+                PresentationData().apply {
+                    tooltip = taskInfo.description ?: "<i>No description provided.</i>"
                 }
+            }
         }
 
     override fun onDoubleClick(event: MouseEvent) {

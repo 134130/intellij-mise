@@ -47,10 +47,11 @@ class MiseTomlTaskDependsReferenceProvider : PsiReferenceProvider() {
             val tasks = project.service<MiseService>().getTasks()
             return tasks
                 .filter { it.name == literalValue }
-                .map {
+                .mapNotNull {
                     when (it) {
                         is MiseTask.ShellScript -> PsiElementResolveResult(it.file.findPsiFile(project)!!)
                         is MiseTask.TomlTable -> PsiElementResolveResult(it.keySegment)
+                        is MiseTask.Unknown -> null
                     }
                 }.toTypedArray()
         }

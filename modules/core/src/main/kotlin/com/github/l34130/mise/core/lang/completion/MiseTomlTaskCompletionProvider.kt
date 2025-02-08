@@ -100,6 +100,14 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
                         when (task) {
                             is MiseTask.ShellScript -> task.file.findPsiFile(project)!!
                             is MiseTask.TomlTable -> task.keySegment
+                            is MiseTask.Unknown -> {
+                                result.addElement(
+                                    LookupElementBuilder.create(task.name)
+                                        .withInsertHandler(StringLiteralInsertionHandler())
+                                        .withTypeText(task.source),
+                                )
+                                continue
+                            }
                         }
 
                     val path =

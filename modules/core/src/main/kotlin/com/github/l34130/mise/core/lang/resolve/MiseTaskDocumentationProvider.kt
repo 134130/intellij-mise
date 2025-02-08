@@ -45,6 +45,7 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
                 when (task) {
                     is MiseTask.ShellScript -> collapsePath(element as ShFile, element.project)
                     is MiseTask.TomlTable -> collapsePath(task.keySegment.containingFile, element.project)
+                    is MiseTask.Unknown -> task.source?.let { collapsePath(it, element.project) } ?: "unknown"
                 },
             )
             append(DocumentationMarkup.SECTIONS_END)
