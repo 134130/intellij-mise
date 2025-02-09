@@ -18,6 +18,8 @@
   - `java`, `go`, `node`, `deno` SDKs are supported.
 - **Language Support**: Provides language features for `mise.toml` files
   - Code completion
+  - Reference (refactoring)
+  - Language Injection
 
 ## Supported Platforms
 - **IntelliJ IDEA**
