@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+## [4.2.0] - 2024-02-09
+
+### Added
+
+- Support sh language injection
+- Use MiseRunConfiguration on running task on ToolWindow
+- Add support for `Go to Declaration` on ToolWindow
+
+### Fixed
+
+- Add `wait_for` for tasks completion
+- RunLineMarkerContributor is contributing on non-leaf nodes
+
 ## [4.1.0] - 2024-02-01
 
 ### Added
@@ -245,7 +258,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.1.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.2.0...HEAD
+[4.2.0]: https://github.com/134130/intellij-mise/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/134130/intellij-mise/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/134130/intellij-mise/compare/v3.5.0...v4.0.0
 [3.5.0]: https://github.com/134130/intellij-mise/compare/v3.4.1...v3.5.0
