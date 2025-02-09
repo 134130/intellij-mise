@@ -9,6 +9,7 @@ import com.intellij.execution.RunManagerEx
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
@@ -44,4 +45,6 @@ internal class RunMiseTomlTaskAction(
         runManager.setTemporaryConfiguration(configuration)
         ExecutionUtil.runConfiguration(configuration, Executor.EXECUTOR_EXTENSION_NAME.extensionList.first())
     }
+
+    override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
 }
