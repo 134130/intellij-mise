@@ -2,8 +2,6 @@ package com.github.l34130.mise.core
 
 import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.notification.MiseNotificationService
-import com.intellij.diagnostic.AbstractMessage
-import com.intellij.diagnostic.LogMessage
 import com.intellij.diagnostic.PluginException
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -46,10 +44,6 @@ class MiseErrorReportSubmitter : ErrorReportSubmitter() {
                     val description = additionalInfo ?: ""
                     var attachments = listOf<Attachment>()
 
-                    if (event.data is LogMessage) {
-                        throwable = (event.data as AbstractMessage).throwable
-                        attachments = (event.data as AbstractMessage).includedAttachments
-                    }
                     if (throwable is PluginException && throwable.cause != null) {
                         // unwrap PluginManagerCore.createPluginException
                         throwable = throwable.cause
