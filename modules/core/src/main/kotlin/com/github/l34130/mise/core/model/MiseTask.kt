@@ -6,16 +6,12 @@ import com.github.l34130.mise.core.lang.psi.getValueWithKey
 import com.github.l34130.mise.core.lang.psi.or
 import com.github.l34130.mise.core.lang.psi.stringArray
 import com.github.l34130.mise.core.lang.psi.stringValue
-import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.actionSystem.DataKey
-import com.intellij.openapi.project.currentOrDefaultProject
 import com.intellij.openapi.util.UserDataHolder
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
-import com.intellij.sh.psi.ShFile
 import com.intellij.testFramework.LightVirtualFile
-import com.intellij.util.containers.nullize
 import org.toml.lang.psi.TomlInlineTable
 import org.toml.lang.psi.TomlKey
 import org.toml.lang.psi.TomlKeySegment
@@ -151,42 +147,5 @@ sealed interface MiseTask {
                 return (containingFile.viewProvider.virtualFile as? LightVirtualFile)?.originalFile
                     ?: containingFile
             }
-    }
-}
-
-fun MiseTask.documentationString(): String {
-    val task = this
-
-    fun StringBuilder.appendKeyValueSection(
-        key: String,
-        value: String?,
-    ) {
-        append(DocumentationMarkup.SECTION_HEADER_START)
-        append(key)
-        append(DocumentationMarkup.SECTION_SEPARATOR)
-        append("<p>")
-        append(value ?: DocumentationMarkup.GRAYED_ELEMENT.addText("None"))
-        append(DocumentationMarkup.SECTION_END)
-    }
-
-    return buildString {
-        append(DocumentationMarkup.DEFINITION_START)
-        append(task.name)
-        append(DocumentationMarkup.DEFINITION_END)
-        append(DocumentationMarkup.CONTENT_START)
-        append(task.description ?: DocumentationMarkup.GRAYED_ELEMENT.addText("No description provided."))
-        append(DocumentationMarkup.CONTENT_END)
-        append(DocumentationMarkup.SECTIONS_START)
-        appendKeyValueSection("Alias:", task.aliases.nullize()?.joinToString(", "))
-        appendKeyValueSection("Depends:", task.depends.nullize()?.joinToString(", "))
-        appendKeyValueSection(
-            "File:",
-            when (task) {
-                is MiseTask.ShellScript -> collapsePath(task.file as ShFile, task.file.project)
-                is MiseTask.TomlTable -> collapsePath(task.keySegment.containingFile, task.keySegment.project)
-                is MiseTask.Unknown -> task.source?.let { collapsePath(it, currentOrDefaultProject(null)) } ?: "unknown"
-            },
-        )
-        append(DocumentationMarkup.SECTIONS_END)
     }
 }
