@@ -145,6 +145,9 @@ class MiseService(
                         MiseTask.ShellScript.resolveOrNull(directory, it)
                     }
             }
+
+            // TODO: get all tasks from custom task directories
+
             tasks.addAll(result)
         }
     }
