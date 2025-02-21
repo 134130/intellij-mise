@@ -92,11 +92,13 @@ class MiseRootNode(
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow() // the tasks loaded from command line
 
+        val validPsiTasks = psiTasks.filter { psiTask -> cliTasks.any { it.name == psiTask.name } }
+
         val filteredCliTasks =
             cliTasks
                 .filterNot { task -> psiTasks.any { it.name == task.name } } // the tasks that are not loaded from psi elements
 
-        return psiTasks.map {
+        return validPsiTasks.map {
             MiseTaskNode(
                 project = project,
                 taskInfo = it,
