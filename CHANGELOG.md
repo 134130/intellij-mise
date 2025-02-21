@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [4.2.1] - 2024-02-21
+
+### Fixed
+
+- Fix `nodejs` sdk is not loaded properly on Windows
+- Fix Mise ToolWindow cannot run File tasks
+
 ## [4.2.0] - 2024-02-09
 
 ### Added
@@ -258,7 +265,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.2.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.2.1...HEAD
+[4.2.0]: https://github.com/134130/intellij-mise/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/134130/intellij-mise/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/134130/intellij-mise/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/134130/intellij-mise/compare/v3.5.0...v4.0.0
