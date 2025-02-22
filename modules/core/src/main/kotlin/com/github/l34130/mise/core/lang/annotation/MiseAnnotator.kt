@@ -15,10 +15,9 @@ class MiseAnnotator : Annotator {
     ) {
         if (element !is LeafPsiElement) return
 
-        val task =
-            MiseTomlTableTask.resolveFromTaskChainedTable(element)
-                ?: MiseTomlTableTask.resolveFromInlineTableInTaskTable(element)
-                ?: return
+        MiseTomlTableTask.resolveFromTaskChainedTable(element)
+            ?: MiseTomlTableTask.resolveFromInlineTableInTaskTable(element)
+            ?: return
 
         holder
             .newSilentAnnotation(HighlightSeverity.INFORMATION)
