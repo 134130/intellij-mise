@@ -9,19 +9,18 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.math.min
 
 abstract class FileTestBase : BasePlatformTestCase() {
-    protected fun InlineFile(
+    protected fun inlineFile(
         text: String,
         fileName: String,
     ): PsiFile {
         val file = myFixture.configureByText(fileName, text.trimIndent())
         runBlocking {
-            launch { project.service<MiseService>().refresh() }
-            launch { file.virtualFile.refresh(false, false) }
+            project.service<MiseService>().refresh()
+            file.virtualFile.refresh(false, false)
         }
         return file
     }

@@ -37,5 +37,5 @@ class MiseTomlPsiUtilsTest : FileTestBase() {
     }
 
     private fun InlineTomlFile(@Language("TOML") code: String, fileName: String = "mise.toml"): TomlFile =
-        InlineFile(code, fileName) as TomlFile
+        inlineFile(code, fileName) as TomlFile
 }

@@ -39,6 +39,9 @@ sealed interface MiseTask {
         override val aliases: List<String>? = null,
         override val depends: List<String>? = null,
         override val description: String? = null,
+        /**
+         * Absolute path
+         */
         override val source: String? = null,
     ) : MiseTask
 
