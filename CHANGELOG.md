@@ -4,6 +4,20 @@
 
 ## [Unreleased]
 
+## [4.3.0] - 2024-02-22
+
+### Added
+
+- Add support for Mise Toml Tasks configured in `task_configs` section
+- Add source comment for Mise ToolWindow
+
+### Fixed
+
+- Error report submitter always reports with title `null`
+- Cannot run unresolved tasks on Mise ToolWindow
+- Some IDEs are not bundled with `ShLanguage` plugin
+- Ensure `mise` command is initialized before drawing the ToolWindow
+
 ## [4.2.1] - 2024-02-21
 
 ### Fixed
@@ -265,7 +279,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.2.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.3.0...HEAD
+[4.3.0]: https://github.com/134130/intellij-mise/compare/v4.2.1...v4.3.0
 [4.2.1]: https://github.com/134130/intellij-mise/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/134130/intellij-mise/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/134130/intellij-mise/compare/v4.0.0...v4.1.0
