@@ -1,6 +1,5 @@
 package com.github.l34130.mise.core.util
 
-import com.github.l34130.mise.core.baseDirectory
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
@@ -14,7 +13,13 @@ object TerminalUtils {
         command: String,
         tabName: String? = null,
     ) {
-        val shellWidget = project.service<TerminalToolWindowManager>().createShellWidget(project.baseDirectory(), tabName ?: "Mise", true, true)
+        val shellWidget =
+            project.service<TerminalToolWindowManager>().createShellWidget(
+                project.baseDirectory(),
+                tabName ?: "Mise",
+                true,
+                true,
+            )
         val widget = ShellTerminalWidget.toShellJediTermWidgetOrThrow(shellWidget)
 
         project

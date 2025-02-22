@@ -1,10 +1,10 @@
 package com.github.l34130.mise.core.lang.resolve
 
 import com.github.l34130.mise.core.MiseService
-import com.github.l34130.mise.core.collapsePath
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
+import com.github.l34130.mise.core.util.collapsePath
 import com.intellij.lang.documentation.AbstractDocumentationProvider
 import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.components.service

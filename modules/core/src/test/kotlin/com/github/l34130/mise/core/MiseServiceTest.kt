@@ -13,7 +13,6 @@ class MiseServiceTest : BasePlatformTestCase() {
     override fun getTestDataPath(): String = "src/test/testData"
 
     fun `test tasks`() {
-        return
         myFixture.configureByFiles(*allTestFiles())
 
         val service = project.service<MiseService>()
@@ -22,18 +21,18 @@ class MiseServiceTest : BasePlatformTestCase() {
         val tasks = service.getTasks()
 
         listOf<TestResult>(
-            TestResult("default-inline-table-task", "/src/mise.toml", MiseTomlTableTask::class),
-            TestResult("default-table-task", "/src/mise.toml", MiseTomlTableTask::class),
-            TestResult("lint", "/src/mise.toml", MiseTomlTableTask::class),
-            TestResult("lint:test1", "/src/xtasks/lint", MiseShellScriptTask::class),
-            TestResult("lint:test2", "/src/xtasks/lint", MiseShellScriptTask::class),
-            TestResult("lint:xtask", "/src/xtasks", MiseShellScriptTask::class),
-            TestResult("task-in-test-config", "/src/mise.test.toml", MiseTomlTableTask::class),
+            TestResult("default-inline-table-task", "mise.toml", MiseTomlTableTask::class),
+            TestResult("default-table-task", "mise.toml", MiseTomlTableTask::class),
+            TestResult("lint", "mise.toml", MiseTomlTableTask::class),
+            TestResult("lint:test1", "xtasks/lint/test1", MiseShellScriptTask::class),
+            TestResult("lint:test2", "xtasks/lint/test2", MiseShellScriptTask::class),
+            TestResult("xtask", "xtasks/xtask.sh", MiseShellScriptTask::class),
+            TestResult("task-in-test-config", "mise.test.toml", MiseTomlTableTask::class),
         ).forEach { (name, source, type) ->
             val task = tasks.find { it.name == name }
-            assertNotNull("Task $name not found", task)
-            assertEquals("Task $name has wrong source", source, task!!.source)
-            assertEquals("Task $name has wrong type", type, task::class)
+            assertNotNull("Task '$name' not found", task)
+            assertEquals("Task '$name' has wrong source", source, task!!.source)
+            assertEquals("Task '$name' has wrong type", type, task::class)
         }
     }
 

@@ -1,11 +1,11 @@
 package com.github.l34130.mise.core.lang.completion
 
 import com.github.l34130.mise.core.MiseService
-import com.github.l34130.mise.core.collapsePath
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
+import com.github.l34130.mise.core.util.collapsePath
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
