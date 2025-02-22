@@ -15,6 +15,7 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
 
 internal class RunMiseTomlTaskAction(
@@ -25,12 +26,29 @@ internal class RunMiseTomlTaskAction(
         AllIcons.Actions.Execute,
     ) {
     override fun actionPerformed(event: AnActionEvent) {
-        var dataContext =
+        val psiLocation =
             when (miseTask) {
-                is MiseTask.ShellScript -> event.project?.let { project -> miseTask.file.findPsiFile(project) }?.let { PsiLocation(it) }
+                is MiseTask.ShellScript -> {
+                    val project = event.project ?: return
+                    val psiFile = miseTask.file.findPsiFile(project) ?: return
+                    PsiLocation(psiFile)
+                }
                 is MiseTask.TomlTable -> PsiLocation(miseTask.keySegment)
-                is MiseTask.Unknown -> null
-            }?.let { SimpleDataContext.getSimpleContext(Location.DATA_KEY, it, event.dataContext) }
+                is MiseTask.Unknown -> {
+                    val project = event.project ?: return
+                    val source = miseTask.source ?: return
+                    val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return
+                    val psiFile = file.findPsiFile(project) ?: return
+                    PsiLocation(psiFile)
+                }
+            }
+
+        var dataContext =
+            SimpleDataContext.getSimpleContext(
+                Location.DATA_KEY,
+                psiLocation,
+                event.dataContext,
+            )
 
         dataContext =
             SimpleDataContext.getSimpleContext(
@@ -44,7 +62,8 @@ internal class RunMiseTomlTaskAction(
         val producer = MiseTomlTaskRunConfigurationProducer()
         val configuration: RunnerAndConfigurationSettings =
             producer.findOrCreateConfigurationFromContext(context)?.configurationSettings
-                ?: RunManager.getInstance(context.project).getConfigurationTemplate(producer.configurationFactory)
+                ?: event.project?.let { project -> RunManager.getInstance(project).getConfigurationTemplate(producer.configurationFactory) }
+                ?: return
 
         val runManager = (context.runManager as? RunManagerEx) ?: return
         runManager.setTemporaryConfiguration(configuration)
