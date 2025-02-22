@@ -10,6 +10,9 @@ import com.intellij.sh.ShLanguage
 class MiseTomlTaskInjectionContributor : LanguageInjectionContributor {
     override fun getInjection(context: PsiElement): Injection? {
         if (!MiseTomlPsiPatterns.inTaskRunString.accepts(context)) return null
-        return SimpleInjection(ShLanguage.INSTANCE, "", "", null)
+        return runCatching {
+            // Some IDEs doesn't have ShLanguage
+            SimpleInjection(ShLanguage.INSTANCE, "", "", null)
+        }.getOrNull()
     }
 }
