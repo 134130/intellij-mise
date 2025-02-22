@@ -2,13 +2,12 @@ package com.github.l34130.mise.core
 
 import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.notification.MiseNotificationService
-import com.intellij.diagnostic.PluginException
+import com.intellij.diagnostic.IdeaReportingEvent
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.application.ex.ApplicationInfoEx
 import com.intellij.openapi.application.invokeLater
-import com.intellij.openapi.diagnostic.Attachment
 import com.intellij.openapi.diagnostic.ErrorReportSubmitter
 import com.intellij.openapi.diagnostic.IdeaLoggingEvent
 import com.intellij.openapi.diagnostic.SubmittedReportInfo
@@ -42,11 +41,9 @@ class MiseErrorReportSubmitter : ErrorReportSubmitter() {
                 for (event in events) {
                     var throwable = event.throwable
                     val description = additionalInfo ?: ""
-                    var attachments = listOf<Attachment>()
 
-                    if (throwable is PluginException && throwable.cause != null) {
-                        // unwrap PluginManagerCore.createPluginException
-                        throwable = throwable.cause
+                    if (event is IdeaReportingEvent) {
+                        throwable = event.data.throwable
                     }
 
                     val title = "[${applicationNamesInfo.productName} ${appInfo.fullVersion}] ${
@@ -76,11 +73,6 @@ class MiseErrorReportSubmitter : ErrorReportSubmitter() {
                             appendLine("```")
 
                             appendLine()
-
-                            appendLine("### Attachments")
-                            for (attachment in attachments) {
-                                appendLine("- $attachment")
-                            }
                         }
 
                     Desktop
