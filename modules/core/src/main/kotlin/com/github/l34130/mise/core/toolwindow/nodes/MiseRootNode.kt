@@ -4,7 +4,7 @@ import com.github.l34130.mise.core.MiseService
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
-import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.github.l34130.mise.core.setting.MiseSettings
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -108,7 +108,7 @@ class MiseRootNode(
                 MiseTaskNode(
                     project = project,
                     taskInfo =
-                        MiseTask.Unknown(
+                        MiseUnknownTask(
                             name = it.name,
                             aliases = it.aliases,
                             depends = it.depends,

@@ -3,7 +3,9 @@ package com.github.l34130.mise.core.lang.completion
 import com.github.l34130.mise.core.MiseService
 import com.github.l34130.mise.core.collapsePath
 import com.github.l34130.mise.core.lang.psi.stringValue
-import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.model.MiseShellScriptTask
+import com.github.l34130.mise.core.model.MiseTomlTableTask
+import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
@@ -98,9 +100,9 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
 
                     val psiElement =
                         when (task) {
-                            is MiseTask.ShellScript -> task.file.findPsiFile(project)!!
-                            is MiseTask.TomlTable -> task.keySegment
-                            is MiseTask.Unknown -> {
+                            is MiseShellScriptTask -> task.file.findPsiFile(project)!!
+                            is MiseTomlTableTask -> task.keySegment
+                            is MiseUnknownTask -> {
                                 result.addElement(
                                     LookupElementBuilder.create(task.name)
                                         .withInsertHandler(StringLiteralInsertionHandler())
@@ -112,7 +114,7 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
 
                     val path =
                         when {
-                            task is MiseTask.TomlTable && task.keySegment.containingFile.virtualFile == originalFile -> "current file"
+                            task is MiseTomlTableTask && task.keySegment.containingFile.virtualFile == originalFile -> "current file"
                             else -> collapsePath(psiElement.containingFile, project)
                         }
 

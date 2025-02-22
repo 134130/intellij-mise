@@ -1,6 +1,7 @@
 package com.github.l34130.mise.core
 
 import com.github.l34130.mise.core.lang.psi.allTasks
+import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.model.MiseTaskFile
 import com.github.l34130.mise.core.model.MiseTomlFile
@@ -163,7 +164,7 @@ class MiseService(
                     .leafChildren()
                     .filter { it.toNioPathOrNull()?.isExecutable() == true }
                     .mapNotNullTo(result) {
-                        MiseTask.ShellScript.resolveOrNull(directory, it)
+                        MiseShellScriptTask.resolveOrNull(directory, it)
                     }
             }
 

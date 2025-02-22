@@ -14,7 +14,7 @@ class MiseTaskFile {
                         ?.segments
                         ?.singleOrNull()
                 }.mapNotNull {
-                    MiseTask.TomlTable.resolveOrNull(it)
+                    MiseTomlTableTask.resolveOrNull(it)
                 }
     }
 }

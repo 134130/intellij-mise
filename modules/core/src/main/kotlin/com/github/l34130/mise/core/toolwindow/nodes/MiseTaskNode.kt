@@ -1,7 +1,10 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
 import com.github.l34130.mise.core.execution.RunMiseTomlTaskAction
+import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.model.MiseTomlTableTask
+import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.github.l34130.mise.core.toolwindow.ActionOnRightClick
 import com.github.l34130.mise.core.toolwindow.DoubleClickable
 import com.intellij.icons.AllIcons
@@ -66,21 +69,21 @@ class MiseTaskNode(
         listOfNotNull(
             RunMiseTomlTaskAction(taskInfo),
             when (taskInfo) {
-                is MiseTask.ShellScript -> {
+                is MiseShellScriptTask -> {
                     object : AnAction("Go to Declaration", "Go to Declaration", AllIcons.General.Locate) {
                         override fun actionPerformed(e: AnActionEvent) {
                             OpenSourceUtil.navigateToSource(false, true, taskInfo.file.findPsiFile(project))
                         }
                     }
                 }
-                is MiseTask.TomlTable -> {
+                is MiseTomlTableTask -> {
                     object : AnAction("Go to Declaration", "Go to Declaration", AllIcons.General.Locate) {
                         override fun actionPerformed(e: AnActionEvent) {
                             OpenSourceUtil.navigateToSource(false, true, taskInfo.keySegment)
                         }
                     }
                 }
-                is MiseTask.Unknown -> null
+                is MiseUnknownTask -> null
             },
         )
 }

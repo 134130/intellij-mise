@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.lang.psi
 
-import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.intellij.psi.util.childrenOfType
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import org.toml.lang.psi.TomlArray
@@ -17,7 +17,7 @@ import kotlin.collections.getOrNull
 import kotlin.collections.orEmpty
 
 @RequiresReadLock
-fun TomlFile.allTasks(): Sequence<MiseTask.TomlTable> =
+fun TomlFile.allTasks(): Sequence<MiseTomlTableTask> =
     sequence {
         val tables = childrenOfType<TomlTable>()
         for (table in tables) {
@@ -32,7 +32,7 @@ fun TomlFile.allTasks(): Sequence<MiseTask.TomlTable> =
                         for (keyValue in keyValues) {
                             val key = keyValue.key
                             if (key.segments.size == 1) {
-                                yield(MiseTask.TomlTable.resolveOrNull(key.segments.first()))
+                                yield(MiseTomlTableTask.resolveOrNull(key.segments.first()))
                             }
                         }
                     }
@@ -41,7 +41,7 @@ fun TomlFile.allTasks(): Sequence<MiseTask.TomlTable> =
                     // [tasks.foo]
                     val (first, second) = headerKeySegments
                     if (first.textMatches("tasks")) {
-                        yield(MiseTask.TomlTable.resolveOrNull(second))
+                        yield(MiseTomlTableTask.resolveOrNull(second))
                     }
                 }
                 else -> continue

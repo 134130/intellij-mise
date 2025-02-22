@@ -34,121 +34,121 @@ sealed interface MiseTask {
         val DATA_KEY = DataKey.create<MiseTask>(javaClass.simpleName)
     }
 
-    class Unknown internal constructor(
-        override val name: String,
-        override val aliases: List<String>? = null,
-        override val depends: List<String>? = null,
-        override val description: String? = null,
-        /**
-         * Absolute path
-         */
-        override val source: String? = null,
-    ) : MiseTask
-
-    class ShellScript internal constructor(
-        override val name: String,
-        override val aliases: List<String>? = null,
-        override val depends: List<String>? = null,
-        override val description: String? = null,
-        override val source: String? = null,
-        val file: VirtualFile,
-    ) : MiseTask {
-        companion object {
-            fun resolveOrNull(
-                baseDir: VirtualFile,
-                file: VirtualFile,
-            ): ShellScript? =
-                ShellScript(
-                    name = baseDir.toNioPath().relativize(file.toNioPath()).joinToString(":"),
-                    file = file,
-                    source = FileUtil.getRelativePath(baseDir.presentableUrl, file.presentableUrl, File.separatorChar),
-                )
+    private val PsiElement.originalContainingFile: UserDataHolder?
+        get() {
+            val containingFile = this.containingFile
+            return (containingFile.viewProvider.virtualFile as? LightVirtualFile)?.originalFile
+                ?: containingFile
         }
-    }
+}
 
-    class TomlTable internal constructor(
-        override val name: String,
-        override val aliases: List<String>? = null,
-        override val depends: List<String>? = null,
-        override val description: String? = null,
-        override val source: String? = null,
-        val keySegment: TomlKeySegment,
-    ) : MiseTask {
-        companion object {
-            /**
-             * If the given [psiElement] is a key segment(or literal) of a task table, returns the [TomlTable] instance.
-             */
-            @Suppress("ktlint:standard:chain-method-continuation")
-            fun resolveOrNull(psiElement: PsiElement): TomlTable? {
-                if (!(
-                        MiseTomlPsiPatterns.miseTomlStringLiteral or
-                            MiseTomlPsiPatterns.miseTomlLeafPsiElement or
-                            MiseTomlPsiPatterns.tomlPsiElement<TomlKeySegment>()
-                    ).accepts(psiElement)
+class MiseUnknownTask internal constructor(
+    override val name: String,
+    override val aliases: List<String>? = null,
+    override val depends: List<String>? = null,
+    override val description: String? = null,
+    /**
+     * Absolute path
+     */
+    override val source: String? = null,
+) : MiseTask
+
+class MiseShellScriptTask internal constructor(
+    override val name: String,
+    override val aliases: List<String>? = null,
+    override val depends: List<String>? = null,
+    override val description: String? = null,
+    override val source: String? = null,
+    val file: VirtualFile,
+) : MiseTask {
+    companion object {
+        fun resolveOrNull(
+            baseDir: VirtualFile,
+            file: VirtualFile,
+        ): MiseShellScriptTask? =
+            MiseShellScriptTask(
+                name = baseDir.toNioPath().relativize(file.toNioPath()).joinToString(":"),
+                file = file,
+                source = FileUtil.getRelativePath(baseDir.presentableUrl, file.presentableUrl, File.separatorChar),
+            )
+    }
+}
+
+class MiseTomlTableTask internal constructor(
+    override val name: String,
+    override val aliases: List<String>? = null,
+    override val depends: List<String>? = null,
+    override val description: String? = null,
+    override val source: String? = null,
+    val keySegment: TomlKeySegment,
+) : MiseTask {
+    companion object {
+        /**
+         * If the given [psiElement] is a key segment(or literal) of a task table, returns the [MiseTomlTableTask] instance.
+         */
+        @Suppress("ktlint:standard:chain-method-continuation")
+        fun resolveOrNull(psiElement: PsiElement): MiseTomlTableTask? {
+            if (!(
+                    MiseTomlPsiPatterns.miseTomlStringLiteral or
+                        MiseTomlPsiPatterns.miseTomlLeafPsiElement or
+                        MiseTomlPsiPatterns.tomlPsiElement<TomlKeySegment>()
+                ).accepts(psiElement)
+            ) {
+                return null
+            }
+
+            val tomlKey =
+                if (psiElement is TomlKeySegment) {
+                    psiElement.parent as? TomlKey
+                } else {
+                    psiElement.parent.parent as? TomlKey
+                } ?: return null
+
+            // CASE: [tasks.<TASK_NAME>]
+            (tomlKey.parent as? TomlTableHeader)?.let { tomlTableHeader ->
+                val keySegments = tomlTableHeader.key?.segments ?: return null
+                if (keySegments.size != 2) return null
+                if (keySegments[0].name != "tasks") return null
+                if (keySegments[0] == psiElement.parent) return null // escape self (tasks)
+
+                val table = tomlTableHeader.parent as? org.toml.lang.psi.TomlTable ?: return null
+                val keySegment = keySegments[1]
+                return MiseTomlTableTask(
+                    name = keySegment.name ?: return null,
+                    description = table.getValueWithKey("description")?.stringValue,
+                    depends = table.getValueWithKey("depends")?.stringArray,
+                    aliases = table.getValueWithKey("alias")?.stringArray,
+                    source = collapsePath(psiElement.containingFile, psiElement.project),
+                    keySegment = keySegment,
+                )
+            }
+
+            // CASE: [tasks]
+            //       <TASK_NAME> = {}
+            (tomlKey.parent.parent as? org.toml.lang.psi.TomlTable)?.let { tomlTable ->
+                val tomlTableHeader = tomlTable.header
+                if (tomlTableHeader == tomlKey.parent) return null // escape self (tasks)
+                if (tomlTableHeader.key
+                        ?.segments
+                        ?.singleOrNull()
+                        ?.textMatches("tasks") != true
                 ) {
                     return null
                 }
 
-                val tomlKey =
-                    if (psiElement is TomlKeySegment) {
-                        psiElement.parent as? TomlKey
-                    } else {
-                        psiElement.parent.parent as? TomlKey
-                    } ?: return null
-
-                // CASE: [tasks.<TASK_NAME>]
-                (tomlKey.parent as? TomlTableHeader)?.let { tomlTableHeader ->
-                    val keySegments = tomlTableHeader.key?.segments ?: return null
-                    if (keySegments.size != 2) return null
-                    if (keySegments[0].name != "tasks") return null
-                    if (keySegments[0] == psiElement.parent) return null // escape self (tasks)
-
-                    val table = tomlTableHeader.parent as? org.toml.lang.psi.TomlTable ?: return null
-                    val keySegment = keySegments[1]
-                    return TomlTable(
-                        name = keySegment.name ?: return null,
-                        description = table.getValueWithKey("description")?.stringValue,
-                        depends = table.getValueWithKey("depends")?.stringArray,
-                        aliases = table.getValueWithKey("alias")?.stringArray,
-                        source = collapsePath(psiElement.containingFile, psiElement.project),
-                        keySegment = keySegment,
-                    )
-                }
-
-                // CASE: [tasks]
-                //       <TASK_NAME> = {}
-                (tomlKey.parent.parent as? org.toml.lang.psi.TomlTable)?.let { tomlTable ->
-                    val tomlTableHeader = tomlTable.header
-                    if (tomlTableHeader == tomlKey.parent) return null // escape self (tasks)
-                    if (tomlTableHeader.key
-                            ?.segments
-                            ?.singleOrNull()
-                            ?.textMatches("tasks") != true
-                    ) {
-                        return null
-                    }
-
-                    val keySegment = tomlKey.segments.singleOrNull() ?: return null
-                    val table = (tomlKey.parent as? TomlKeyValue)?.value as? TomlInlineTable ?: return null
-                    return TomlTable(
-                        name = keySegment.name ?: return null,
-                        description = table.getValueWithKey("description")?.stringValue,
-                        depends = table.getValueWithKey("depends")?.stringArray,
-                        aliases = table.getValueWithKey("alias")?.stringArray,
-                        source = collapsePath(psiElement.containingFile, psiElement.project),
-                        keySegment = keySegment,
-                    )
-                }
-
-                return null
+                val keySegment = tomlKey.segments.singleOrNull() ?: return null
+                val table = (tomlKey.parent as? TomlKeyValue)?.value as? TomlInlineTable ?: return null
+                return MiseTomlTableTask(
+                    name = keySegment.name ?: return null,
+                    description = table.getValueWithKey("description")?.stringValue,
+                    depends = table.getValueWithKey("depends")?.stringArray,
+                    aliases = table.getValueWithKey("alias")?.stringArray,
+                    source = collapsePath(psiElement.containingFile, psiElement.project),
+                    keySegment = keySegment,
+                )
             }
+
+            return null
         }
-
-        private val PsiElement.originalContainingFile: UserDataHolder?
-            get() {
-                val containingFile = this.containingFile
-                return (containingFile.viewProvider.virtualFile as? LightVirtualFile)?.originalFile
-                    ?: containingFile
-            }
     }
 }

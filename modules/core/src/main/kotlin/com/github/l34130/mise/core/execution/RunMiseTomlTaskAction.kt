@@ -1,7 +1,10 @@
 package com.github.l34130.mise.core.execution
 
 import com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationProducer
+import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.model.MiseTomlTableTask
+import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.intellij.execution.Executor
 import com.intellij.execution.Location
 import com.intellij.execution.PsiLocation
@@ -28,13 +31,13 @@ internal class RunMiseTomlTaskAction(
     override fun actionPerformed(event: AnActionEvent) {
         val psiLocation =
             when (miseTask) {
-                is MiseTask.ShellScript -> {
+                is MiseShellScriptTask -> {
                     val project = event.project ?: return
                     val psiFile = miseTask.file.findPsiFile(project) ?: return
                     PsiLocation(psiFile)
                 }
-                is MiseTask.TomlTable -> PsiLocation(miseTask.keySegment)
-                is MiseTask.Unknown -> {
+                is MiseTomlTableTask -> PsiLocation(miseTask.keySegment)
+                is MiseUnknownTask -> {
                     val project = event.project ?: return
                     val source = miseTask.source ?: return
                     val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return

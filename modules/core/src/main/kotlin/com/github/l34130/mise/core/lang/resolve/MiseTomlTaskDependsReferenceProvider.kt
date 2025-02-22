@@ -2,7 +2,9 @@ package com.github.l34130.mise.core.lang.resolve
 
 import com.github.l34130.mise.core.MiseService
 import com.github.l34130.mise.core.lang.psi.stringValue
-import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.model.MiseShellScriptTask
+import com.github.l34130.mise.core.model.MiseTomlTableTask
+import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.intellij.openapi.components.service
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
@@ -49,9 +51,9 @@ class MiseTomlTaskDependsReferenceProvider : PsiReferenceProvider() {
                 .filter { it.name == literalValue }
                 .mapNotNull {
                     when (it) {
-                        is MiseTask.ShellScript -> PsiElementResolveResult(it.file.findPsiFile(project)!!)
-                        is MiseTask.TomlTable -> PsiElementResolveResult(it.keySegment)
-                        is MiseTask.Unknown -> null
+                        is MiseShellScriptTask -> PsiElementResolveResult(it.file.findPsiFile(project)!!)
+                        is MiseTomlTableTask -> PsiElementResolveResult(it.keySegment)
+                        is MiseUnknownTask -> null
                     }
                 }.toTypedArray()
         }
