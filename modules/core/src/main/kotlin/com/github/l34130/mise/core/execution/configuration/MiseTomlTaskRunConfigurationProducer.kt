@@ -1,7 +1,7 @@
 package com.github.l34130.mise.core.execution.configuration
 
-import com.github.l34130.mise.core.baseDirectory
 import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.util.baseDirectory
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.LazyRunConfigurationProducer
 import com.intellij.execution.configurations.ConfigurationFactory

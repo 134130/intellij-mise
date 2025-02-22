@@ -1,0 +1,26 @@
+min_version = "2024.1.1"
+
+[env]
+MISE_DEFAULT = 'The default environment variable'
+
+[tools]
+"actionlint" = "latest"
+"jq" = "latest"
+"shellcheck" = "latest"
+"shfmt" = "latest"
+
+
+[tasks]
+"default-inline-table-task" = { run = 'echo "default"' }
+
+[tasks.default-table-task]
+run = '''
+#!/usr/bin/env bash
+echo "default"
+'''
+
+[tasks.lint]
+depends = ['lint:*']
+
+[task_config]
+includes = ["tasks.toml", "xtasks"]

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE depends=['lint:test1']
+echo "test2"

@@ -1,8 +1,10 @@
 package com.github.l34130.mise.core.lang.resolve
 
 import com.github.l34130.mise.core.MiseService
-import com.github.l34130.mise.core.collapsePath
-import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.model.MiseShellScriptTask
+import com.github.l34130.mise.core.model.MiseTomlTableTask
+import com.github.l34130.mise.core.model.MiseUnknownTask
+import com.github.l34130.mise.core.util.collapsePath
 import com.intellij.lang.documentation.AbstractDocumentationProvider
 import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.components.service
@@ -24,9 +26,11 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
                 is ShFile -> {
                     val service = element.project.service<MiseService>()
                     val tasks = service.getTasks()
-                    tasks.firstOrNull { it is MiseTask.ShellScript && it.file == element.virtualFile } as MiseTask.ShellScript
+                    tasks.firstOrNull { it is MiseShellScriptTask && it.file == element.virtualFile } as MiseShellScriptTask
                 }
-                is TomlKeySegment -> MiseTask.TomlTable.resolveOrNull(element)
+                is TomlKeySegment ->
+                    MiseTomlTableTask.resolveFromTaskChainedTable(element)
+                        ?: MiseTomlTableTask.resolveFromInlineTableInTaskTable(element)
                 else -> return null
             } ?: return null
 
@@ -43,9 +47,9 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
             appendKeyValueSection(
                 "File:",
                 when (task) {
-                    is MiseTask.ShellScript -> collapsePath(element as ShFile, element.project)
-                    is MiseTask.TomlTable -> collapsePath(task.keySegment.containingFile, element.project)
-                    is MiseTask.Unknown -> task.source?.let { collapsePath(it, element.project) } ?: "unknown"
+                    is MiseShellScriptTask -> collapsePath(element as ShFile, element.project)
+                    is MiseTomlTableTask -> collapsePath(task.keySegment.containingFile, element.project)
+                    is MiseUnknownTask -> task.source?.let { collapsePath(it, element.project) } ?: "unknown"
                 },
             )
             append(DocumentationMarkup.SECTIONS_END)
