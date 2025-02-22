@@ -6,11 +6,15 @@ import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.util.collapsePath
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.util.application
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
 class MiseRootNode(
     nodeProject: Project,
@@ -21,13 +25,20 @@ class MiseRootNode(
 
     override fun getChildren(): Collection<AbstractTreeNode<*>> {
         val settings = application.service<MiseSettings>()
+        val service = project.service<MiseService>()
+
+        runBlocking(Dispatchers.IO) {
+            while (!service.isInitialized.get()) {
+                delay(100)
+            }
+        }
 
         return listOf(
             runCatching { getToolNodes(settings) }.fold(
                 onSuccess = { tools -> MiseToolServiceNode(project, tools) },
                 onFailure = { e -> MiseErrorNode(project, e) },
             ),
-            runCatching { getTaskNodes(settings) }.fold(
+            runCatching { getTaskNodes(settings).sortedBy { it.taskInfo.name } }.fold(
                 onSuccess = { tasks -> MiseTaskServiceNode(project, tasks) },
                 onFailure = { e -> MiseErrorNode(project, e) },
             ),
@@ -113,7 +124,7 @@ class MiseRootNode(
                             aliases = it.aliases,
                             depends = it.depends,
                             description = it.description,
-                            source = it.source,
+                            source = it.source?.let { source -> collapsePath(source, project) },
                         ),
                 )
             }

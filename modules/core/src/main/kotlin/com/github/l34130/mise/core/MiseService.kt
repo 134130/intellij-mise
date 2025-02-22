@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlTable
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.isExecutable
 
 @Service(Service.Level.PROJECT)
@@ -31,6 +32,9 @@ class MiseService(
     val project: Project,
     private val cs: CoroutineScope,
 ) : Disposable {
+    var isInitialized: AtomicBoolean = AtomicBoolean(false)
+        private set
+
     private val miseTomlFiles: MutableSet<VirtualFile> = ConcurrentHashMap.newKeySet<VirtualFile>()
     private val taskConfigDirectories: MutableSet<VirtualFile> = ConcurrentHashMap.newKeySet<VirtualFile>()
     private val tasks: MutableSet<MiseTask> = ConcurrentHashMap.newKeySet<MiseTask>()
@@ -63,6 +67,8 @@ class MiseService(
         loadMiseTomlFiles()
         loadFileTaskDirectories()
         loadTasks()
+
+        isInitialized.set(true)
     }
 
     override fun dispose() {
