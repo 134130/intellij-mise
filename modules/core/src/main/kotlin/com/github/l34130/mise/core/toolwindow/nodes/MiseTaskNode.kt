@@ -44,7 +44,7 @@ class MiseTaskNode(
     override fun displayName(): String = taskInfo.name
 
     override fun appendInplaceComments(appender: InplaceCommentAppender) {
-        appender.append(" ${taskInfo.javaClass.simpleName}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+        appender.append(" ${taskInfo.source}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
     }
 
     override fun createPresentation(): PresentationData =
