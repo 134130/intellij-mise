@@ -52,7 +52,7 @@ class MiseTomlPsiPatternsTest : FileTestBase() {
         @Language("TOML") code: String,
         fileName: String = "mise.toml",
     ) {
-        InlineFile(code, fileName)
+        inlineFile(code, fileName)
         val element = findElementInEditor<T>()
         assert(pattern.accepts(element)) {
             """

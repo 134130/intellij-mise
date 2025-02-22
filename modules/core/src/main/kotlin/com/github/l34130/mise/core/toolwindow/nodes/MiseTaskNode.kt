@@ -7,14 +7,14 @@ import com.github.l34130.mise.core.toolwindow.DoubleClickable
 import com.intellij.icons.AllIcons
 import com.intellij.ide.DataManager
 import com.intellij.ide.projectView.PresentationData
+import com.intellij.ide.util.treeView.InplaceCommentAppender
 import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.readAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.ui.SimpleTextAttributes
 import com.intellij.util.OpenSourceUtil
-import kotlinx.coroutines.runBlocking
 import java.awt.event.MouseEvent
 
 class MiseTaskServiceNode(
@@ -40,13 +40,13 @@ class MiseTaskNode(
     ActionOnRightClick {
     override fun displayName(): String = taskInfo.name
 
+    override fun appendInplaceComments(appender: InplaceCommentAppender) {
+        appender.append(" ${taskInfo.javaClass.simpleName}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+    }
+
     override fun createPresentation(): PresentationData =
-        runBlocking {
-            readAction {
-                PresentationData().apply {
-                    tooltip = taskInfo.description ?: "<i>No description provided.</i>"
-                }
-            }
+        PresentationData().apply {
+            tooltip = taskInfo.description ?: "<i>No description provided.</i>"
         }
 
     override fun onDoubleClick(event: MouseEvent) {
@@ -56,7 +56,7 @@ class MiseTaskNode(
                 action,
                 event,
                 ActionPlaces.TOOLWINDOW_CONTENT,
-                DataManager.getInstance().getDataContext(event.getComponent()),
+                DataManager.getInstance().getDataContext(event.component),
             )
 
         action.actionPerformed(actionEvent)

@@ -25,8 +25,9 @@ internal abstract class MiseTomlCompletionTestBase : FileTestBase() {
 
         checkByText(before.trimIndent(), after.trimIndent()) {
             val items = myFixture.completeBasic() ?: return@checkByText
-            val lookupItem = items.find { it.lookupString == lookupString }
-                ?: error("No lookup item found: $lookupString\nitems: ${items.joinToString { it.lookupString }}")
+            val lookupItem =
+                items.find { it.lookupString == lookupString }
+                    ?: error("No lookup item found: $lookupString\nitems: ${items.joinToString { it.lookupString }}")
             myFixture.lookup.currentItem = lookupItem
             myFixture.type(completionChar)
         }
@@ -37,7 +38,7 @@ internal abstract class MiseTomlCompletionTestBase : FileTestBase() {
         after: String,
         action: () -> Unit,
     ) {
-        InlineFile(code, "mise.toml")
+        inlineFile(code, "mise.toml")
         action()
         myFixture.checkResult(replaceCaretMarker(after))
     }
@@ -52,9 +53,12 @@ internal abstract class MiseTomlCompletionTestBase : FileTestBase() {
                 myFixture.type('\n')
                 return
             }
+
             fun LookupElement.debug(): String = "$lookupString ($psiElement)"
-            error("Expected a single completion, but got ${lookups.size}\n"
-                    + lookups.joinToString("\n") { it.debug() })
+            error(
+                "Expected a single completion, but got ${lookups.size}\n" +
+                    lookups.joinToString("\n") { it.debug() },
+            )
         }
     }
 
