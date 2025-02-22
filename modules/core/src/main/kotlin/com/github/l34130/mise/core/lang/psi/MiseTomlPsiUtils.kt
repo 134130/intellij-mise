@@ -9,12 +9,9 @@ import org.toml.lang.psi.TomlKeyValue
 import org.toml.lang.psi.TomlKeyValueOwner
 import org.toml.lang.psi.TomlLiteral
 import org.toml.lang.psi.TomlTable
-import org.toml.lang.psi.TomlTableHeader
 import org.toml.lang.psi.TomlValue
 import org.toml.lang.psi.ext.TomlLiteralKind
 import org.toml.lang.psi.ext.kind
-import kotlin.collections.getOrNull
-import kotlin.collections.orEmpty
 
 @RequiresReadLock
 fun TomlFile.allTasks(): Sequence<MiseTomlTableTask> =
@@ -48,18 +45,6 @@ fun TomlFile.allTasks(): Sequence<MiseTomlTableTask> =
             }
         }
     }.filterNotNull().constrainOnce()
-
-/**
- * ```
- * [tasks.foo]
- * ```
- */
-@get:RequiresReadLock
-val TomlTableHeader.isSpecificTaskTableHeader: Boolean
-    get() {
-        val names = key?.segments.orEmpty()
-        return names.getOrNull(names.size - 2)?.name == "tasks"
-    }
 
 @RequiresReadLock
 fun TomlKeyValueOwner.getValueWithKey(key: String): TomlValue? = entries.find { it.key.text == key }?.value
