@@ -49,16 +49,6 @@ fun TomlFile.allTasks(): Sequence<MiseTomlTableTask> =
         }
     }.filterNotNull().constrainOnce()
 
-@get:RequiresReadLock
-val TomlTable.taskName: String?
-    get() {
-        if (header.isSpecificTaskTableHeader) {
-            val headerKey = header.key ?: return null
-            return headerKey.segments.lastOrNull()?.name
-        }
-        return null
-    }
-
 /**
  * ```
  * [tasks.foo]
