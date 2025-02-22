@@ -1,50 +1,12 @@
 package com.github.l34130.mise.core.lang.psi
 
-import com.github.l34130.mise.core.model.MiseTomlTableTask
-import com.intellij.psi.util.childrenOfType
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import org.toml.lang.psi.TomlArray
-import org.toml.lang.psi.TomlFile
-import org.toml.lang.psi.TomlKeyValue
 import org.toml.lang.psi.TomlKeyValueOwner
 import org.toml.lang.psi.TomlLiteral
-import org.toml.lang.psi.TomlTable
 import org.toml.lang.psi.TomlValue
 import org.toml.lang.psi.ext.TomlLiteralKind
 import org.toml.lang.psi.ext.kind
-
-@RequiresReadLock
-fun TomlFile.allTasks(): Sequence<MiseTomlTableTask> =
-    sequence {
-        val tables = childrenOfType<TomlTable>()
-        for (table in tables) {
-            val headerKeySegments = table.header.key?.segments ?: continue
-
-            when (headerKeySegments.size) {
-                1 -> {
-                    // [tasks]
-                    // foo = {  }
-                    if (headerKeySegments.first().textMatches("tasks")) {
-                        val keyValues = table.childrenOfType<TomlKeyValue>()
-                        for (keyValue in keyValues) {
-                            val key = keyValue.key
-                            if (key.segments.size == 1) {
-                                yield(MiseTomlTableTask.resolveOrNull(key.segments.first()))
-                            }
-                        }
-                    }
-                }
-                2 -> {
-                    // [tasks.foo]
-                    val (first, second) = headerKeySegments
-                    if (first.textMatches("tasks")) {
-                        yield(MiseTomlTableTask.resolveOrNull(second))
-                    }
-                }
-                else -> continue
-            }
-        }
-    }.filterNotNull().constrainOnce()
 
 @RequiresReadLock
 fun TomlKeyValueOwner.getValueWithKey(key: String): TomlValue? = entries.find { it.key.text == key }?.value

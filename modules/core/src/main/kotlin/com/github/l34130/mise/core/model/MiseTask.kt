@@ -16,6 +16,7 @@ import org.toml.lang.psi.TomlInlineTable
 import org.toml.lang.psi.TomlKey
 import org.toml.lang.psi.TomlKeySegment
 import org.toml.lang.psi.TomlKeyValue
+import org.toml.lang.psi.TomlLiteral
 import org.toml.lang.psi.TomlTableHeader
 import java.io.File
 
@@ -83,20 +84,21 @@ class MiseTomlTableTask internal constructor(
     val keySegment: TomlKeySegment,
 ) : MiseTask {
     companion object {
-        /**
-         * If the given [psiElement] is a key segment(or literal) of a task table, returns the [MiseTomlTableTask] instance.
-         */
-        @Suppress("ktlint:standard:chain-method-continuation")
-        fun resolveOrNull(psiElement: PsiElement): MiseTomlTableTask? {
-            if (!(
-                    MiseTomlPsiPatterns.miseTomlStringLiteral or
-                        MiseTomlPsiPatterns.miseTomlLeafPsiElement or
-                        MiseTomlPsiPatterns.tomlPsiElement<TomlKeySegment>()
-                ).accepts(psiElement)
-            ) {
-                return null
-            }
+        private val acceptPattern =
+            MiseTomlPsiPatterns.miseTomlStringLiteral or
+                MiseTomlPsiPatterns.miseTomlLeafPsiElement or
+                MiseTomlPsiPatterns.tomlPsiElement<TomlKeySegment>()
 
+        /**
+         * If the given [psiElement] is a [TomlKeySegment] or [TomlLiteral] of a task table, returns the [MiseTomlTableTask] instance.
+         *
+         *   ```toml
+         *   [tasks.<foo>]
+         *   run = "echo foo"
+         *   ```
+         */
+        fun resolveFromTaskChainedTable(psiElement: PsiElement): MiseTomlTableTask? {
+            if (!acceptPattern.accepts(psiElement)) return null
             val tomlKey =
                 if (psiElement is TomlKeySegment) {
                     psiElement.parent as? TomlKey
@@ -104,51 +106,61 @@ class MiseTomlTableTask internal constructor(
                     psiElement.parent.parent as? TomlKey
                 } ?: return null
 
-            // CASE: [tasks.<TASK_NAME>]
-            (tomlKey.parent as? TomlTableHeader)?.let { tomlTableHeader ->
-                val keySegments = tomlTableHeader.key?.segments ?: return null
-                if (keySegments.size != 2) return null
-                if (keySegments[0].name != "tasks") return null
-                if (keySegments[0] == psiElement.parent) return null // escape self (tasks)
+            val tomlTableHeader = tomlKey.parent as? TomlTableHeader ?: return null
+            val keySegments = tomlTableHeader.key?.segments ?: return null
+            if (keySegments.size != 2) return null
+            if (keySegments[0].name != "tasks") return null
+            if (keySegments[0] == psiElement.parent) return null // escape self (tasks)
 
-                val table = tomlTableHeader.parent as? org.toml.lang.psi.TomlTable ?: return null
-                val keySegment = keySegments[1]
-                return MiseTomlTableTask(
-                    name = keySegment.name ?: return null,
-                    description = table.getValueWithKey("description")?.stringValue,
-                    depends = table.getValueWithKey("depends")?.stringArray,
-                    aliases = table.getValueWithKey("alias")?.stringArray,
-                    source = collapsePath(psiElement.containingFile, psiElement.project),
-                    keySegment = keySegment,
-                )
+            val table = tomlTableHeader.parent as? org.toml.lang.psi.TomlTable ?: return null
+            val keySegment = keySegments[1]
+            return MiseTomlTableTask(
+                name = keySegment.name ?: return null,
+                description = table.getValueWithKey("description")?.stringValue,
+                depends = table.getValueWithKey("depends")?.stringArray,
+                aliases = table.getValueWithKey("alias")?.stringArray,
+                source = collapsePath(psiElement.containingFile, psiElement.project),
+                keySegment = keySegment,
+            )
+        }
+
+        /**
+         * If the given [psiElement] is a key segment(or literal) of a task table, returns the [MiseTomlTableTask] instance.
+         *
+         *   ```toml
+         *   [tasks]
+         *   <foo> = { run = "echo foo" }
+         *   ```
+         */
+        fun resolveFromInlineTableInTaskTable(psiElement: PsiElement): MiseTomlTableTask? {
+            val tomlKey =
+                if (psiElement is TomlKeySegment) {
+                    psiElement.parent as? TomlKey
+                } else {
+                    psiElement.parent.parent as? TomlKey
+                } ?: return null
+
+            val tomlTable = tomlKey.parent.parent as? org.toml.lang.psi.TomlTable ?: return null
+            val tomlTableHeader = tomlTable.header
+            if (tomlTableHeader == tomlKey.parent) return null // escape self (tasks)
+            if (tomlTableHeader.key
+                    ?.segments
+                    ?.singleOrNull()
+                    ?.textMatches("tasks") != true
+            ) {
+                return null
             }
 
-            // CASE: [tasks]
-            //       <TASK_NAME> = {}
-            (tomlKey.parent.parent as? org.toml.lang.psi.TomlTable)?.let { tomlTable ->
-                val tomlTableHeader = tomlTable.header
-                if (tomlTableHeader == tomlKey.parent) return null // escape self (tasks)
-                if (tomlTableHeader.key
-                        ?.segments
-                        ?.singleOrNull()
-                        ?.textMatches("tasks") != true
-                ) {
-                    return null
-                }
-
-                val keySegment = tomlKey.segments.singleOrNull() ?: return null
-                val table = (tomlKey.parent as? TomlKeyValue)?.value as? TomlInlineTable ?: return null
-                return MiseTomlTableTask(
-                    name = keySegment.name ?: return null,
-                    description = table.getValueWithKey("description")?.stringValue,
-                    depends = table.getValueWithKey("depends")?.stringArray,
-                    aliases = table.getValueWithKey("alias")?.stringArray,
-                    source = collapsePath(psiElement.containingFile, psiElement.project),
-                    keySegment = keySegment,
-                )
-            }
-
-            return null
+            val keySegment = tomlKey.segments.singleOrNull() ?: return null
+            val table = (tomlKey.parent as? TomlKeyValue)?.value as? TomlInlineTable ?: return null
+            return MiseTomlTableTask(
+                name = keySegment.name ?: return null,
+                description = table.getValueWithKey("description")?.stringValue,
+                depends = table.getValueWithKey("depends")?.stringArray,
+                aliases = table.getValueWithKey("alias")?.stringArray,
+                source = collapsePath(psiElement.containingFile, psiElement.project),
+                keySegment = keySegment,
+            )
         }
     }
 }

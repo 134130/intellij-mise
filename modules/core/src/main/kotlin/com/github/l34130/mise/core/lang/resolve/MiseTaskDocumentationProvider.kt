@@ -28,7 +28,9 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
                     val tasks = service.getTasks()
                     tasks.firstOrNull { it is MiseShellScriptTask && it.file == element.virtualFile } as MiseShellScriptTask
                 }
-                is TomlKeySegment -> MiseTomlTableTask.resolveOrNull(element)
+                is TomlKeySegment ->
+                    MiseTomlTableTask.resolveFromTaskChainedTable(element)
+                        ?: MiseTomlTableTask.resolveFromInlineTableInTaskTable(element)
                 else -> return null
             } ?: return null
 

@@ -8,9 +8,14 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement
 class MiseTomlTaskRunLineMarkerContributor : RunLineMarkerContributor() {
     override fun getInfo(element: PsiElement): Info? {
         if (element !is LeafPsiElement) return null
-        MiseTomlTableTask.resolveOrNull(element)?.let { task ->
+
+        MiseTomlTableTask.resolveFromTaskChainedTable(element)?.let { task ->
             return Info(RunMiseTomlTaskAction(task))
         }
+        MiseTomlTableTask.resolveFromInlineTableInTaskTable(element)?.let { task ->
+            return Info(RunMiseTomlTaskAction(task))
+        }
+
         return null
     }
 }

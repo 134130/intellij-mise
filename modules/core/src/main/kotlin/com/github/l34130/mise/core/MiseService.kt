@@ -1,10 +1,9 @@
 package com.github.l34130.mise.core
 
-import com.github.l34130.mise.core.lang.psi.allTasks
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTask
-import com.github.l34130.mise.core.model.MiseTaskFile
 import com.github.l34130.mise.core.model.MiseTomlFile
+import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.Service
@@ -16,6 +15,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.openapi.vfs.resolveFromRootOrRelative
 import com.intellij.openapi.vfs.toNioPathOrNull
+import com.intellij.psi.util.childrenOfType
 import com.intellij.util.application
 import com.intellij.util.containers.addIfNotNull
 import com.jetbrains.rd.util.ConcurrentHashMap
@@ -23,6 +23,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.toml.lang.psi.TomlFile
+import org.toml.lang.psi.TomlKeyValue
+import org.toml.lang.psi.TomlTable
 import kotlin.io.path.isExecutable
 
 @Service(Service.Level.PROJECT)
@@ -155,7 +157,34 @@ class MiseService(
             // get all tasks from all toml files in the project
             for (virtualFile in miseTomlFiles) {
                 val psiFile = virtualFile.findPsiFile(project) as? TomlFile ?: continue
-                result.addAll(psiFile.allTasks())
+
+                val tables = psiFile.childrenOfType<TomlTable>()
+                for (table in tables) {
+                    val keySegments = table.header.key?.segments ?: continue
+                    when (keySegments.size) {
+                        1 -> {
+                            // [tasks]
+                            // foo = {  }
+                            if (keySegments.first().textMatches("tasks")) {
+                                val keyValues = table.childrenOfType<TomlKeyValue>()
+                                for (keyValue in keyValues) {
+                                    val keySegment = keyValue.key.segments.singleOrNull() ?: continue
+                                    result.addIfNotNull(
+                                        MiseTomlTableTask.resolveFromInlineTableInTaskTable(keySegment),
+                                    )
+                                }
+                            }
+                        }
+                        2 -> {
+                            // [tasks.foo]
+                            val (first, second) = keySegments
+                            if (first.textMatches("tasks")) {
+                                result.addIfNotNull(MiseTomlTableTask.resolveFromTaskChainedTable(second))
+                            }
+                        }
+                        else -> continue
+                    }
+                }
             }
 
             // get all tasks from the task directories
@@ -180,7 +209,7 @@ class MiseService(
                     val virtualFile = baseDir.resolveFromRootOrRelative(taskTomlOrDir) ?: continue
                     if (!virtualFile.isDirectory) {
                         val psiFile = virtualFile.findPsiFile(project) as? TomlFile ?: continue
-                        result.addAll(MiseTaskFile.resolveTasks(psiFile))
+// TODO:                        result.addAll(MiseTaskFile.resolveTasks(psiFile))
                     }
                 }
             }
