@@ -54,7 +54,7 @@ class MiseTomlTaskRunConfiguration(
                 params += listOf("run", miseTaskName)
 
                 val commandLine = PtyCommandLine()
-                if(!SystemInfo.isWindows) {
+                if (!SystemInfo.isWindows) {
                     commandLine.withEnvironment("TERM", "xterm-256color")
                 }
                 commandLine.withConsoleMode(false)
@@ -64,8 +64,8 @@ class MiseTomlTaskRunConfiguration(
                 commandLine.withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
                 commandLine.withWorkDirectory(workDirectory)
 
-                commandLine.withExePath(miseExecutablePath)
-                commandLine.withParameters(params)
+                commandLine.withExePath(miseExecutablePath.substringBefore(" "))
+                commandLine.withParameters(miseExecutablePath.split(' ').drop(1) + params)
 
                 return ColoredProcessHandler(commandLine).apply {
                     setShouldKillProcessSoftly(true)

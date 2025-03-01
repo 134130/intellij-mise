@@ -31,7 +31,8 @@ internal class MiseCommandLine(
     ): Result<T> {
         val miseVersion = getMiseVersion()
 
-        val commandLineArgs = mutableListOf(application.service<MiseSettings>().state.executablePath)
+        val executablePath = application.service<MiseSettings>().state.executablePath
+        val commandLineArgs = executablePath.split(' ').toMutableList()
 
         if (configEnvironment != null) {
             if (miseVersion >= MiseVersion(2024, 12, 2)) {
