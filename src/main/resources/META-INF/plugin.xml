@@ -69,6 +69,7 @@
         </group>
     </actions>
 
+    <depends optional="true" config-file="mise-diagram.xml">com.intellij.diagram</depends>
     <depends optional="true" config-file="mise-goland.xml">org.jetbrains.plugins.go</depends>
     <depends optional="true" config-file="mise-gradle.xml">com.intellij.gradle</depends>
     <depends optional="true" config-file="mise-idea.xml">com.intellij.java</depends>

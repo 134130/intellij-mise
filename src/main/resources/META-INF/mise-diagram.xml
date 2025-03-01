@@ -1,0 +1,15 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <diagram.Provider implementation="com.github.l34130.mise.diagram.MiseTaskGraphProvider"/>
+    </extensions>
+
+    <actions>
+        <action class="com.github.l34130.mise.diagram.ShowMiseTaskGraphDiagramAction"
+                id="ShowMiseTaskGraphNewDiagram"
+                text="Show Mise Task Dependency Graph Diagram"
+                icon="AllIcons.FileTypes.Diagram"
+        >
+            <add-to-group group-id="UML.EditorGroup"/>
+        </action>
+    </actions>
+</idea-plugin>

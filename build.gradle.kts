@@ -34,6 +34,7 @@ dependencies {
     intellijPlatform {
         create(IntelliJPlatformType.IntellijIdeaCommunity, providers.gradleProperty("platformVersion"), false)
 
+        pluginModule(implementation(project(":mise-products-diagram")))
         pluginModule(implementation(project(":mise-products-goland")))
         pluginModule(implementation(project(":mise-products-gradle")))
         pluginModule(implementation(project(":mise-products-idea")))
@@ -158,6 +159,7 @@ allprojects {
         detekt("io.gitlab.arturbosch.detekt:detekt-cli:${rootProject.libs.versions.detekt.get()}")
         detekt("io.gitlab.arturbosch.detekt:detekt-formatting:${rootProject.libs.versions.detekt.get()}")
         detekt(project(":mise-core"))
+        detekt(project(":mise-products-diagram"))
         detekt(project(":mise-products-goland"))
         detekt(project(":mise-products-gradle"))
         detekt(project(":mise-products-idea"))

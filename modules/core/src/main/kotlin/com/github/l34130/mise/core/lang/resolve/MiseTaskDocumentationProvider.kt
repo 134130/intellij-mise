@@ -44,6 +44,8 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
             append(DocumentationMarkup.SECTIONS_START)
             appendKeyValueSection("Alias:", task.aliases.nullize()?.joinToString(", "))
             appendKeyValueSection("Depends:", task.depends.nullize()?.joinToString(", "))
+            appendKeyValueSection("Wait for:", task.waitFor.nullize()?.joinToString(", "))
+            appendKeyValueSection("Depends Post:", task.dependsPost.nullize()?.joinToString(", "))
             appendKeyValueSection(
                 "File:",
                 when (task) {

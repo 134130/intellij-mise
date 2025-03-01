@@ -32,6 +32,8 @@ sealed interface MiseTask {
     val name: String
     val aliases: List<String>?
     val depends: List<String>?
+    val waitFor: List<String>?
+    val dependsPost: List<String>?
     val description: String?
 
     @RelativePath
@@ -46,6 +48,8 @@ class MiseUnknownTask internal constructor(
     override val name: String,
     override val aliases: List<String>? = null,
     override val depends: List<String>? = null,
+    override val waitFor: List<String>? = null,
+    override val dependsPost: List<String>? = null,
     override val description: String? = null,
     @AbsolutePath
     override val source: String? = null,
@@ -55,6 +59,8 @@ class MiseShellScriptTask internal constructor(
     override val name: String,
     override val aliases: List<String>? = null,
     override val depends: List<String>? = null,
+    override val waitFor: List<String>? = null,
+    override val dependsPost: List<String>? = null,
     override val description: String? = null,
     override val source: String? = null,
     val file: VirtualFile,
@@ -77,6 +83,8 @@ class MiseTomlTableTask internal constructor(
     override val name: String,
     override val aliases: List<String>? = null,
     override val depends: List<String>? = null,
+    override val waitFor: List<String>? = null,
+    override val dependsPost: List<String>? = null,
     override val description: String? = null,
     override val source: String? = null,
     val keySegment: TomlKeySegment,
@@ -150,6 +158,8 @@ class MiseTomlTableTask internal constructor(
                 name = keySegment.name ?: return null,
                 description = table.getValueWithKey("description")?.stringValue,
                 depends = table.getValueWithKey("depends")?.stringArray,
+                waitFor = table.getValueWithKey("wait_for")?.stringArray,
+                dependsPost = table.getValueWithKey("depends_post")?.stringArray,
                 aliases = table.getValueWithKey("alias")?.stringArray,
                 source = collapsePath(psiElement.containingFile, psiElement.project),
                 keySegment = keySegment,
@@ -186,6 +196,8 @@ class MiseTomlTableTask internal constructor(
                 name = keySegment.name ?: return null,
                 description = table.getValueWithKey("description")?.stringValue,
                 depends = table.getValueWithKey("depends")?.stringArray,
+                waitFor = table.getValueWithKey("wait_for")?.stringArray,
+                dependsPost = table.getValueWithKey("depends_post")?.stringArray,
                 aliases = table.getValueWithKey("alias")?.stringArray,
                 source = collapsePath(psiElement.containingFile, psiElement.project),
                 keySegment = keySegment,
@@ -213,6 +225,8 @@ class MiseTomlTableTask internal constructor(
                 name = keySegment.name ?: return null,
                 description = table.getValueWithKey("description")?.stringValue,
                 depends = table.getValueWithKey("depends")?.stringArray,
+                waitFor = table.getValueWithKey("wait_for")?.stringArray,
+                dependsPost = table.getValueWithKey("depends_post")?.stringArray,
                 aliases = table.getValueWithKey("alias")?.stringArray,
                 source = collapsePath(psiElement.containingFile, psiElement.project),
                 keySegment = keySegment,
