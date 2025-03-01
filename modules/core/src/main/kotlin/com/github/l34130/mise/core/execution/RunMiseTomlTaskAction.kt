@@ -20,6 +20,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.util.containers.nullize
 
 internal class RunMiseTomlTaskAction(
     private val miseTask: MiseTask,
@@ -45,6 +46,8 @@ internal class RunMiseTomlTaskAction(
                     PsiLocation(psiFile)
                 }
             }
+
+        listOf<STring>().nullize()
 
         var dataContext =
             SimpleDataContext.getSimpleContext(
