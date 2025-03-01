@@ -1,5 +1,7 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="com.github.l34130.mise.diagram.MiseStartupActivity"/>
+
         <diagram.Provider implementation="com.github.l34130.mise.diagram.MiseTaskGraphProvider"/>
     </extensions>
 

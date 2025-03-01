@@ -5,42 +5,17 @@ import com.intellij.diagram.DiagramDataModel
 import com.intellij.diagram.DiagramEdge
 import com.intellij.diagram.DiagramNode
 import com.intellij.openapi.components.service
+import com.intellij.openapi.graph.GraphLayoutOrientation
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ModificationTracker
 import com.intellij.psi.PsiManager
 
 class MiseSingleTaskGraphDataModel(
     project: Project,
-    myTask: MiseTaskGraphableTaskWrapper<*>,
+    private val myTask: MiseTaskGraphableTaskWrapper<*>,
     provider: MiseTaskGraphProvider,
 ) : DiagramDataModel<MiseTaskGraphable>(project, provider) {
-    private val nodes: List<MiseTaskGraphNode> =
-        sequence {
-            val tasks = project.service<MiseService>().getTasks()
-            myTask.task.depends?.let { depends ->
-                yieldAll(
-                    tasks
-                        .filter { task -> task.name in depends }
-                        .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
-                )
-            }
-            myTask.task.waitFor?.let { waitFor ->
-                yieldAll(
-                    tasks
-                        .filter { task -> task.name in waitFor }
-                        .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
-                )
-            }
-            myTask.task.dependsPost?.let { dependsPost ->
-                yieldAll(
-                    tasks
-                        .filter { task -> task.name in dependsPost }
-                        .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
-                )
-            }
-
-            yield(MiseTaskGraphNode(myTask, provider))
-        }.toList()
+    private var nodes: List<MiseTaskGraphNode> = loadNodes()
 
     override fun getModificationTracker(): ModificationTracker = PsiManager.getInstance(project).modificationTracker
 
@@ -74,6 +49,45 @@ class MiseSingleTaskGraphDataModel(
         return result
     }
 
+    override fun refreshDataModel() {
+        nodes = loadNodes()
+        builder.presentationModel.settings.currentLayoutOrientation = GraphLayoutOrientation.LEFT_TO_RIGHT
+        builder
+            .queryUpdate()
+            .withRelayout()
+            .withDataReload()
+            .withPresentationUpdate()
+            .run()
+    }
+
     override fun dispose() {
     }
+
+    private fun loadNodes(): List<MiseTaskGraphNode> =
+        sequence {
+            val tasks = project.service<MiseService>().getTasks()
+            myTask.task.depends?.let { depends ->
+                yieldAll(
+                    tasks
+                        .filter { task -> task.name in depends }
+                        .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
+                )
+            }
+            myTask.task.waitFor?.let { waitFor ->
+                yieldAll(
+                    tasks
+                        .filter { task -> task.name in waitFor }
+                        .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
+                )
+            }
+            myTask.task.dependsPost?.let { dependsPost ->
+                yieldAll(
+                    tasks
+                        .filter { task -> task.name in dependsPost }
+                        .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
+                )
+            }
+
+            yield(MiseTaskGraphNode(myTask, provider))
+        }.toList()
 }

@@ -10,10 +10,13 @@ import com.github.l34130.mise.core.util.RelativePath
 import com.github.l34130.mise.core.util.baseDirectory
 import com.github.l34130.mise.core.util.collapsePath
 import com.github.l34130.mise.core.util.getRelativePath
+import com.intellij.execution.PsiLocation
 import com.intellij.openapi.actionSystem.DataKey
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.childrenOfType
 import com.intellij.util.containers.addIfNotNull
@@ -43,6 +46,21 @@ sealed interface MiseTask {
         val DATA_KEY = DataKey.create<MiseTask>(javaClass.simpleName)
     }
 }
+
+fun MiseTask.psiLocation(project: Project): PsiLocation<*>? =
+    when (this) {
+        is MiseShellScriptTask -> {
+            val psiFile = this.file.findPsiFile(project) ?: return null
+            PsiLocation(psiFile)
+        }
+        is MiseTomlTableTask -> PsiLocation(this.keySegment)
+        is MiseUnknownTask -> {
+            val source = this.source ?: return null
+            val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return null
+            val psiFile = file.findPsiFile(project) ?: return null
+            PsiLocation(psiFile)
+        }
+    }
 
 class MiseUnknownTask internal constructor(
     override val name: String,

@@ -1,13 +1,10 @@
 package com.github.l34130.mise.core.execution
 
 import com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationProducer
-import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTask
-import com.github.l34130.mise.core.model.MiseTomlTableTask
-import com.github.l34130.mise.core.model.MiseUnknownTask
+import com.github.l34130.mise.core.model.psiLocation
 import com.intellij.execution.Executor
 import com.intellij.execution.Location
-import com.intellij.execution.PsiLocation
 import com.intellij.execution.RunManager
 import com.intellij.execution.RunManagerEx
 import com.intellij.execution.RunnerAndConfigurationSettings
@@ -18,8 +15,6 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.findPsiFile
 import org.jetbrains.concurrency.runAsync
 
 internal class RunMiseTomlTaskAction(
@@ -30,28 +25,15 @@ internal class RunMiseTomlTaskAction(
         AllIcons.Actions.Execute,
     ) {
     override fun actionPerformed(event: AnActionEvent) {
+        val project = event.project ?: return
+
         runAsync {
-            val psiLocation =
-                when (miseTask) {
-                    is MiseShellScriptTask -> {
-                        val project = event.project ?: return@runAsync
-                        val psiFile = miseTask.file.findPsiFile(project) ?: return@runAsync
-                        PsiLocation(psiFile)
-                    }
-                    is MiseTomlTableTask -> PsiLocation(miseTask.keySegment)
-                    is MiseUnknownTask -> {
-                        val project = event.project ?: return@runAsync
-                        val source = miseTask.source ?: return@runAsync
-                        val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return@runAsync
-                        val psiFile = file.findPsiFile(project) ?: return@runAsync
-                        PsiLocation(psiFile)
-                    }
-                }
+            val psiLocation = miseTask.psiLocation(project) ?: return@runAsync
 
             var dataContext =
                 SimpleDataContext.getSimpleContext(
                     Location.DATA_KEY,
-                    psiLocation,
+                    miseTask.psiLocation(project) ?: return@runAsync,
                     event.dataContext,
                 )
 

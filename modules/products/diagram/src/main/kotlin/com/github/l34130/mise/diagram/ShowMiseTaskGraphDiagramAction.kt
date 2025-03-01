@@ -5,7 +5,7 @@ import com.intellij.diagram.DiagramProvider
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.uml.core.actions.ShowDiagram
 
-class ShowMiseTaskGraphDiagramAction : ShowDiagram() {
+open class ShowMiseTaskGraphDiagramAction : ShowDiagram() {
     override fun getForcedProvider(): DiagramProvider<*>? = DiagramProvider.findByID<MiseTaskGraphProvider>(MiseTaskGraphProvider.ID)
 
     override fun update(e: AnActionEvent) {
