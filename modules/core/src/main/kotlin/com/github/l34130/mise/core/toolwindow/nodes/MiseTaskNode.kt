@@ -19,6 +19,7 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.util.OpenSourceUtil
 import java.awt.event.MouseEvent
+import java.util.concurrent.ConcurrentHashMap
 
 class MiseTaskServiceNode(
     project: Project,
@@ -85,5 +86,15 @@ class MiseTaskNode(
                 }
                 is MiseUnknownTask -> null
             },
-        )
+        ).toMutableList().apply {
+            addAll(MiseTaskNode.EP_NAME.flatMap { it.contributeActions(taskInfo) })
+        }
+
+    companion object {
+        val EP_NAME = ConcurrentHashMap.newKeySet<MiseTaskNodeActionsContributor>()
+    }
+
+    interface MiseTaskNodeActionsContributor {
+        fun contributeActions(task: MiseTask): List<AnAction>
+    }
 }
