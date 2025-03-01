@@ -20,6 +20,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
+import org.jetbrains.concurrency.runAsync
 
 internal class RunMiseTomlTaskAction(
     private val miseTask: MiseTask,
@@ -29,48 +30,52 @@ internal class RunMiseTomlTaskAction(
         AllIcons.Actions.Execute,
     ) {
     override fun actionPerformed(event: AnActionEvent) {
-        val psiLocation =
-            when (miseTask) {
-                is MiseShellScriptTask -> {
-                    val project = event.project ?: return
-                    val psiFile = miseTask.file.findPsiFile(project) ?: return
-                    PsiLocation(psiFile)
+        runAsync {
+            val psiLocation =
+                when (miseTask) {
+                    is MiseShellScriptTask -> {
+                        val project = event.project ?: return@runAsync
+                        val psiFile = miseTask.file.findPsiFile(project) ?: return@runAsync
+                        PsiLocation(psiFile)
+                    }
+                    is MiseTomlTableTask -> PsiLocation(miseTask.keySegment)
+                    is MiseUnknownTask -> {
+                        val project = event.project ?: return@runAsync
+                        val source = miseTask.source ?: return@runAsync
+                        val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return@runAsync
+                        val psiFile = file.findPsiFile(project) ?: return@runAsync
+                        PsiLocation(psiFile)
+                    }
                 }
-                is MiseTomlTableTask -> PsiLocation(miseTask.keySegment)
-                is MiseUnknownTask -> {
-                    val project = event.project ?: return
-                    val source = miseTask.source ?: return
-                    val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return
-                    val psiFile = file.findPsiFile(project) ?: return
-                    PsiLocation(psiFile)
-                }
-            }
 
-        var dataContext =
-            SimpleDataContext.getSimpleContext(
-                Location.DATA_KEY,
-                psiLocation,
-                event.dataContext,
-            )
+            var dataContext =
+                SimpleDataContext.getSimpleContext(
+                    Location.DATA_KEY,
+                    psiLocation,
+                    event.dataContext,
+                )
 
-        dataContext =
-            SimpleDataContext.getSimpleContext(
-                MiseTask.DATA_KEY,
-                miseTask,
-                dataContext,
-            )
+            dataContext =
+                SimpleDataContext.getSimpleContext(
+                    MiseTask.DATA_KEY,
+                    miseTask,
+                    dataContext,
+                )
 
-        val context = ConfigurationContext.getFromContext(dataContext, event.place)
+            val context = ConfigurationContext.getFromContext(dataContext, event.place)
 
-        val producer = MiseTomlTaskRunConfigurationProducer()
-        val configuration: RunnerAndConfigurationSettings =
-            producer.findOrCreateConfigurationFromContext(context)?.configurationSettings
-                ?: event.project?.let { project -> RunManager.getInstance(project).getConfigurationTemplate(producer.configurationFactory) }
-                ?: return
+            val producer = MiseTomlTaskRunConfigurationProducer()
+            val configuration: RunnerAndConfigurationSettings =
+                producer.findOrCreateConfigurationFromContext(context)?.configurationSettings
+                    ?: event.project?.let { project ->
+                        RunManager.getInstance(project).getConfigurationTemplate(producer.configurationFactory)
+                    }
+                    ?: return@runAsync
 
-        val runManager = (context.runManager as? RunManagerEx) ?: return
-        runManager.setTemporaryConfiguration(configuration)
-        ExecutionUtil.runConfiguration(configuration, Executor.EXECUTOR_EXTENSION_NAME.extensionList.first())
+            val runManager = (context.runManager as? RunManagerEx) ?: return@runAsync
+            runManager.setTemporaryConfiguration(configuration)
+            ExecutionUtil.runConfiguration(configuration, Executor.EXECUTOR_EXTENSION_NAME.extensionList.first())
+        }
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
