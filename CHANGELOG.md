@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [4.4.0] - 2024-03-03
+
+### Added
+
+- Support argument passing for Mise Settings' `executable path` field
+- Dependency graph diagram support for Mise Tasks
+
+### Fixed
+
+- Slow operation on `Run Mise Task` on ToolWindow
+
 ## [4.3.0] - 2024-02-22
 
 ### Added
@@ -279,7 +290,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.3.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.4.0...HEAD
+[4.4.0]: https://github.com/134130/intellij-mise/compare/v4.3.0...v4.4.0
 [4.3.0]: https://github.com/134130/intellij-mise/compare/v4.2.1...v4.3.0
 [4.2.1]: https://github.com/134130/intellij-mise/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/134130/intellij-mise/compare/v4.1.0...v4.2.0
