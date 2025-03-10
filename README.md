@@ -16,10 +16,11 @@
   - See [Supported Platforms](#supported-platforms) for the list of supported IDEs.
 - **Tool Integration**: Set project's SDK automatically from `mise.toml` files.
   - `java`, `go`, `node`, `deno` SDKs are supported.
-- **Language Support**: Provides language features for `mise.toml` files
+- **Language Support**: Provides language features for `mise.toml` files.
   - Code completion
   - Reference (refactoring)
   - Language Injection
+- **Diagram Support**: Provides task dependency diagrams.
 
 ## Supported Platforms
 - **IntelliJ IDEA**
