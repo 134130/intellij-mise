@@ -8,8 +8,8 @@
 
 ### Fixed
 
-- Mise settings panel cannot be opened when `mise` is not installed.
-- Mise 'depends' with arguments occurs an `Cannot resolve symbol` error .
+- Mise settings panel cannot be opened when `mise` is not installed
+- Mise 'depends' with arguments occurs an `Cannot resolve symbol` error
 
 ## [4.4.0] - 2024-03-03
 
