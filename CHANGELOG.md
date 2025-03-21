@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [4.4.1] - 2024-03-21
+
+### Fixed
+
+- Mise settings panel cannot be opened when `mise` is not installed
+- Mise 'depends' with arguments occurs an `Cannot resolve symbol` error
+
 ## [4.4.0] - 2024-03-03
 
 ### Added
@@ -290,7 +297,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.4.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.4.1...HEAD
+[4.4.1]: https://github.com/134130/intellij-mise/compare/v4.4.0...v4.4.1
 [4.4.0]: https://github.com/134130/intellij-mise/compare/v4.3.0...v4.4.0
 [4.3.0]: https://github.com/134130/intellij-mise/compare/v4.2.1...v4.3.0
 [4.2.1]: https://github.com/134130/intellij-mise/compare/v4.2.0...v4.2.1
