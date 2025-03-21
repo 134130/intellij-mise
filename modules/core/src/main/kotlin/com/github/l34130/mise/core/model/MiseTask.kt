@@ -25,11 +25,13 @@ import org.toml.lang.psi.TomlInlineTable
 import org.toml.lang.psi.TomlKey
 import org.toml.lang.psi.TomlKeySegment
 import org.toml.lang.psi.TomlKeyValue
+import org.toml.lang.psi.TomlKeyValueOwner
 import org.toml.lang.psi.TomlLiteral
 import org.toml.lang.psi.TomlTable
 import org.toml.lang.psi.TomlTableHeader
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.text.split
 
 sealed interface MiseTask {
     val name: String
@@ -172,16 +174,7 @@ class MiseTomlTableTask internal constructor(
 
             val table = tomlTableHeader.parent as? TomlTable ?: return null
             val keySegment = keySegments[1]
-            return MiseTomlTableTask(
-                name = keySegment.name ?: return null,
-                description = table.getValueWithKey("description")?.stringValue,
-                depends = table.getValueWithKey("depends")?.stringArray,
-                waitFor = table.getValueWithKey("wait_for")?.stringArray,
-                dependsPost = table.getValueWithKey("depends_post")?.stringArray,
-                aliases = table.getValueWithKey("alias")?.stringArray,
-                source = collapsePath(psiElement.containingFile, psiElement.project),
-                keySegment = keySegment,
-            )
+            return from(keySegment, table)
         }
 
         /**
@@ -208,18 +201,9 @@ class MiseTomlTableTask internal constructor(
                 return null
             }
 
-            val keySegment = tomlKey.segments.singleOrNull() ?: return null
             val table = (tomlKey.parent as? TomlKeyValue)?.value as? TomlInlineTable ?: return null
-            return MiseTomlTableTask(
-                name = keySegment.name ?: return null,
-                description = table.getValueWithKey("description")?.stringValue,
-                depends = table.getValueWithKey("depends")?.stringArray,
-                waitFor = table.getValueWithKey("wait_for")?.stringArray,
-                dependsPost = table.getValueWithKey("depends_post")?.stringArray,
-                aliases = table.getValueWithKey("alias")?.stringArray,
-                source = collapsePath(psiElement.containingFile, psiElement.project),
-                keySegment = keySegment,
-            )
+            val keySegment = tomlKey.segments.singleOrNull() ?: return null
+            return from(keySegment, table)
         }
 
         /**
@@ -238,17 +222,25 @@ class MiseTomlTableTask internal constructor(
 
             val table = tomlKey.parent.parent as? TomlTable ?: return null
             val keySegment = tomlKey.segments.singleOrNull() ?: return null
+            return from(keySegment, table)
+        }
 
+        private fun from(
+            keySegment: TomlKeySegment,
+            table: TomlKeyValueOwner,
+        ): MiseTomlTableTask? {
             return MiseTomlTableTask(
                 name = keySegment.name ?: return null,
                 description = table.getValueWithKey("description")?.stringValue,
-                depends = table.getValueWithKey("depends")?.stringArray,
-                waitFor = table.getValueWithKey("wait_for")?.stringArray,
-                dependsPost = table.getValueWithKey("depends_post")?.stringArray,
+                depends = table.getValueWithKey("depends")?.stringArray?.withoutArgs(),
+                waitFor = table.getValueWithKey("wait_for")?.stringArray?.withoutArgs(),
+                dependsPost = table.getValueWithKey("depends_post")?.stringArray?.withoutArgs(),
                 aliases = table.getValueWithKey("alias")?.stringArray,
-                source = collapsePath(psiElement.containingFile, psiElement.project),
+                source = collapsePath(keySegment.containingFile, keySegment.project),
                 keySegment = keySegment,
             )
         }
+
+        private fun List<String>.withoutArgs(): List<String> = map { it.split(' ', ignoreCase = false, limit = 2).firstOrNull() ?: it }
     }
 }
