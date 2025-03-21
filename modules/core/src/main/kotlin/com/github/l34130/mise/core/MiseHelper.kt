@@ -9,7 +9,6 @@ import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.components.service
 import com.intellij.platform.ide.progress.TaskCancellation
 import com.intellij.platform.ide.progress.withBackgroundProgress
-import com.intellij.util.application
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import java.util.function.Supplier
@@ -20,7 +19,7 @@ object MiseHelper {
         workingDirectory: Supplier<String?>,
     ): Map<String, String> {
         val project = configuration.project
-        val projectState = application.service<MiseSettings>().state
+        val projectState = project.service<MiseSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
         val (workDir, configEnvironment) =
@@ -37,12 +36,12 @@ object MiseHelper {
         return runBlocking(Dispatchers.IO) {
             withBackgroundProgress(configuration.project, "Getting Mise envvars", TaskCancellation.nonCancellable()) {
                 MiseCommandLineHelper
-                    .getEnvVars(workDir, configEnvironment)
+                    .getEnvVars(project, workDir, configEnvironment)
                     .fold(
                         onSuccess = { envVars -> envVars },
                         onFailure = {
                             if (it !is MiseCommandLineNotFoundException) {
-                                MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                                MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
                             }
                             mapOf()
                         },

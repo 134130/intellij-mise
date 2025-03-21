@@ -13,7 +13,6 @@ import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.selected
-import com.intellij.util.application
 import javax.swing.JComponent
 
 class MiseConfigurable(
@@ -32,7 +31,7 @@ class MiseConfigurable(
     override fun getDisplayName(): String = "Mise Settings"
 
     override fun createComponent(): JComponent {
-        val service = application.service<MiseSettings>()
+        val service = project.service<MiseSettings>()
 
         myMiseExecutableTf.setTextAndAddToHistory(service.state.executablePath)
         myMiseDirEnvCb.isSelected = service.state.useMiseDirEnv
@@ -74,7 +73,7 @@ class MiseConfigurable(
     }
 
     override fun isModified(): Boolean {
-        val service = application.service<MiseSettings>()
+        val service = project.service<MiseSettings>()
         return myMiseExecutableTf.text != service.state.executablePath ||
             myMiseDirEnvCb.isSelected != service.state.useMiseDirEnv ||
             myMiseConfigEnvironmentTf.text != service.state.miseConfigEnvironment
@@ -82,7 +81,7 @@ class MiseConfigurable(
 
     override fun apply() {
         if (isModified) {
-            val service = application.service<MiseSettings>()
+            val service = project.service<MiseSettings>()
             service.state.executablePath = myMiseExecutableTf.text
             service.state.useMiseDirEnv = myMiseDirEnvCb.isSelected
             service.state.miseConfigEnvironment = myMiseConfigEnvironmentTf.text

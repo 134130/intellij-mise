@@ -7,13 +7,16 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.options.ShowSettingsUtil
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.EnvironmentUtil
 import java.io.File
 
-@Service(Service.Level.APP)
+@Service(Service.Level.PROJECT)
 @State(name = "com.github.l34130.mise.settings.MiseSettings", storages = [Storage("mise.xml")])
-class MiseSettings : PersistentStateComponent<MiseSettings.MyState> {
+class MiseSettings(
+    private val project: Project,
+) : PersistentStateComponent<MiseSettings.MyState> {
     private var myState = MyState()
 
     override fun getState() = myState
@@ -38,7 +41,7 @@ class MiseSettings : PersistentStateComponent<MiseSettings.MyState> {
             }
 
         if (myState.executablePath.isEmpty()) {
-            MiseNotificationService.getInstance(null).warn(
+            MiseNotificationService.getInstance(project).warn(
                 title = "Mise Executable Not Found",
                 htmlText =
                     """
@@ -49,7 +52,7 @@ class MiseSettings : PersistentStateComponent<MiseSettings.MyState> {
                     NotificationAction.createSimple(
                         "Open settings",
                     ) {
-                        ShowSettingsUtil.getInstance().showSettingsDialog(null, MiseConfigurable::class.java)
+                        ShowSettingsUtil.getInstance().showSettingsDialog(project, "Mise Settings")
                     }
                 },
             )

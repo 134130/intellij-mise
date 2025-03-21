@@ -10,7 +10,6 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.util.application
 import com.intellij.util.ui.JBUI
 import org.toml.lang.psi.TomlFileType
 import javax.swing.JComponent
@@ -18,7 +17,7 @@ import javax.swing.JComponent
 class MiseTomlTaskRunConfigurationEditor(
     private val project: Project,
 ) : SettingsEditor<MiseTomlTaskRunConfiguration>() {
-    private val applicationState = application.service<MiseSettings>().state
+    private val applicationState = project.service<MiseSettings>().state
 
     private val miseExecutablePathTf = TextFieldWithBrowseButton()
     private val miseConfigEnvironmentTf = JBTextField()

@@ -11,27 +11,34 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.util.application
+import com.intellij.openapi.project.Project
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
 
 internal class MiseCommandLine(
     private val workDir: String? = null,
     private val configEnvironment: String? = null,
 ) {
-    inline fun <reified T> runCommandLine(vararg params: String): Result<T> = runCommandLine(params.toList())
+    inline fun <reified T> runCommandLine(
+        project: Project,
+        vararg params: String,
+    ): Result<T> = runCommandLine(project, params.toList())
 
-    inline fun <reified T> runCommandLine(params: List<String>): Result<T> {
+    inline fun <reified T> runCommandLine(
+        project: Project,
+        params: List<String>,
+    ): Result<T> {
         val typeReference = object : TypeReference<T>() {}
-        return runCommandLine(params, typeReference)
+        return runCommandLine(project, params, typeReference)
     }
 
     fun <T> runCommandLine(
+        project: Project,
         params: List<String>,
         typeReference: TypeReference<T>,
     ): Result<T> {
-        val miseVersion = getMiseVersion()
+        val miseVersion = getMiseVersion(project)
 
-        val executablePath = application.service<MiseSettings>().state.executablePath
+        val executablePath = project.service<MiseSettings>().state.executablePath
         val commandLineArgs = executablePath.split(' ').toMutableList()
 
         if (configEnvironment != null) {
@@ -46,7 +53,7 @@ internal class MiseCommandLine(
 
         commandLineArgs.addAll(params)
 
-        return runCommandLine(commandLineArgs) {
+        return runCommandLine(project, commandLineArgs) {
             ObjectMapper()
                 .registerKotlinModule()
                 .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
@@ -57,6 +64,7 @@ internal class MiseCommandLine(
     }
 
     private fun <T> runCommandLine(
+        project: Project,
         commandLineArgs: List<String>,
         transform: (String) -> T,
     ): Result<T> {
@@ -106,10 +114,10 @@ internal class MiseCommandLine(
 
     companion object {
         @RequiresBackgroundThread
-        fun getMiseVersion(): MiseVersion {
+        fun getMiseVersion(project: Project): MiseVersion {
             val miseCommandLine = MiseCommandLine()
-            val miseExecutable = application.service<MiseSettings>().state.executablePath
-            val versionString = miseCommandLine.runCommandLine(listOf(miseExecutable, "version")) { it }
+            val miseExecutable = project.service<MiseSettings>().state.executablePath
+            val versionString = miseCommandLine.runCommandLine(project, listOf(miseExecutable, "version")) { it }
 
             val miseVersion =
                 versionString.fold(

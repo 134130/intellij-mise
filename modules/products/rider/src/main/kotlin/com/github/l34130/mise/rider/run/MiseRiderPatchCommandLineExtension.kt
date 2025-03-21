@@ -9,7 +9,6 @@ import com.intellij.execution.process.ProcessInfo
 import com.intellij.execution.process.ProcessListener
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.util.application
 import com.jetbrains.rd.util.lifetime.Lifetime
 import com.jetbrains.rider.projectView.solutionDirectoryPath
 import com.jetbrains.rider.run.PatchCommandLineExtension
@@ -42,7 +41,7 @@ class MiseRiderPatchCommandLineExtension : PatchCommandLineExtension {
         commandLine: GeneralCommandLine,
         project: Project,
     ) {
-        val projectState = application.service<MiseSettings>().state
+        val projectState = project.service<MiseSettings>().state
         if (!projectState.useMiseDirEnv) {
             return
         }
@@ -50,13 +49,14 @@ class MiseRiderPatchCommandLineExtension : PatchCommandLineExtension {
         val miseEnvVars =
             MiseCommandLineHelper
                 .getEnvVars(
+                    project,
                     workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
                     configEnvironment = projectState.miseConfigEnvironment,
                 ).fold(
                     onSuccess = { envVars -> envVars },
                     onFailure = {
                         if (it !is MiseCommandLineNotFoundException) {
-                            MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it)
+                            MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
                         }
                         emptyMap()
                     },
