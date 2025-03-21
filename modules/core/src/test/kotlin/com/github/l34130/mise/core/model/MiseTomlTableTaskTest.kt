@@ -24,11 +24,13 @@ class MiseTomlTableTaskTest : FileTestBase() {
         assertEquals(2, tasks.size)
         assertEquals("echo", tasks[0].name)
         assertEquals("hello-world", tasks[1].name)
-        assertEquals("echo", tasks[1].depends!![0]) {
+        assertEquals(
             """
             Expected 'echo' but got ${tasks[1].depends!![0]}.
             The task should have been resolved to 'echo' and the args should have been removed.
-            """.trimIndent()
-        }
+            """.trimIndent(),
+            "echo",
+            tasks[1].depends!![0],
+        )
     }
 }
