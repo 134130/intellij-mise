@@ -45,17 +45,27 @@ class MiseTomlTaskDependsReferenceProvider : PsiReferenceProvider() {
             val literalValue = element.stringValue ?: return ResolveResult.EMPTY_ARRAY
             if (element.containingFile !is TomlFile) return ResolveResult.EMPTY_ARRAY
 
+            var value = literalValue.split(' ', ignoreCase = false, limit = 2).firstOrNull() ?: return ResolveResult.EMPTY_ARRAY
+            val isWildcard = value.endsWith(":*")
+
             val project = element.project
             val tasks = project.service<MiseService>().getTasks()
-            return tasks
-                .filter { it.name == literalValue }
-                .mapNotNull {
+
+            val result =
+                if (isWildcard) {
+                    // FIXME: IDK why this is not working
+                    tasks.filter { it.name.startsWith(value.dropLast(1)) }
+                } else {
+                    tasks.filter { it.name == value }
+                }.mapNotNull {
                     when (it) {
-                        is MiseShellScriptTask -> PsiElementResolveResult(it.file.findPsiFile(project)!!)
-                        is MiseTomlTableTask -> PsiElementResolveResult(it.keySegment)
+                        is MiseShellScriptTask -> it.file.findPsiFile(project)
+                        is MiseTomlTableTask -> it.keySegment
                         is MiseUnknownTask -> null
                     }
-                }.toTypedArray()
+                }
+
+            return PsiElementResolveResult.createResults(result)
         }
     }
 }
