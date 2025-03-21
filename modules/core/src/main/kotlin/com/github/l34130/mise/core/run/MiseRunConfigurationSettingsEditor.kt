@@ -16,7 +16,6 @@ import com.intellij.ui.layout.ComponentPredicate
 import com.intellij.ui.layout.and
 import com.intellij.ui.layout.not
 import com.intellij.ui.layout.selected
-import com.intellij.util.application
 import org.jdom.Element
 import javax.swing.JComponent
 
@@ -25,7 +24,7 @@ private val USER_DATA_KEY = Key<MiseRunConfigurationState>("Mise Run Settings")
 class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     private val project: Project,
 ) : SettingsEditor<T>() {
-    private val applicationState = application.service<MiseSettings>().state
+    private val applicationState = project.service<MiseSettings>().state
     private val useApplicationWideMiseConfig = applicationState.useMiseDirEnv
     private val useApplicationWideMiseConfigPredicate = ComponentPredicate.fromValue(useApplicationWideMiseConfig)
 
@@ -58,7 +57,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
 
     // Write to persistence from the UI
     override fun applyEditorTo(config: T) {
-        val projectState = application.service<MiseSettings>().state
+        val projectState = project.service<MiseSettings>().state
 
         // When the project is configured to use the project-wide mise configuration
         if (projectState.useMiseDirEnv) {

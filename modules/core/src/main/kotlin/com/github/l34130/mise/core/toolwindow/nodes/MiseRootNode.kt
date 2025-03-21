@@ -11,7 +11,6 @@ import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.util.application
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -24,7 +23,7 @@ class MiseRootNode(
     }
 
     override fun getChildren(): Collection<AbstractTreeNode<*>> {
-        val settings = application.service<MiseSettings>()
+        val settings = project.service<MiseSettings>()
         val service = project.service<MiseService>()
 
         runBlocking(Dispatchers.IO) {
@@ -53,6 +52,7 @@ class MiseRootNode(
         val toolsByToolNames =
             MiseCommandLineHelper
                 .getDevTools(
+                    project,
                     workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow()
@@ -79,6 +79,7 @@ class MiseRootNode(
         val envs =
             MiseCommandLineHelper
                 .getEnvVars(
+                    project,
                     workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow()
@@ -99,6 +100,7 @@ class MiseRootNode(
         val cliTasks =
             MiseCommandLineHelper
                 .getTasks(
+                    project,
                     workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow() // the tasks loaded from command line

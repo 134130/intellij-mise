@@ -20,7 +20,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.vfs.encoding.EncodingManager
 import com.intellij.util.EnvironmentUtil
-import com.intellij.util.application
 import org.jdom.Element
 
 class MiseTomlTaskRunConfiguration(
@@ -28,7 +27,7 @@ class MiseTomlTaskRunConfiguration(
     factory: MiseTomlTaskRunConfigurationFactory,
     name: String,
 ) : LocatableConfigurationBase<RunProfileState>(project, factory, name) {
-    private val settings = application.service<MiseSettings>().state
+    private val settings = project.service<MiseSettings>().state
 
     var miseExecutablePath: String = settings.executablePath
     var miseConfigEnvironment: String = settings.miseConfigEnvironment
