@@ -1,6 +1,8 @@
-![Build](https://github.com/134130/intellij-mise/workflows/Build/badge.svg)
+[![Build](https://github.com/134130/intellij-mise/workflows/Build/badge.svg)](https://github.com/134130/intellij-mise/actions/workflows/build.yml)
 [![Version](https://img.shields.io/jetbrains/plugin/v/24904-mise.svg)](https://plugins.jetbrains.com/plugin/24904-mise)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/24904-mise.svg)](https://plugins.jetbrains.com/plugin/24904-mise)
+[![Rating](https://img.shields.io/jetbrains/plugin/r/rating/24904)](https://plugins.jetbrains.com/plugin/24904-mise)
+
 
 <!-- Plugin description -->
 # Mise
