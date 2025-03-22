@@ -1,6 +1,6 @@
-package com.github.l34130.mise.core.lang.completion
+package com.github.l34130.mise.sh.lang.completion
 
-import com.github.l34130.mise.core.FileTestBase
+import com.github.l34130.mise.sh.FileTestBase
 import com.intellij.codeInsight.lookup.LookupElement
 import org.intellij.lang.annotations.Language
 

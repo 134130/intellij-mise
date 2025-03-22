@@ -4,7 +4,6 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
-    id("org.jetbrains.gradle.plugin.idea-ext")
     id("org.jetbrains.intellij.platform.module")
     alias(libs.plugins.kotlin) // Kotlin support
 }
@@ -15,9 +14,10 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.IntellijIdeaCommunity, properties("platformVersion"))
+        create(IntelliJPlatformType.IntellijIdeaCommunity, properties("platformVersion"), false)
 
-        bundledPlugins("com.intellij.java", "com.intellij.gradle")
+        bundledPlugin("com.jetbrains.sh")
+        bundledPlugin("org.toml.lang")
 
         jetbrainsRuntime()
 
