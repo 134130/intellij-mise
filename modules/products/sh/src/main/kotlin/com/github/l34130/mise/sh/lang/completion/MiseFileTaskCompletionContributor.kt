@@ -1,6 +1,6 @@
-package com.github.l34130.mise.core.lang.completion
+package com.github.l34130.mise.sh.lang.completion
 
-import com.github.l34130.mise.core.lang.psi.MiseFileTaskPsiPatterns
+import com.github.l34130.mise.sh.lang.psi.MiseFileTaskPsiPatterns
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionType
 

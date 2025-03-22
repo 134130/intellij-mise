@@ -25,6 +25,7 @@ include(
     "modules/products/nodejs",
     "modules/products/pycharm",
     "modules/products/rider",
+    "modules/products/sh",
 )
 
 rootProject.name = "mise"

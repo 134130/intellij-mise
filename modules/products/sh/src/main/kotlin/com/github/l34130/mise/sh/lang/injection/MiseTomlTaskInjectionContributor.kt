@@ -1,4 +1,4 @@
-package com.github.l34130.mise.core.lang.injection
+package com.github.l34130.mise.sh.lang.injection
 
 import com.github.l34130.mise.core.lang.psi.MiseTomlPsiPatterns
 import com.intellij.lang.injection.general.Injection

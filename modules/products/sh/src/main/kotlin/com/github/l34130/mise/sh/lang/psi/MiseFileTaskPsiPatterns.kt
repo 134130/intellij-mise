@@ -1,5 +1,6 @@
-package com.github.l34130.mise.core.lang.psi
+package com.github.l34130.mise.sh.lang.psi
 
+import com.github.l34130.mise.core.lang.psi.psiElement
 import com.intellij.patterns.PsiElementPattern
 import com.intellij.patterns.VirtualFilePattern
 import com.intellij.psi.PsiComment

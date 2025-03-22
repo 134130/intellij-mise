@@ -1,4 +1,4 @@
-package com.github.l34130.mise.core.lang.completion
+package com.github.l34130.mise.sh.lang.completion
 
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider

@@ -1,6 +1,6 @@
 @file:Suppress("ktlint")
 
-package com.github.l34130.mise.core.lang.completion
+package com.github.l34130.mise.sh.lang.completion
 
 internal class MiseFileTaskCompletionProviderTest : MiseShCompletionTestBase() {
     fun `test completion alias`() = testSingleCompletion(
