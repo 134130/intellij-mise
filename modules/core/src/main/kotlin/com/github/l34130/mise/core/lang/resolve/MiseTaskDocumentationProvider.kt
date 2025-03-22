@@ -9,7 +9,7 @@ import com.intellij.lang.documentation.AbstractDocumentationProvider
 import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.components.service
 import com.intellij.psi.PsiElement
-import com.intellij.sh.psi.ShFile
+import com.intellij.psi.PsiFile
 import com.intellij.util.containers.nullize
 import org.jetbrains.annotations.Nls
 import org.toml.lang.psi.TomlKeySegment
@@ -23,7 +23,8 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
 
         val task =
             when (element) {
-                is ShFile -> {
+                is PsiFile -> {
+                    if (element.language.id != "Shell Script") return null
                     val service = element.project.service<MiseService>()
                     val tasks = service.getTasks()
                     tasks.firstOrNull { it is MiseShellScriptTask && it.file == element.virtualFile } as MiseShellScriptTask
@@ -49,7 +50,7 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
             appendKeyValueSection(
                 "File:",
                 when (task) {
-                    is MiseShellScriptTask -> collapsePath(element as ShFile, element.project)
+                    is MiseShellScriptTask -> collapsePath(element as PsiFile, element.project)
                     is MiseTomlTableTask -> collapsePath(task.keySegment.containingFile, element.project)
                     is MiseUnknownTask -> task.source?.let { collapsePath(it, element.project) } ?: "unknown"
                 },

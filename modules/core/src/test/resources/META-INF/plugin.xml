@@ -9,7 +9,7 @@
 
         <completion.contributor
                 order="first" language="Shell Script"
-                implementationClass="com.github.l34130.mise.core.lang.completion.MiseFileTaskCompletionContributor"/>
+                implementationClass="com.github.l34130.mise.sh.lang.completion.MiseFileTaskCompletionContributor"/>
     </extensions>
 
     <!-- Execution Support -->
