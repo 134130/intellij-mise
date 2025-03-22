@@ -22,5 +22,6 @@ dependencies {
         jetbrainsRuntime()
 
         testFramework(TestFrameworkType.Platform)
+        testImplementation("org.opentest4j:opentest4j:1.3.0")
     }
 }

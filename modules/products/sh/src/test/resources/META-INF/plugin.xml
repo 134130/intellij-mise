@@ -1,0 +1,10 @@
+<idea-plugin url="https://github.com/l34130/intellij-mise" require-restart="false">
+    <id>com.github.l34130.mise</id>
+
+    <!-- Language Support -->
+    <extensions defaultExtensionNs="com.intellij">
+        <completion.contributor
+                order="first" language="Shell Script"
+                implementationClass="com.github.l34130.mise.sh.lang.completion.MiseFileTaskCompletionContributor"/>
+    </extensions>
+</idea-plugin>

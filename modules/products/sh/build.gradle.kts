@@ -14,12 +14,14 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.IntellijIdeaUltimate, properties("platformVersion"), false)
+        create(IntelliJPlatformType.IntellijIdeaCommunity, properties("platformVersion"), false)
 
         bundledPlugin("com.jetbrains.sh")
+        bundledPlugin("org.toml.lang")
 
         jetbrainsRuntime()
 
         testFramework(TestFrameworkType.Platform)
+        testImplementation("org.opentest4j:opentest4j:1.3.0")
     }
 }
