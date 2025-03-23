@@ -16,6 +16,7 @@
             <option value="$PROJECT_DIR$/modules/products/nodejs" />
             <option value="$PROJECT_DIR$/modules/products/pycharm" />
             <option value="$PROJECT_DIR$/modules/products/rider" />
+            <option value="$PROJECT_DIR$/modules/products/sh" />
           </set>
         </option>
       </GradleProjectSettings>
