@@ -2,7 +2,6 @@ package com.github.l34130.mise.core
 
 import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.notification.MiseNotificationService
-import com.intellij.diagnostic.IdeaReportingEvent
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationNamesInfo
@@ -39,12 +38,8 @@ class MiseErrorReportSubmitter : ErrorReportSubmitter() {
                 val applicationNamesInfo = ApplicationNamesInfo.getInstance()
 
                 for (event in events) {
-                    var throwable = event.throwable
+                    val throwable = event.throwable
                     val description = additionalInfo ?: ""
-
-                    if (event is IdeaReportingEvent) {
-                        throwable = event.data.throwable
-                    }
 
                     val title = "[${applicationNamesInfo.productName} ${appInfo.fullVersion}] ${
                         StringUtils.abbreviate(throwable.message, 80)
