@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.isExecutable
 
 @Service(Service.Level.PROJECT)
-class MiseService(
+class MiseProjectService(
     val project: Project,
     private val cs: CoroutineScope,
 ) : Disposable {
@@ -214,6 +214,6 @@ class MiseService(
     companion object {
         private val MISE_TOML_NAME_REGEX = "^\\.?mise\\.(\\w+\\.)?toml$".toRegex()
 
-        fun getInstance(project: Project): MiseService = project.getService(MiseService::class.java)
+        fun getInstance(project: Project): MiseProjectService = project.getService(MiseProjectService::class.java)
     }
 }

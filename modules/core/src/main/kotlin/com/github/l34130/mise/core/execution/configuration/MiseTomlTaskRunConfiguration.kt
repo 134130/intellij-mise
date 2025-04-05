@@ -1,6 +1,7 @@
 package com.github.l34130.mise.core.execution.configuration
 
-import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.setting.MiseApplicationSettings
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.Executor
 import com.intellij.execution.configuration.EnvironmentVariablesData
 import com.intellij.execution.configurations.CommandLineState
@@ -20,6 +21,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.vfs.encoding.EncodingManager
 import com.intellij.util.EnvironmentUtil
+import com.intellij.util.application
 import org.jdom.Element
 
 class MiseTomlTaskRunConfiguration(
@@ -27,10 +29,11 @@ class MiseTomlTaskRunConfiguration(
     factory: MiseTomlTaskRunConfigurationFactory,
     name: String,
 ) : LocatableConfigurationBase<RunProfileState>(project, factory, name) {
-    private val settings = project.service<MiseSettings>().state
+    private val applicationSettings = application.service<MiseApplicationSettings>().state
+    private val projectSettings = project.service<MiseProjectSettings>().state
 
-    var miseExecutablePath: String = settings.executablePath
-    var miseConfigEnvironment: String = settings.miseConfigEnvironment
+    var miseExecutablePath: String = applicationSettings.executablePath
+    var miseConfigEnvironment: String = projectSettings.miseConfigEnvironment
     var miseTaskName: String = ""
     var workingDirectory: String? = project.basePath
     var envVars: EnvironmentVariablesData = EnvironmentVariablesData.DEFAULT

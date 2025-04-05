@@ -1,6 +1,6 @@
 package com.github.l34130.mise.diagram
 
-import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.MiseProjectService
 import com.intellij.diagram.DiagramDataModel
 import com.intellij.diagram.DiagramEdge
 import com.intellij.diagram.DiagramNode
@@ -65,7 +65,7 @@ class MiseSingleTaskGraphDataModel(
 
     private fun loadNodes(): List<MiseTaskGraphNode> =
         sequence {
-            val tasks = project.service<MiseService>().getTasks()
+            val tasks = project.service<MiseProjectService>().getTasks()
             myTask.task.depends?.let { depends ->
                 yieldAll(
                     tasks

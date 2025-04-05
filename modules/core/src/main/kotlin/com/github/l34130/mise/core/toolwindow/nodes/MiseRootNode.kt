@@ -1,11 +1,11 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.MiseProjectService
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.model.MiseUnknownTask
-import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.collapsePath
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -23,8 +23,8 @@ class MiseRootNode(
     }
 
     override fun getChildren(): Collection<AbstractTreeNode<*>> {
-        val settings = project.service<MiseSettings>()
-        val service = project.service<MiseService>()
+        val settings = project.service<MiseProjectSettings>()
+        val service = project.service<MiseProjectService>()
 
         runBlocking(Dispatchers.IO) {
             while (!service.isInitialized.get()) {
@@ -48,11 +48,10 @@ class MiseRootNode(
         )
     }
 
-    private fun getToolNodes(settings: MiseSettings): Collection<MiseToolConfigDirectoryNode> {
+    private fun getToolNodes(settings: MiseProjectSettings): Collection<MiseToolConfigDirectoryNode> {
         val toolsByToolNames =
             MiseCommandLineHelper
                 .getDevTools(
-                    project,
                     workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow()
@@ -75,11 +74,10 @@ class MiseRootNode(
         }
     }
 
-    private fun getEnvironmentNodes(settings: MiseSettings): Collection<MiseEnvironmentNode> {
+    private fun getEnvironmentNodes(settings: MiseProjectSettings): Collection<MiseEnvironmentNode> {
         val envs =
             MiseCommandLineHelper
                 .getEnvVars(
-                    project,
                     workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow()
@@ -93,14 +91,13 @@ class MiseRootNode(
         }
     }
 
-    private fun getTaskNodes(settings: MiseSettings): Collection<MiseTaskNode> {
-        val service = project.service<MiseService>()
+    private fun getTaskNodes(settings: MiseProjectSettings): Collection<MiseTaskNode> {
+        val service = project.service<MiseProjectService>()
 
         val psiTasks = service.getTasks() // the tasks loaded from psi elements
         val cliTasks =
             MiseCommandLineHelper
                 .getTasks(
-                    project,
                     workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow() // the tasks loaded from command line

@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.lang.resolve
 
-import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.MiseProjectService
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
@@ -49,7 +49,7 @@ class MiseTomlTaskDependsReferenceProvider : PsiReferenceProvider() {
             val isWildcard = value.endsWith(":*")
 
             val project = element.project
-            val tasks = project.service<MiseService>().getTasks()
+            val tasks = project.service<MiseProjectService>().getTasks()
 
             val result =
                 if (isWildcard) {

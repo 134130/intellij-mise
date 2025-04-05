@@ -19,7 +19,7 @@ abstract class FileTestBase : BasePlatformTestCase() {
     ): PsiFile {
         val file = myFixture.configureByText(fileName, text.trimIndent())
         runBlocking {
-            project.service<MiseService>().refresh()
+            project.service<MiseProjectService>().refresh()
             file.virtualFile.refresh(false, false)
         }
         return file

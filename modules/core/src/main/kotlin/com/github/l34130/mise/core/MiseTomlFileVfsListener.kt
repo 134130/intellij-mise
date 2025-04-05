@@ -33,7 +33,7 @@ class MiseTomlFileVfsListener private constructor(
 
         fun startListening(
             project: Project,
-            service: MiseService,
+            service: MiseProjectService,
             connection: MessageBusConnection,
         ) {
             val updater = MiseLocalIndexUpdater(project, service)
@@ -53,7 +53,7 @@ class MiseTomlFileVfsListener private constructor(
 
     class MiseLocalIndexUpdater(
         val project: Project,
-        val service: MiseService,
+        val service: MiseProjectService,
     ) {
         private val updater = ZipperUpdater(200, Alarm.ThreadToUse.POOLED_THREAD, service)
         private val dirtyTomlFiles: MutableSet<VirtualFile> = ConcurrentHashMap.newKeySet<VirtualFile>()

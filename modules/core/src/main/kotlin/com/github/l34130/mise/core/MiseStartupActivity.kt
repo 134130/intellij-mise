@@ -9,7 +9,7 @@ internal class MiseStartupActivity :
     ProjectActivity,
     DumbAware {
     override suspend fun execute(project: Project) {
-        val tomlService = project.service<MiseService>()
+        val tomlService = project.service<MiseProjectService>()
 
         tomlService.refresh()
     }
