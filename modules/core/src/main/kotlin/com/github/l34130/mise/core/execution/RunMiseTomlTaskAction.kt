@@ -15,7 +15,10 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
-import org.jetbrains.concurrency.runAsync
+import com.intellij.openapi.application.readAction
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 internal class RunMiseTomlTaskAction(
     private val miseTask: MiseTask,
@@ -27,13 +30,13 @@ internal class RunMiseTomlTaskAction(
     override fun actionPerformed(event: AnActionEvent) {
         val project = event.project ?: return
 
-        runAsync {
-            val psiLocation = miseTask.psiLocation(project) ?: return@runAsync
+        CoroutineScope(Dispatchers.Default).launch {
+            val psiLocation = readAction { miseTask.psiLocation(project) } ?: return@launch
 
             var dataContext =
                 SimpleDataContext.getSimpleContext(
                     Location.DATA_KEY,
-                    miseTask.psiLocation(project) ?: return@runAsync,
+                    psiLocation,
                     event.dataContext,
                 )
 
@@ -48,13 +51,14 @@ internal class RunMiseTomlTaskAction(
 
             val producer = MiseTomlTaskRunConfigurationProducer()
             val configuration: RunnerAndConfigurationSettings =
-                producer.findOrCreateConfigurationFromContext(context)?.configurationSettings
-                    ?: event.project?.let { project ->
-                        RunManager.getInstance(project).getConfigurationTemplate(producer.configurationFactory)
-                    }
-                    ?: return@runAsync
+                readAction {
+                    producer.findOrCreateConfigurationFromContext(context)?.configurationSettings
+                        ?: event.project?.let { project ->
+                            RunManager.getInstance(project).getConfigurationTemplate(producer.configurationFactory)
+                        }
+                } ?: return@launch
 
-            val runManager = (context.runManager as? RunManagerEx) ?: return@runAsync
+            val runManager = (context.runManager as? RunManagerEx) ?: return@launch
             runManager.setTemporaryConfiguration(configuration)
             ExecutionUtil.runConfiguration(configuration, Executor.EXECUTOR_EXTENSION_NAME.extensionList.first())
         }
