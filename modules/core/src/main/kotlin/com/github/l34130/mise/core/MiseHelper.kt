@@ -36,7 +36,7 @@ object MiseHelper {
         return runBlocking(Dispatchers.IO) {
             withBackgroundProgress(configuration.project, "Getting Mise envvars", TaskCancellation.nonCancellable()) {
                 MiseCommandLineHelper
-                    .getEnvVars(project, workDir, configEnvironment)
+                    .getEnvVars(workDir, configEnvironment)
                     .fold(
                         onSuccess = { envVars -> envVars },
                         onFailure = {

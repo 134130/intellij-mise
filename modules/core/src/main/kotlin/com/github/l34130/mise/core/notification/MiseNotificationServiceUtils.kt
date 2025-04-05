@@ -32,7 +32,7 @@ object MiseNotificationServiceUtils {
 
                                 runAsync {
                                     MiseCommandLineHelper
-                                        .trustConfigFile(project, absolutePath)
+                                        .trustConfigFile(absolutePath)
                                         .onSuccess {
                                             notificationService.info(
                                                 "Config file trusted",

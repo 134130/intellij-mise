@@ -49,7 +49,6 @@ class MiseRiderPatchCommandLineExtension : PatchCommandLineExtension {
         val miseEnvVars =
             MiseCommandLineHelper
                 .getEnvVars(
-                    project,
                     workDir = project.solutionDirectoryPath.toAbsolutePath().toString(),
                     configEnvironment = projectState.miseConfigEnvironment,
                 ).fold(

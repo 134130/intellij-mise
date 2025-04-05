@@ -52,7 +52,6 @@ class MiseRootNode(
         val toolsByToolNames =
             MiseCommandLineHelper
                 .getDevTools(
-                    project,
                     workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow()
@@ -79,7 +78,6 @@ class MiseRootNode(
         val envs =
             MiseCommandLineHelper
                 .getEnvVars(
-                    project,
                     workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow()
@@ -100,7 +98,6 @@ class MiseRootNode(
         val cliTasks =
             MiseCommandLineHelper
                 .getTasks(
-                    project,
                     workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow() // the tasks loaded from command line

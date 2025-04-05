@@ -53,7 +53,7 @@ abstract class AbstractProjectSdkSetup :
 
             val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
             val toolsResult =
-                MiseCommandLineHelper.getDevTools(project, workDir = project.basePath, configEnvironment = configEnvironment)
+                MiseCommandLineHelper.getDevTools(workDir = project.basePath, configEnvironment = configEnvironment)
             val tools =
                 toolsResult.fold(
                     onSuccess = { tools -> tools[devToolName] },
