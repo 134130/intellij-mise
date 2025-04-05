@@ -34,24 +34,6 @@ class MiseApplicationSettings : PersistentStateComponent<MiseApplicationSettings
             MyState().also {
                 it.executablePath = myState.executablePath.takeIf { it.isNotEmpty() } ?: getMiseExecutablePath() ?: ""
             }
-
-//        if (myState.executablePath.isEmpty()) {
-//            MiseNotificationService.getInstance(project).warn(
-//                title = "Mise Executable Not Found",
-//                htmlText =
-//                    """
-//                    Mise executable not found in PATH.<br/>
-//                    Please specify the path to the mise executable in the settings.
-//                    """.trimIndent(),
-//                actionProvider = {
-//                    NotificationAction.createSimple(
-//                        "Open settings",
-//                    ) {
-//                        ShowSettingsUtil.getInstance().showSettingsDialog(project, "Mise Settings")
-//                    }
-//                },
-//            )
-//        }
     }
 
     companion object {
