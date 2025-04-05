@@ -1,6 +1,6 @@
 package com.github.l34130.mise.diagram
 
-import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.MiseProjectService
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.intellij.diagram.DiagramDataModel
 import com.intellij.diagram.DiagramEdge
@@ -19,7 +19,7 @@ class MiseFileTaskGraphDataModel(
         mutableListOf<MiseTaskGraphNode>()
             .apply {
                 val myTasks = MiseTomlTableTask.resolveAllFromTomlFile(tomlFile.tomlFile)
-                val tasks = project.service<MiseService>().getTasks()
+                val tasks = project.service<MiseProjectService>().getTasks()
 
                 for (myTask in myTasks) {
                     myTask.depends?.let { depends ->

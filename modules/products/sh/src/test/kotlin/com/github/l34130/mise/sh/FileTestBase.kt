@@ -1,6 +1,6 @@
 package com.github.l34130.mise.sh
 
-import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.MiseProjectService
 import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.lang.LanguageCommenters
 import com.intellij.lang.injection.InjectedLanguageManager
@@ -20,7 +20,7 @@ abstract class FileTestBase : BasePlatformTestCase() {
     ): PsiFile {
         val file = myFixture.configureByText(fileName, text.trimIndent())
         runBlocking {
-            project.service<MiseService>().refresh()
+            project.service<MiseProjectService>().refresh()
             file.virtualFile.refresh(false, false)
         }
         return file

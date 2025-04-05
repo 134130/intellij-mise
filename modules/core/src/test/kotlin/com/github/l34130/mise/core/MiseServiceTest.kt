@@ -15,7 +15,7 @@ class MiseServiceTest : BasePlatformTestCase() {
     fun `test tasks`() {
         myFixture.configureByFiles(*allTestFiles())
 
-        val service = project.service<MiseService>()
+        val service = project.service<MiseProjectService>()
         runBlocking { service.refresh() }
 
         val tasks = service.getTasks()

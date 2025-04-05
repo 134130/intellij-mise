@@ -1,6 +1,6 @@
 package com.github.l34130.mise.diagram
 
-import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.MiseProjectService
 import com.intellij.diagram.DiagramDataModel
 import com.intellij.diagram.DiagramEdge
 import com.intellij.diagram.DiagramNode
@@ -15,7 +15,7 @@ class MiseFullTaskGraphDataModel(
 ) : DiagramDataModel<MiseTaskGraphable>(project, provider) {
     private val nodes: List<MiseTaskGraphNode> =
         project
-            .service<MiseService>()
+            .service<MiseProjectService>()
             .getTasks()
             .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) }
 

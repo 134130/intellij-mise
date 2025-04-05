@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.lang.resolve
 
-import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.MiseProjectService
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
@@ -25,7 +25,7 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
             when (element) {
                 is PsiFile -> {
                     if (element.language.id != "Shell Script") return null
-                    val service = element.project.service<MiseService>()
+                    val service = element.project.service<MiseProjectService>()
                     val tasks = service.getTasks()
                     tasks.firstOrNull { it is MiseShellScriptTask && it.file == element.virtualFile } as MiseShellScriptTask
                 }

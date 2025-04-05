@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.lang.completion
 
-import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.MiseProjectService
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
@@ -94,7 +94,7 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
 
         runBlocking(Dispatchers.IO) {
             smartReadAction(project) {
-                for (task in project.service<MiseService>().getTasks()) {
+                for (task in project.service<MiseProjectService>().getTasks()) {
                     if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
                     if (task.name == currentTaskSegment.name) continue
 

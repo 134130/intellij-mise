@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.MiseService
+import com.github.l34130.mise.core.MiseProjectService
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
@@ -24,7 +24,7 @@ class MiseRootNode(
 
     override fun getChildren(): Collection<AbstractTreeNode<*>> {
         val settings = project.service<MiseSettings>()
-        val service = project.service<MiseService>()
+        val service = project.service<MiseProjectService>()
 
         runBlocking(Dispatchers.IO) {
             while (!service.isInitialized.get()) {
@@ -94,7 +94,7 @@ class MiseRootNode(
     }
 
     private fun getTaskNodes(settings: MiseSettings): Collection<MiseTaskNode> {
-        val service = project.service<MiseService>()
+        val service = project.service<MiseProjectService>()
 
         val psiTasks = service.getTasks() // the tasks loaded from psi elements
         val cliTasks =
