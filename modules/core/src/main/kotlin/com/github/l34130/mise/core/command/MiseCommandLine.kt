@@ -11,7 +11,6 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.project.Project
 import com.intellij.util.application
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
 
@@ -19,10 +18,7 @@ internal class MiseCommandLine(
     private val workDir: String? = null,
     private val configEnvironment: String? = null,
 ) {
-    inline fun <reified T> runCommandLine(
-        project: Project,
-        vararg params: String,
-    ): Result<T> = runCommandLine(params.toList())
+    inline fun <reified T> runCommandLine(vararg params: String): Result<T> = runCommandLine(params.toList())
 
     inline fun <reified T> runCommandLine(params: List<String>): Result<T> {
         val typeReference = object : TypeReference<T>() {}
