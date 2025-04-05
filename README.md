@@ -15,7 +15,7 @@
 ## Features
 
 - **Environment Variables**: Set environment variables for your run configurations from `mise.toml` files.
-  - See [Supported Platforms](#supported-platforms) for the list of supported IDEs.
+  - See [Supported Platforms](#supported-platforms) for the list of supported Run configurations.
 - **Tool Integration**: Set project's SDK automatically from `mise.toml` files.
   - `java`, `go`, `node`, `deno` SDKs are supported.
 - **Language Support**: Provides language features for `mise.toml` files.
@@ -24,13 +24,22 @@
   - Language Injection
 - **Diagram Support**: Provides task dependency diagrams.
 
-## Supported Platforms
-- **IntelliJ IDEA**
-- **GoLand**
-- **PyCharm**
-- **WebStorm**
-- **Rider**
-- _Submit issue if you need other IDE_
+## Supported Run configurations
+- **JVM**
+  - Java
+  - Kotlin
+  - JUnit
+  - Gradle
+- **Go**
+  - Go Build
+  - Go Test
+- **Python**
+- **Node.js**
+  - Node.js
+  - npm
+  - Deno 
+- **C#**
+- _Submit issue if you need others_
 
 <!-- Plugin description end -->
 
