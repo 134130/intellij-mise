@@ -3,7 +3,7 @@ package com.github.l34130.mise.rider.run
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
-import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.ProcessInfo
 import com.intellij.execution.process.ProcessListener
@@ -41,7 +41,7 @@ class MiseRiderPatchCommandLineExtension : PatchCommandLineExtension {
         commandLine: GeneralCommandLine,
         project: Project,
     ) {
-        val projectState = project.service<MiseSettings>().state
+        val projectState = project.service<MiseProjectSettings>().state
         if (!projectState.useMiseDirEnv) {
             return
         }

@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.run
 
-import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.components.service
@@ -24,7 +24,7 @@ private val USER_DATA_KEY = Key<MiseRunConfigurationState>("Mise Run Settings")
 class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
     private val project: Project,
 ) : SettingsEditor<T>() {
-    private val applicationState = project.service<MiseSettings>().state
+    private val applicationState = project.service<MiseProjectSettings>().state
     private val useApplicationWideMiseConfig = applicationState.useMiseDirEnv
     private val useApplicationWideMiseConfigPredicate = ComponentPredicate.fromValue(useApplicationWideMiseConfig)
 
@@ -57,7 +57,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>>(
 
     // Write to persistence from the UI
     override fun applyEditorTo(config: T) {
-        val projectState = project.service<MiseSettings>().state
+        val projectState = project.service<MiseProjectSettings>().state
 
         // When the project is configured to use the project-wide mise configuration
         if (projectState.useMiseDirEnv) {

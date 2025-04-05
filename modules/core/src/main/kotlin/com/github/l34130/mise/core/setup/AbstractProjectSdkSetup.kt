@@ -6,7 +6,7 @@ import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.notification.MiseNotificationService
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
-import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -51,7 +51,7 @@ abstract class AbstractProjectSdkSetup :
             val devToolName = getDevToolName()
             val miseNotificationService = project.service<MiseNotificationService>()
 
-            val configEnvironment = project.service<MiseSettings>().state.miseConfigEnvironment
+            val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
             val toolsResult =
                 MiseCommandLineHelper.getDevTools(project, workDir = project.basePath, configEnvironment = configEnvironment)
             val tools =

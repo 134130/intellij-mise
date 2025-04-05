@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
@@ -38,7 +38,7 @@ internal class MiseCommandLine(
     ): Result<T> {
         val miseVersion = getMiseVersion(project)
 
-        val executablePath = project.service<MiseSettings>().state.executablePath
+        val executablePath = project.service<MiseProjectSettings>().state.executablePath
         val commandLineArgs = executablePath.split(' ').toMutableList()
 
         if (configEnvironment != null) {
@@ -116,7 +116,7 @@ internal class MiseCommandLine(
         @RequiresBackgroundThread
         fun getMiseVersion(project: Project): MiseVersion {
             val miseCommandLine = MiseCommandLine()
-            val miseExecutable = project.service<MiseSettings>().state.executablePath
+            val miseExecutable = project.service<MiseProjectSettings>().state.executablePath
             val versionString = miseCommandLine.runCommandLine(project, listOf(miseExecutable, "version")) { it }
 
             val miseVersion =

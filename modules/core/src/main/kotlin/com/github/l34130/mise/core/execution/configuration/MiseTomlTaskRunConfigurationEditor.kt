@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.execution.configuration
 
-import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.configuration.EnvironmentVariablesComponent
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
@@ -17,7 +17,7 @@ import javax.swing.JComponent
 class MiseTomlTaskRunConfigurationEditor(
     private val project: Project,
 ) : SettingsEditor<MiseTomlTaskRunConfiguration>() {
-    private val applicationState = project.service<MiseSettings>().state
+    private val applicationState = project.service<MiseProjectSettings>().state
 
     private val miseExecutablePathTf = TextFieldWithBrowseButton()
     private val miseConfigEnvironmentTf = JBTextField()

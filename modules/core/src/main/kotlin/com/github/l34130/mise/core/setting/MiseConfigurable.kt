@@ -31,7 +31,7 @@ class MiseConfigurable(
     override fun getDisplayName(): String = "Mise Settings"
 
     override fun createComponent(): JComponent {
-        val service = project.service<MiseSettings>()
+        val service = project.service<MiseProjectSettings>()
 
         myMiseExecutableTf.setTextAndAddToHistory(service.state.executablePath)
         myMiseDirEnvCb.isSelected = service.state.useMiseDirEnv
@@ -73,7 +73,7 @@ class MiseConfigurable(
     }
 
     override fun isModified(): Boolean {
-        val service = project.service<MiseSettings>()
+        val service = project.service<MiseProjectSettings>()
         return myMiseExecutableTf.text != service.state.executablePath ||
             myMiseDirEnvCb.isSelected != service.state.useMiseDirEnv ||
             myMiseConfigEnvironmentTf.text != service.state.miseConfigEnvironment
@@ -81,7 +81,7 @@ class MiseConfigurable(
 
     override fun apply() {
         if (isModified) {
-            val service = project.service<MiseSettings>()
+            val service = project.service<MiseProjectSettings>()
             service.state.executablePath = myMiseExecutableTf.text
             service.state.useMiseDirEnv = myMiseDirEnvCb.isSelected
             service.state.miseConfigEnvironment = myMiseConfigEnvironmentTf.text

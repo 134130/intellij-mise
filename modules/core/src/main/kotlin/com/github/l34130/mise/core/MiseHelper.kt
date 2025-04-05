@@ -4,7 +4,7 @@ import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
-import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.components.service
 import com.intellij.platform.ide.progress.TaskCancellation
@@ -19,7 +19,7 @@ object MiseHelper {
         workingDirectory: Supplier<String?>,
     ): Map<String, String> {
         val project = configuration.project
-        val projectState = project.service<MiseSettings>().state
+        val projectState = project.service<MiseProjectSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
         val (workDir, configEnvironment) =
