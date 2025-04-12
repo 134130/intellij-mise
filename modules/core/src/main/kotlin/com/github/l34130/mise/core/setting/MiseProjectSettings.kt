@@ -12,7 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.application
 
 @Service(Service.Level.PROJECT)
-@State(name = "com.github.l34130.mise.settings.MiseProjectSettings", storages = [Storage("mise.project.xml")])
+@State(name = "com.github.l34130.mise.settings.MiseProjectSettings", storages = [Storage("mise.xml")])
 class MiseProjectSettings(
     private val project: Project,
 ) : PersistentStateComponent<MiseProjectSettings.MyState> {

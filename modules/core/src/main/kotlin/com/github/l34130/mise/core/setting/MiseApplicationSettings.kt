@@ -9,10 +9,7 @@ import com.intellij.util.EnvironmentUtil
 import java.io.File
 
 @Service(Service.Level.APP)
-@State(
-    name = "com.github.l34130.mise.settings.MiseApplicationSettings",
-    storages = [Storage("mise.application.xml")],
-)
+@State(name = "com.github.l34130.mise.settings.MiseApplicationSettings", storages = [Storage("mise.xml")])
 class MiseApplicationSettings : PersistentStateComponent<MiseApplicationSettings.MyState> {
     private var myState = MyState()
 

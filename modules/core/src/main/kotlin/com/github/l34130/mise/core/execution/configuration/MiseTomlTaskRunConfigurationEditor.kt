@@ -11,7 +11,6 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBUI
-import org.toml.lang.psi.TomlFileType
 import javax.swing.JComponent
 
 class MiseTomlTaskRunConfigurationEditor(
@@ -19,19 +18,12 @@ class MiseTomlTaskRunConfigurationEditor(
 ) : SettingsEditor<MiseTomlTaskRunConfiguration>() {
     private val applicationState = project.service<MiseProjectSettings>().state
 
-    private val miseExecutablePathTf = TextFieldWithBrowseButton()
     private val miseConfigEnvironmentTf = JBTextField()
     private val miseTaskNameTf = JBTextField()
     private val workingDirectoryTf = TextFieldWithBrowseButton()
     private val envVarsComponent = EnvironmentVariablesComponent()
 
     init {
-        miseExecutablePathTf.addBrowseFolderListener(
-            "Mise Executable Path",
-            "Select the Mise executable path",
-            project,
-            FileChooserDescriptorFactory.createSingleFileDescriptor(TomlFileType),
-        )
         workingDirectoryTf.addBrowseFolderListener(
             "Working Directory",
             "Select the working directory",
@@ -42,9 +34,6 @@ class MiseTomlTaskRunConfigurationEditor(
 
     override fun createEditor(): JComponent =
         panel {
-            row("Mise executable:") {
-                cell(miseExecutablePathTf).align(AlignX.FILL)
-            }
             row("Mise config environment:") {
                 cell(miseConfigEnvironmentTf).align(AlignX.FILL)
             }
@@ -62,7 +51,6 @@ class MiseTomlTaskRunConfigurationEditor(
         }
 
     override fun resetEditorFrom(configuration: MiseTomlTaskRunConfiguration) {
-        miseExecutablePathTf.text = configuration.miseExecutablePath
         miseConfigEnvironmentTf.text = configuration.miseConfigEnvironment
         miseTaskNameTf.text = configuration.miseTaskName
         workingDirectoryTf.text = configuration.workingDirectory ?: ""
@@ -70,7 +58,6 @@ class MiseTomlTaskRunConfigurationEditor(
     }
 
     override fun applyEditorTo(configuration: MiseTomlTaskRunConfiguration) {
-        configuration.miseExecutablePath = miseExecutablePathTf.text
         configuration.miseConfigEnvironment = miseConfigEnvironmentTf.text
         configuration.miseTaskName = miseTaskNameTf.text
         configuration.workingDirectory = workingDirectoryTf.text
