@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+## [4.5.0] - 2024-04-06
+
+### Changed
+
+- Separate mise executable configuration to application scope
+- Make mise toml task Run Configuration as portable
+- Bump org.jetbrains.intellij.platform.settings from 2.4.0 to 2.5.0
+
+### Fixed
+
+- Read access is allowed from inside read-action in RunMiseTomlTaskAction
+- Remove internal API usage: `IdeaReportingEvent`
+
 ## [4.4.1] - 2024-03-21
 
 ### Fixed
@@ -297,7 +310,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.4.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.5.0...HEAD
+[4.5.0]: https://github.com/134130/intellij-mise/compare/v4.4.1...v4.5.0
 [4.4.1]: https://github.com/134130/intellij-mise/compare/v4.4.0...v4.4.1
 [4.4.0]: https://github.com/134130/intellij-mise/compare/v4.3.0...v4.4.0
 [4.3.0]: https://github.com/134130/intellij-mise/compare/v4.2.1...v4.3.0
