@@ -32,7 +32,6 @@ class MiseTomlTaskRunConfiguration(
     private val applicationSettings = application.service<MiseApplicationSettings>().state
     private val projectSettings = project.service<MiseProjectSettings>().state
 
-    var miseExecutablePath: String = applicationSettings.executablePath
     var miseConfigEnvironment: String = projectSettings.miseConfigEnvironment
     var miseTaskName: String = ""
     var workingDirectory: String? = project.basePath
@@ -66,6 +65,7 @@ class MiseTomlTaskRunConfiguration(
                 commandLine.withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
                 commandLine.withWorkDirectory(workDirectory)
 
+                val miseExecutablePath = applicationSettings.executablePath
                 commandLine.withExePath(miseExecutablePath.substringBefore(" "))
                 commandLine.withParameters(miseExecutablePath.split(' ').drop(1) + params)
 
@@ -82,7 +82,6 @@ class MiseTomlTaskRunConfiguration(
     override fun writeExternal(element: Element) {
         super.writeExternal(element)
         val child = element.getOrCreateChild("mise")
-        child.setAttribute("executablePath", miseExecutablePath)
         child.setAttribute("configEnvironment", miseConfigEnvironment ?: "")
         child.setAttribute("taskName", miseTaskName)
         child.setAttribute("workingDirectory", workingDirectory ?: "")
@@ -92,7 +91,6 @@ class MiseTomlTaskRunConfiguration(
     override fun readExternal(element: Element) {
         super.readExternal(element)
         val child = element.getChild("mise") ?: return
-        miseExecutablePath = child.getAttributeValue("executablePath") ?: ""
         miseConfigEnvironment = child.getAttributeValue("configEnvironment")
         miseTaskName = child.getAttributeValue("taskName") ?: ""
         workingDirectory = child.getAttributeValue("workingDirectory")
