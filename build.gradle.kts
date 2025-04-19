@@ -8,6 +8,7 @@ import org.jetbrains.intellij.pluginRepository.PluginRepositoryFactory
 
 plugins {
     id("java") // Java support
+    id("idea") // IntelliJ IDEA support
     id("org.jetbrains.intellij.platform")
 
     alias(libs.plugins.kotlin) // Kotlin support
@@ -23,6 +24,13 @@ version = providers.gradleProperty("pluginVersion").get()
 // Set the JVM language level used to build the project.
 kotlin {
     jvmToolchain(21)
+}
+
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
 }
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
@@ -41,6 +49,7 @@ dependencies {
         pluginComposedModule(implementation(project(":mise-products-pycharm")))
         pluginComposedModule(implementation(project(":mise-products-rider")))
         pluginComposedModule(implementation(project(":mise-products-ruby")))
+        pluginComposedModule(implementation(project(":mise-products-rust")))
         pluginComposedModule(implementation(project(":mise-products-sh")))
 
         plugins(listOf())
@@ -172,6 +181,7 @@ val runIdePlatformTypes =
 //        IntelliJPlatformType.PyCharmCommunity,
 //        IntelliJPlatformType.PyCharmProfessional,
 //        IntelliJPlatformType.Rider,
+//        IntelliJPlatformType.RustRover
     )
 
 val IntelliJPlatformPluginsExtension.pluginRepository by lazy {
