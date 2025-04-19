@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [5.0.0] - 2024-04-19
+
+### Changed
+
+- Change minimum support version from `2024.2` to `2025.1`
+
 ## [4.5.0] - 2024-04-06
 
 ### Changed
@@ -310,7 +316,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.5.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.0.0...HEAD
+[5.0.0]: https://github.com/134130/intellij-mise/compare/v4.5.0...v5.0.0
 [4.5.0]: https://github.com/134130/intellij-mise/compare/v4.4.1...v4.5.0
 [4.4.1]: https://github.com/134130/intellij-mise/compare/v4.4.0...v4.4.1
 [4.4.0]: https://github.com/134130/intellij-mise/compare/v4.3.0...v4.4.0
