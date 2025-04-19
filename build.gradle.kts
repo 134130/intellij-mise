@@ -9,6 +9,7 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
     id("java") // Java support
+    id("idea") // IntelliJ IDEA support
     id("org.jetbrains.intellij.platform")
 
     alias(libs.plugins.kotlin) // Kotlin support
@@ -27,6 +28,13 @@ kotlin {
     jvmToolchain(21)
 }
 
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
+}
+
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     testImplementation(libs.junit)
@@ -41,6 +49,7 @@ dependencies {
         pluginModule(implementation(project(":mise-products-nodejs")))
         pluginModule(implementation(project(":mise-products-pycharm")))
         pluginModule(implementation(project(":mise-products-rider")))
+        pluginModule(implementation(project(":mise-products-rust")))
         pluginModule(implementation(project(":mise-products-sh")))
 
         plugins(listOf())
@@ -167,6 +176,7 @@ allprojects {
         detekt(project(":mise-products-nodejs"))
         detekt(project(":mise-products-pycharm"))
         detekt(project(":mise-products-rider"))
+        detekt(project(":mise-products-rust"))
         detekt(project(":mise-products-sh"))
     }
 
@@ -209,13 +219,14 @@ val runIdeForUnitTests by intellijPlatformTesting.runIde.registering {
 
 val runIdePlatformTypes =
     listOf(
-        IntelliJPlatformType.GoLand,
-        IntelliJPlatformType.IntellijIdeaCommunity,
+//        IntelliJPlatformType.GoLand,
+//        IntelliJPlatformType.IntellijIdeaCommunity,
         IntelliJPlatformType.IntellijIdeaUltimate,
-        IntelliJPlatformType.WebStorm,
-        IntelliJPlatformType.PyCharmCommunity,
-        IntelliJPlatformType.PyCharmProfessional,
-        IntelliJPlatformType.Rider,
+//        IntelliJPlatformType.WebStorm,
+//        IntelliJPlatformType.PyCharmCommunity,
+//        IntelliJPlatformType.PyCharmProfessional,
+//        IntelliJPlatformType.Rider,
+        IntelliJPlatformType.RustRover
     )
 
 runIdePlatformTypes.forEach { platformType ->

@@ -25,6 +25,7 @@ include(
     "modules/products/nodejs",
     "modules/products/pycharm",
     "modules/products/rider",
+    "modules/products/rust",
     "modules/products/sh",
 )
 
