@@ -221,7 +221,7 @@ val runIdePlatformTypes =
 runIdePlatformTypes.forEach { platformType ->
     intellijPlatformTesting.runIde.register("run${platformType.name}") {
         type = platformType
-        version = "2024.3"
+        version = "2025.1"
 
         plugins {
 //            plugin("pluginId", "1.0.0")

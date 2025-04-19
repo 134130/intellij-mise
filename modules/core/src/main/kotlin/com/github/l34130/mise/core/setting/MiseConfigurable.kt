@@ -21,8 +21,7 @@ class MiseConfigurable(
     private val myMiseExecutableTf =
         textFieldWithHistoryWithBrowseButton(
             project = project,
-            browseDialogTitle = "Select Mise Executable",
-            fileChooserDescriptor = FileChooserDescriptor(true, false, false, false, false, false),
+            fileChooserDescriptor = FileChooserDescriptor(true, false, false, false, false, false).withTitle("Select Mise Executable"),
             historyProvider = { listOf("/opt/homebrew/bin/mise").distinct() },
         )
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
