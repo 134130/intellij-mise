@@ -14,7 +14,6 @@
 
 - Python: Run configration envvars are not restoring by @134130 in https://github.com/134130/intellij-mise/pull/230
 
-
 ## [5.0.0] - 2024-04-19
 
 ### Changed
@@ -327,7 +326,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.0.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.1.0...HEAD
+[5.1.0]: https://github.com/134130/intellij-mise/compare/v5.0.0...v5.1.0
 [5.0.0]: https://github.com/134130/intellij-mise/compare/v4.5.0...v5.0.0
 [4.5.0]: https://github.com/134130/intellij-mise/compare/v4.4.1...v4.5.0
 [4.4.1]: https://github.com/134130/intellij-mise/compare/v4.4.0...v4.4.1
