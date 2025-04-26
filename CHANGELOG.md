@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [5.1.0] - 2024-04-26
+
+### Added
+
+- Support structure tree by @134130 in https://github.com/134130/intellij-mise/pull/229
+
+### Fixed
+
+- Python: Run configration envvars are not restoring by @134130 in https://github.com/134130/intellij-mise/pull/230
+
+
 ## [5.0.0] - 2024-04-19
 
 ### Changed
