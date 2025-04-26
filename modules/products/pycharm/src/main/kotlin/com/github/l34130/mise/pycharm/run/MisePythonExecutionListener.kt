@@ -5,6 +5,7 @@ import com.intellij.execution.ExecutionListener
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.jetbrains.python.run.PythonRunConfiguration
+import kotlinx.collections.immutable.toImmutableMap
 
 class MisePythonExecutionListener : ExecutionListener {
     override fun processStarting(
@@ -23,7 +24,7 @@ class MisePythonExecutionListener : ExecutionListener {
             return super.processStarting(executorId, env)
         }
 
-        executions[env.executionId] = pythonRunConfiguration.envs
+        executions[env.executionId] = pythonRunConfiguration.envs.toImmutableMap()
         pythonRunConfiguration.envs.putAll(envVars)
 
         super.processStarting(executorId, env)

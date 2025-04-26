@@ -53,7 +53,7 @@
 
 ![run](https://github.com/user-attachments/assets/6b5ef885-17d0-4865-ac3e-150a588d4d02)
 
-![run-gif](https://github.com/user-attachments/assets/1af82256-954c-4b3c-afcc-6bc8dd1f44a1)
+![gif](https://github.com/user-attachments/assets/dc4681b5-4a00-4629-9832-2dfe6407da96)
 
 ## Installation
 

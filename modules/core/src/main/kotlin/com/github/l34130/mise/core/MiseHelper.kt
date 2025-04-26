@@ -28,7 +28,7 @@ object MiseHelper {
                     project.basePath to projectState.miseConfigEnvironment
                 }
                 runConfigState?.useMiseDirEnv == true -> {
-                    (workingDirectory.get() ?: project.basePath) to runConfigState.miseConfigEnvironment
+                    (workingDirectory.get()?.takeIf { it.isNotBlank() } ?: project.basePath) to runConfigState.miseConfigEnvironment
                 }
                 else -> return emptyMap()
             }
