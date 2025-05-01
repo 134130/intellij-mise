@@ -1,10 +1,6 @@
 package com.github.l34130.mise.core.command
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.github.l34130.mise.core.setting.MiseApplicationSettings
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -47,12 +43,7 @@ internal class MiseCommandLine(
         commandLineArgs.addAll(params)
 
         return runCommandLine(commandLineArgs) {
-            ObjectMapper()
-                .registerKotlinModule()
-                .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-                .readValue(it, typeReference)
+            MiseCommandLineOutputParser.parse(it, typeReference)
         }
     }
 

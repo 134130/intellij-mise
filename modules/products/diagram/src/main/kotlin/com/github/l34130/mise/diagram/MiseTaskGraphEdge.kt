@@ -29,8 +29,8 @@ class MiseTaskGraphEdge(
             val sourceTask = (source.identifyingElement as MiseTaskGraphableTaskWrapper<MiseTask>).task
             val targetTask = (target.identifyingElement as MiseTaskGraphableTaskWrapper<MiseTask>).task
 
-            if (targetTask.depends?.contains(sourceTask.name) == true) return "depends"
-            if (targetTask.waitFor?.contains(sourceTask.name) == true) return "wait_for"
+            if (targetTask.depends?.map { it.first() }?.contains(sourceTask.name) == true) return "depends"
+            if (targetTask.waitFor?.map { it.first() }?.contains(sourceTask.name) == true) return "wait_for"
             return null
         }
 
@@ -41,7 +41,7 @@ class MiseTaskGraphEdge(
             val sourceTask = (source.identifyingElement as MiseTaskGraphableTaskWrapper<MiseTask>).task
             val targetTask = (target.identifyingElement as MiseTaskGraphableTaskWrapper<MiseTask>).task
 
-            if (sourceTask.dependsPost?.contains(targetTask.name) == true) return "depends_post"
+            if (sourceTask.dependsPost?.map { it.first() }?.contains(targetTask.name) == true) return "depends_post"
             return null
         }
     }

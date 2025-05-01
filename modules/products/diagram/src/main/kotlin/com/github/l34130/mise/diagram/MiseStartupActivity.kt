@@ -8,9 +8,11 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
+import kotlinx.coroutines.runBlocking
 
 class MiseStartupActivity :
     ProjectActivity,
@@ -19,7 +21,7 @@ class MiseStartupActivity :
         MiseTaskNode.EP_NAME.add(
             object : MiseTaskNode.MiseTaskNodeActionsContributor {
                 override fun contributeActions(task: MiseTask): List<AnAction> {
-                    val psiLocation = task.psiLocation(project) ?: return emptyList()
+                    val psiLocation = runBlocking { readAction { task.psiLocation(project) } } ?: return emptyList()
 
                     return listOf(
                         object : ShowMiseTaskGraphDiagramAction() {
