@@ -16,7 +16,7 @@ dependencies {
     intellijPlatform {
         create(IntelliJPlatformType.CLion, properties("platformVersion"))
 
-        bundledPlugins("com.intellij.clion", "com.intellij.cidr.base", "com.intellij.cidr.lang")
+        bundledPlugins("com.intellij.clion", "com.intellij.cidr.base", "com.intellij.nativeDebug")
 
         jetbrainsRuntime()
 

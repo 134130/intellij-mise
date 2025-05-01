@@ -1,7 +1,6 @@
 <idea-plugin require-restart="false">
     <depends>com.intellij.clion</depends>
     <depends>com.intellij.cidr.base</depends>
-    <depends>com.intellij.cidr.lang</depends>
 
     <extensions defaultExtensionNs="cidr">
         <runConfigurationExtension implementation="com.github.l34130.mise.clion.run.MiseCidrRunConfigurationExtension"/>
