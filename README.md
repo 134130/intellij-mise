@@ -37,7 +37,11 @@
 - **Node.js**
   - Node.js
   - npm
-  - Deno 
+  - Deno
+- **C / C++** (only support for application level settings)
+  - C/C++ File
+  - CMake Application
+  - Makefile target
 - **C#**
 - _Submit issue if you need others_
 
