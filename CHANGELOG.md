@@ -15,7 +15,7 @@
 - Invalid thread access for psi by @134130 in https://github.com/134130/intellij-mise/pull/235
 - `ignore duplicated child at 1: Environment` warnings from AsyncTreeModel by @134130 in https://github.com/134130/intellij-mise/pull/236
 
-## [5.1.0] - 2024-04-26
+## [5.1.0] - 2025-04-26
 
 ### Added
 
@@ -25,13 +25,13 @@
 
 - Python: Run configration envvars are not restoring by @134130 in https://github.com/134130/intellij-mise/pull/230
 
-## [5.0.0] - 2024-04-19
+## [5.0.0] - 2025-04-19
 
 ### Changed
 
 - Change minimum support version from `2024.2` to `2025.1`
 
-## [4.5.0] - 2024-04-06
+## [4.5.0] - 2025-04-06
 
 ### Changed
 
@@ -44,14 +44,14 @@
 - Read access is allowed from inside read-action in RunMiseTomlTaskAction
 - Remove internal API usage: `IdeaReportingEvent`
 
-## [4.4.1] - 2024-03-21
+## [4.4.1] - 2025-03-21
 
 ### Fixed
 
 - Mise settings panel cannot be opened when `mise` is not installed
 - Mise 'depends' with arguments occurs an `Cannot resolve symbol` error
 
-## [4.4.0] - 2024-03-03
+## [4.4.0] - 2025-03-03
 
 ### Added
 
@@ -62,7 +62,7 @@
 
 - Slow operation on `Run Mise Task` on ToolWindow
 
-## [4.3.0] - 2024-02-22
+## [4.3.0] - 2025-02-22
 
 ### Added
 
@@ -76,14 +76,14 @@
 - Some IDEs are not bundled with `ShLanguage` plugin
 - Ensure `mise` command is initialized before drawing the ToolWindow
 
-## [4.2.1] - 2024-02-21
+## [4.2.1] - 2025-02-21
 
 ### Fixed
 
 - Fix `nodejs` sdk is not loaded properly on Windows
 - Fix Mise ToolWindow cannot run File tasks
 
-## [4.2.0] - 2024-02-09
+## [4.2.0] - 2025-02-09
 
 ### Added
 
@@ -96,19 +96,19 @@
 - Add `wait_for` for tasks completion
 - RunLineMarkerContributor is contributing on non-leaf nodes
 
-## [4.1.0] - 2024-02-01
+## [4.1.0] - 2025-02-01
 
 ### Added
 
 - Support run configuration for PyCharm Community & Professional
 
-## [4.0.0] - 2024-01-31
+## [4.0.0] - 2025-01-31
 
 ### BREAKING CHANGE
 
 - Change minimum support version from `2023.3` to `2024.2` to support `2025.1+` IDEs
 
-## [3.5.0] - 2024-01-30
+## [3.5.0] - 2025-01-30
 
 ### Added
 
@@ -121,7 +121,7 @@
 
 - Refactoring `mise.toml` files are not working properly.
 
-## [3.4.1] - 2024-01-22
+## [3.4.1] - 2025-01-22
 
 ### Fixed
 
