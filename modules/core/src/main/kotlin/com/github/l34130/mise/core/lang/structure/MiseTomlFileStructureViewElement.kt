@@ -29,61 +29,85 @@ class MiseTomlFileStructureViewElement(
 
     override fun getPresentation(): ItemPresentation = element.presentation ?: PresentationData()
 
-    override fun getChildren(): Array<out TreeElement> {
-        if (element !is TomlFile) return emptyArray()
-        if (!MiseTomlFile.isMiseTomlFile(element.project, element.virtualFile)) return emptyArray()
+    override fun getChildren(): Array<out TreeElement> = children
 
-        val tools =
-            treeElement(file = element, name = "Tools") {
-                val toolsTable =
-                    element.childrenOfType<TomlTable>().firstOrNull { it.header.key?.textMatches("tools") == true }
-                        ?: return@treeElement emptyArray()
+    private val children =
+        run {
+            if (element !is TomlFile) return@run emptyArray()
+            if (!MiseTomlFile.isMiseTomlFile(element.project, element.virtualFile)) return@run emptyArray()
 
-                toolsTable.entries
-                    .mapNotNull {
-                        val keySegment = it.key.segments.firstOrNull() ?: return@mapNotNull null
-                        MiseTomlTableToolStructureViewElement(keySegment, it.value)
-                    }.toTypedArray()
-            }
+            val tools =
+                element.childrenOfType<TomlTable>().firstOrNull { it.header.key?.textMatches("tools") == true }?.let { table ->
+                    GroupingStructureViewElement(
+                        element =
+                            table.header.key
+                                ?.segments
+                                ?.firstOrNull() ?: return@let null,
+                        name = "Tools",
+                        icon = null,
+                        children =
+                            table.entries
+                                .mapNotNull {
+                                    val keySegment = it.key.segments.firstOrNull() ?: return@mapNotNull null
+                                    MiseTomlTableToolStructureViewElement(keySegment, it.value)
+                                }.toTypedArray(),
+                    )
+                }
 
-        val tasks =
-            treeElement(file = element, name = "Tasks") {
-                MiseTomlTableTask
-                    .resolveAllFromTomlFile(element)
-                    .map { it.keySegment }
-                    .map { MiseTomlTableTaskStructureViewElement(it) }
-                    .toTypedArray()
-            }
+            val tasks =
+                GroupingStructureViewElement(
+                    element = element,
+                    name = "Tasks",
+                    icon = null,
+                    children =
+                        run {
+                            MiseTomlTableTask
+                                .resolveAllFromTomlFile(element as TomlFile)
+                                .map { it.keySegment }
+                                .map { MiseTomlTableTaskStructureViewElement(it) }
+                                .toTypedArray()
+                        },
+                )
 
-        val envs =
-            treeElement(file = element, name = "Environments") {
-                val envTable =
-                    element.childrenOfType<TomlTable>().firstOrNull { it.header.key?.textMatches("env") == true }
-                        ?: return@treeElement emptyArray()
+            val envs =
+                element.childrenOfType<TomlTable>().firstOrNull { it.header.key?.textMatches("env") == true }?.let { table ->
+                    GroupingStructureViewElement(
+                        element =
+                            table.header.key
+                                ?.segments
+                                ?.firstOrNull() ?: return@let null,
+                        name = "Environments",
+                        icon = null,
+                        children =
+                            run {
+                                table.entries
+                                    .mapNotNull {
+                                        val keySegment = it.key.segments.firstOrNull() ?: return@mapNotNull null
+                                        MiseTomlTableEnvStructureViewElement(keySegment, it.value)
+                                    }.toTypedArray()
+                            },
+                    )
+                }
 
-                envTable.entries
-                    .mapNotNull {
-                        val keySegment = it.key.segments.firstOrNull() ?: return@mapNotNull null
-                        MiseTomlTableEnvStructureViewElement(keySegment, it.value)
-                    }.toTypedArray()
-            }
-
-        return arrayOf(tools, tasks, envs)
-    }
-
-    private fun treeElement(
-        file: TomlFile,
-        name: String,
-        icon: Icon? = null,
-        children: () -> Array<out TreeElement>,
-    ): StructureViewTreeElement {
-        val children = children()
-        return object : StructureViewTreeElement {
-            override fun getPresentation(): ItemPresentation = PresentationData(name, null, icon, null)
-
-            override fun getChildren(): Array<out TreeElement> = children
-
-            override fun getValue() = file
+            listOfNotNull(tools, tasks, envs).toTypedArray()
         }
+
+    private class GroupingStructureViewElement(
+        private val element: NavigatablePsiElement,
+        private val name: String,
+        private val icon: Icon? = null,
+        private val children: Array<out TreeElement>,
+    ) : StructureViewTreeElement {
+        override fun getValue() = element
+
+        override fun navigate(requestFocus: Boolean) = element.navigate(requestFocus)
+
+        override fun canNavigate(): Boolean = element.canNavigate()
+
+        override fun canNavigateToSource(): Boolean = element.canNavigateToSource()
+
+        override fun getPresentation(): ItemPresentation = PresentationData(name, null, icon, null)
+
+        override fun getChildren(): Array<out TreeElement> = children
     }
 }
