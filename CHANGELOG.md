@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [5.2.0] - 2024-05-01
+
+### Added
+
+- Add environment variable injection for C/C++ by @134130 in https://github.com/134130/intellij-mise/pull/237
+
+### Fixed
+
+- Invalid thread access for psi by @134130 in https://github.com/134130/intellij-mise/pull/235
+- `ignore duplicated child at 1: Environment` warnings from AsyncTreeModel by @134130 in https://github.com/134130/intellij-mise/pull/236
+
 ## [5.1.0] - 2024-04-26
 
 ### Added
@@ -326,7 +337,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.1.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.2.0...HEAD
+[5.2.0]: https://github.com/134130/intellij-mise/compare/v5.1.0...v5.2.0
 [5.1.0]: https://github.com/134130/intellij-mise/compare/v5.0.0...v5.1.0
 [5.0.0]: https://github.com/134130/intellij-mise/compare/v4.5.0...v5.0.0
 [4.5.0]: https://github.com/134130/intellij-mise/compare/v4.4.1...v4.5.0

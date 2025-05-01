@@ -49,6 +49,8 @@
 
 ## Screenshots
 
+![demo-gif](./assets/demo.gif)
+
 ![main](https://github.com/user-attachments/assets/e668d651-9d39-497e-b1b6-d9f05d5c3232)
 
 ![language-completion](https://github.com/user-attachments/assets/073644b8-2189-411d-b3a9-64c207ac44e4)
@@ -56,8 +58,6 @@
 ![language-reference](https://github.com/user-attachments/assets/426f0f1b-6824-4dc5-8ab9-e52f76cd9f69)
 
 ![run](https://github.com/user-attachments/assets/6b5ef885-17d0-4865-ac3e-150a588d4d02)
-
-![gif](https://github.com/user-attachments/assets/dc4681b5-4a00-4629-9832-2dfe6407da96)
 
 ## Installation
 
