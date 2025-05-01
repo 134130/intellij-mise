@@ -71,6 +71,19 @@
   Download the [latest release](https://github.com/134130/intellij-mise/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
+## Acknowledgements
+
+- [mirrord-intellij](https://github.com/metalbear-co/mirrord-intellij)
+- [EnvFile](https://github.com/ashald/EnvFile)
+- [ProjectEnv](https://github.com/BredoGen/ProjectEnv)
+- [intellij-direnv](https://github.com/fehnomenal/intellij-direnv)
+- [intellij-better-direnv](https://github.com/Fapiko/intellij-better-direnv)
+- [project-env-intellij-plugin](https://github.com/Project-Env/project-env-intellij-plugin)
+- [hermit-ij-plugin](https://github.com/cashapp/hermit-ij-plugin)
+- [github-workflow-plugin](https://github.com/YunaBraska/github-workflow-plugin)
+- [avro-schema-support](https://github.com/opwvhk/avro-schema-support)
+- [aws-toolkit-jetbrains](https://github.com/aws/aws-toolkit-jetbrains)
+
 ## Ecosystem
 
 - See [mise-vscode](https://github.com/hverlin/mise-vscode/) if you are looking for a similar plugin for VSCode
