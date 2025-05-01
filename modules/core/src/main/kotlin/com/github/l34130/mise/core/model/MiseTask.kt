@@ -19,6 +19,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.childrenOfType
+import com.intellij.util.concurrency.annotations.RequiresReadLock
 import com.intellij.util.containers.addIfNotNull
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlInlineTable
@@ -36,9 +37,9 @@ import kotlin.text.split
 sealed interface MiseTask {
     val name: String
     val aliases: List<String>?
-    val depends: List<String>?
-    val waitFor: List<String>?
-    val dependsPost: List<String>?
+    val depends: List<List<String>>?
+    val waitFor: List<List<String>>?
+    val dependsPost: List<List<String>>?
     val description: String?
 
     @RelativePath
@@ -49,6 +50,7 @@ sealed interface MiseTask {
     }
 }
 
+@RequiresReadLock
 fun MiseTask.psiLocation(project: Project): PsiLocation<*>? =
     when (this) {
         is MiseShellScriptTask -> {
@@ -67,9 +69,9 @@ fun MiseTask.psiLocation(project: Project): PsiLocation<*>? =
 class MiseUnknownTask internal constructor(
     override val name: String,
     override val aliases: List<String>? = null,
-    override val depends: List<String>? = null,
-    override val waitFor: List<String>? = null,
-    override val dependsPost: List<String>? = null,
+    override val depends: List<List<String>>? = null,
+    override val waitFor: List<List<String>>? = null,
+    override val dependsPost: List<List<String>>? = null,
     override val description: String? = null,
     @AbsolutePath
     override val source: String? = null,
@@ -78,9 +80,9 @@ class MiseUnknownTask internal constructor(
 class MiseShellScriptTask internal constructor(
     override val name: String,
     override val aliases: List<String>? = null,
-    override val depends: List<String>? = null,
-    override val waitFor: List<String>? = null,
-    override val dependsPost: List<String>? = null,
+    override val depends: List<List<String>>? = null,
+    override val waitFor: List<List<String>>? = null,
+    override val dependsPost: List<List<String>>? = null,
     override val description: String? = null,
     override val source: String? = null,
     val file: VirtualFile,
@@ -102,9 +104,9 @@ class MiseShellScriptTask internal constructor(
 class MiseTomlTableTask internal constructor(
     override val name: String,
     override val aliases: List<String>? = null,
-    override val depends: List<String>? = null,
-    override val waitFor: List<String>? = null,
-    override val dependsPost: List<String>? = null,
+    override val depends: List<List<String>>? = null,
+    override val waitFor: List<List<String>>? = null,
+    override val dependsPost: List<List<String>>? = null,
     override val description: String? = null,
     override val source: String? = null,
     val keySegment: TomlKeySegment,
@@ -232,15 +234,13 @@ class MiseTomlTableTask internal constructor(
             return MiseTomlTableTask(
                 name = keySegment.name ?: return null,
                 description = table.getValueWithKey("description")?.stringValue,
-                depends = table.getValueWithKey("depends")?.stringArray?.withoutArgs(),
-                waitFor = table.getValueWithKey("wait_for")?.stringArray?.withoutArgs(),
-                dependsPost = table.getValueWithKey("depends_post")?.stringArray?.withoutArgs(),
+                depends = table.getValueWithKey("depends")?.stringArray?.map { it.split(' ', ignoreCase = false) },
+                waitFor = table.getValueWithKey("wait_for")?.stringArray?.map { it.split(' ', ignoreCase = false) },
+                dependsPost = table.getValueWithKey("depends_post")?.stringArray?.map { it.split(' ', ignoreCase = false) },
                 aliases = table.getValueWithKey("alias")?.stringArray,
                 source = collapsePath(keySegment.containingFile, keySegment.project),
                 keySegment = keySegment,
             )
         }
-
-        private fun List<String>.withoutArgs(): List<String> = map { it.split(' ', ignoreCase = false, limit = 2).firstOrNull() ?: it }
     }
 }
