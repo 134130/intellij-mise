@@ -58,7 +58,7 @@ internal class MiseCommandLine(
         val processOutput =
             try {
                 logger.debug("Running command: $commandLineArgs")
-                ExecUtil.execAndGetOutput(generalCommandLine, 5000)
+                ExecUtil.execAndGetOutput(generalCommandLine, 3000)
             } catch (e: ExecutionException) {
                 logger.info("Failed to execute command. (command=$generalCommandLine)", e)
                 return Result.failure(
