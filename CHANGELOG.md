@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [5.3.1] - 2025-06-08
+
+### Fixed
+
+- Test is cached when running tests with `gradle` and no source code changes
+- Indicate progress when running Mise commands on background
+- NullPointerException when indicating Mise file icon
+
 ## [5.3.0] - 2025-05-11
 
 ### Added
@@ -343,7 +351,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.3.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.3.1...HEAD
+[5.3.1]: https://github.com/134130/intellij-mise/compare/v5.3.0...v5.3.1
 [5.3.0]: https://github.com/134130/intellij-mise/compare/v5.2.0...v5.3.0
 [5.2.0]: https://github.com/134130/intellij-mise/compare/v5.1.0...v5.2.0
 [5.1.0]: https://github.com/134130/intellij-mise/compare/v5.0.0...v5.1.0
