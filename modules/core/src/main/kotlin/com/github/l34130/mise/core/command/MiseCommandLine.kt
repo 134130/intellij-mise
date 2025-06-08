@@ -16,11 +16,13 @@ internal class MiseCommandLine(
 ) {
     inline fun <reified T> runCommandLine(vararg params: String): Result<T> = runCommandLine(params.toList())
 
+    @RequiresBackgroundThread
     inline fun <reified T> runCommandLine(params: List<String>): Result<T> {
         val typeReference = object : TypeReference<T>() {}
         return runCommandLine(params, typeReference)
     }
 
+    @RequiresBackgroundThread
     fun <T> runCommandLine(
         params: List<String>,
         typeReference: TypeReference<T>,
@@ -30,7 +32,7 @@ internal class MiseCommandLine(
         val executablePath = application.service<MiseApplicationSettings>().state.executablePath
         val commandLineArgs = executablePath.split(' ').toMutableList()
 
-        if (configEnvironment != null) {
+        if (!configEnvironment.isNullOrBlank()) {
             if (miseVersion >= MiseVersion(2024, 12, 2)) {
                 commandLineArgs.add("--env")
                 commandLineArgs.add(configEnvironment)
@@ -47,6 +49,7 @@ internal class MiseCommandLine(
         }
     }
 
+    @RequiresBackgroundThread
     private fun <T> runCommandLine(
         commandLineArgs: List<String>,
         transform: (String) -> T,
@@ -55,7 +58,7 @@ internal class MiseCommandLine(
         val processOutput =
             try {
                 logger.debug("Running command: $commandLineArgs")
-                ExecUtil.execAndGetOutput(generalCommandLine, 5000)
+                ExecUtil.execAndGetOutput(generalCommandLine, 3000)
             } catch (e: ExecutionException) {
                 logger.info("Failed to execute command. (command=$generalCommandLine)", e)
                 return Result.failure(
