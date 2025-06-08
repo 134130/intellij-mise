@@ -211,14 +211,14 @@ val runIdeForUnitTests by intellijPlatformTesting.runIde.registering {
 
 val runIdePlatformTypes =
     listOf(
-        IntelliJPlatformType.CLion,
-        IntelliJPlatformType.GoLand,
-        IntelliJPlatformType.IntellijIdeaCommunity,
+//        IntelliJPlatformType.CLion,
+//        IntelliJPlatformType.GoLand,
+//        IntelliJPlatformType.IntellijIdeaCommunity,
         IntelliJPlatformType.IntellijIdeaUltimate,
-        IntelliJPlatformType.WebStorm,
-        IntelliJPlatformType.PyCharmCommunity,
-        IntelliJPlatformType.PyCharmProfessional,
-        IntelliJPlatformType.Rider,
+//        IntelliJPlatformType.WebStorm,
+//        IntelliJPlatformType.PyCharmCommunity,
+//        IntelliJPlatformType.PyCharmProfessional,
+//        IntelliJPlatformType.Rider,
     )
 
 runIdePlatformTypes.forEach { platformType ->
