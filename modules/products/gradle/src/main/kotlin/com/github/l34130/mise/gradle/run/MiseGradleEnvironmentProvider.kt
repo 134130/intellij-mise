@@ -12,6 +12,7 @@ import org.jetbrains.plugins.gradle.execution.build.GradleExecutionEnvironmentPr
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 import org.jetbrains.plugins.gradle.util.GradleConstants
 
+// It seems actually not working; the gradle task environment injection is handling on idea module.
 class MiseGradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
     override fun isApplicable(task: ExecuteRunConfigurationTask?): Boolean = task?.runProfile is ApplicationConfiguration
 
