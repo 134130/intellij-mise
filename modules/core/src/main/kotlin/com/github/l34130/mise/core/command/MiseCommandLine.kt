@@ -16,11 +16,13 @@ internal class MiseCommandLine(
 ) {
     inline fun <reified T> runCommandLine(vararg params: String): Result<T> = runCommandLine(params.toList())
 
+    @RequiresBackgroundThread
     inline fun <reified T> runCommandLine(params: List<String>): Result<T> {
         val typeReference = object : TypeReference<T>() {}
         return runCommandLine(params, typeReference)
     }
 
+    @RequiresBackgroundThread
     fun <T> runCommandLine(
         params: List<String>,
         typeReference: TypeReference<T>,
@@ -47,6 +49,7 @@ internal class MiseCommandLine(
         }
     }
 
+    @RequiresBackgroundThread
     private fun <T> runCommandLine(
         commandLineArgs: List<String>,
         transform: (String) -> T,
