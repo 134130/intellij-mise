@@ -32,7 +32,7 @@ internal class MiseCommandLine(
         val executablePath = application.service<MiseApplicationSettings>().state.executablePath
         val commandLineArgs = executablePath.split(' ').toMutableList()
 
-        if (configEnvironment != null) {
+        if (!configEnvironment.isNullOrBlank()) {
             if (miseVersion >= MiseVersion(2024, 12, 2)) {
                 commandLineArgs.add("--env")
                 commandLineArgs.add(configEnvironment)
