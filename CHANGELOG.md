@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [5.3.2] - 2025-06-15
+
+### Fixed
+
+- Plugin verification failing with `Package 'com.intellij.deno' is not found` and `Package 'com.jetbrains.nodejs' is not found`
+
 ## [5.3.1] - 2025-06-08
 
 ### Fixed
@@ -351,7 +357,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.3.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.3.2...HEAD
+[5.3.2]: https://github.com/134130/intellij-mise/compare/v5.3.1...v5.3.2
 [5.3.1]: https://github.com/134130/intellij-mise/compare/v5.3.0...v5.3.1
 [5.3.0]: https://github.com/134130/intellij-mise/compare/v5.2.0...v5.3.0
 [5.2.0]: https://github.com/134130/intellij-mise/compare/v5.1.0...v5.2.0

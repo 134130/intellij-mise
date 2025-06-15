@@ -6,6 +6,8 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.Constants.Constraints
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformPluginsExtension
+import org.jetbrains.intellij.pluginRepository.PluginRepositoryFactory
 
 plugins {
     id("java") // Java support
@@ -221,6 +223,32 @@ val runIdePlatformTypes =
 //        IntelliJPlatformType.Rider,
     )
 
+val IntelliJPlatformPluginsExtension.pluginRepository by lazy {
+    PluginRepositoryFactory.create("https://plugins.jetbrains.com")
+}
+
+fun IntelliJPlatformPluginsExtension.pluginsInLatestCompatibleVersion(vararg pluginIds: String) =
+    plugins(
+        provider {
+            pluginIds.map { pluginId ->
+                val platformType = intellijPlatform.productInfo.productCode
+                val platformVersion = intellijPlatform.productInfo.buildNumber
+
+                val plugin =
+                    pluginRepository.pluginManager
+                        .searchCompatibleUpdates(
+                            build = "$platformType-$platformVersion",
+                            xmlIds = listOf(pluginId),
+                        ).firstOrNull()
+                        ?: throw GradleException(
+                            "No plugin update with id='$pluginId' compatible with '$platformType-$platformVersion' found in JetBrains Marketplace",
+                        )
+
+                "${plugin.pluginXmlId}:${plugin.version}"
+            }
+        },
+    )
+
 runIdePlatformTypes.forEach { platformType ->
     intellijPlatformTesting.runIde.register("run${platformType.name}") {
         type = platformType
@@ -228,6 +256,7 @@ runIdePlatformTypes.forEach { platformType ->
 
         plugins {
 //            plugin("pluginId", "1.0.0")
+            pluginsInLatestCompatibleVersion("org.toml.lang")
             disablePlugin("bundledPluginId")
         }
     }

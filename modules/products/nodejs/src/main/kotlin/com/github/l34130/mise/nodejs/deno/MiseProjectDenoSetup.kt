@@ -5,7 +5,6 @@ import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.intellij.deno.DenoConfigurable
 import com.intellij.deno.DenoSettings
-import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
@@ -19,7 +18,7 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
         tool: MiseDevTool,
         project: Project,
     ): Boolean {
-        val settings = project.service<DenoSettings>()
+        val settings = DenoSettings.getService(project)
 
         val oldDenoPath = settings.getDenoPath()
         val newDenoPath =
