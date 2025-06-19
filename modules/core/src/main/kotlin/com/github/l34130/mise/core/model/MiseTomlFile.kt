@@ -33,7 +33,8 @@ class MiseTomlFile {
         ): Boolean {
             if (file.fileType != TomlFileType) return false
 
-            val originalFile = if (file is LightVirtualFile) file.originalFile else file ?: return false
+            val originalFile = if (file is LightVirtualFile) file.originalFile else file
+            if (originalFile == null) return false
 
             if (originalFile.name in listOf("mise.local.toml", ".mise.local.toml", "mise.toml", ".mise.toml") ||
                 originalFile.name.matches("^mise\\.(\\w+\\.)?toml$".toRegex())
