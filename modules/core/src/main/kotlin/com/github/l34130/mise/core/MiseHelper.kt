@@ -7,8 +7,6 @@ import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.components.service
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.util.ThrowableComputable
 import java.util.function.Supplier
 
 object MiseHelper {
@@ -31,23 +29,16 @@ object MiseHelper {
                 else -> return emptyMap()
             }
 
-        return ProgressManager.getInstance().runProcessWithProgressSynchronously(
-            ThrowableComputable {
-                MiseCommandLineHelper
-                    .getEnvVars(workDir, configEnvironment)
-                    .fold(
-                        onSuccess = { envVars -> envVars },
-                        onFailure = {
-                            if (it !is MiseCommandLineNotFoundException) {
-                                MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
-                            }
-                            mapOf()
-                        },
-                    )
-            },
-            "Loading Mise Environment Variables",
-            true,
-            configuration.project,
-        )
+        return MiseCommandLineHelper
+            .getEnvVars(workDir, configEnvironment)
+            .fold(
+                onSuccess = { envVars -> envVars },
+                onFailure = {
+                    if (it !is MiseCommandLineNotFoundException) {
+                        MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
+                    }
+                    mapOf()
+                },
+            )
     }
 }
