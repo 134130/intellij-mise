@@ -12,6 +12,7 @@ import com.github.l34130.mise.core.util.collapsePath
 import com.github.l34130.mise.core.util.getRelativePath
 import com.intellij.execution.PsiLocation
 import com.intellij.openapi.actionSystem.DataKey
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -19,7 +20,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.childrenOfType
-import com.intellij.util.concurrency.annotations.RequiresReadLock
 import com.intellij.util.containers.addIfNotNull
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlInlineTable
@@ -50,18 +50,17 @@ sealed interface MiseTask {
     }
 }
 
-@RequiresReadLock
 fun MiseTask.psiLocation(project: Project): PsiLocation<*>? =
     when (this) {
         is MiseShellScriptTask -> {
-            val psiFile = this.file.findPsiFile(project) ?: return null
+            val psiFile = runReadAction { this.file.findPsiFile(project) } ?: return null
             PsiLocation(psiFile)
         }
         is MiseTomlTableTask -> PsiLocation(this.keySegment)
         is MiseUnknownTask -> {
             val source = this.source ?: return null
             val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return null
-            val psiFile = file.findPsiFile(project) ?: return null
+            val psiFile = runReadAction { file.findPsiFile(project) } ?: return null
             PsiLocation(psiFile)
         }
     }
