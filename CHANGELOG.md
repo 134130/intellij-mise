@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [5.3.3] - 2025-06-19
+
+### Fixed
+
+- Calling invokeAndWait from read-action leads to possible deadlock by @134130 in https://github.com/134130/intellij-mise/pull/272
+- class `MnRunConfiguration` cannot be cast to class `GradleRunConfiguration` by @134130 in https://github.com/134130/intellij-mise/pull/273
+- Read access is allowed from inside read-action only by @134130 in https://github.com/134130/intellij-mise/pull/274
+
 ## [5.3.2] - 2025-06-15
 
 ### Fixed
@@ -357,7 +365,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.3.2...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.3.3...HEAD
+[5.3.3]: https://github.com/134130/intellij-mise/compare/v5.3.2...v5.3.3
 [5.3.2]: https://github.com/134130/intellij-mise/compare/v5.3.1...v5.3.2
 [5.3.1]: https://github.com/134130/intellij-mise/compare/v5.3.0...v5.3.1
 [5.3.0]: https://github.com/134130/intellij-mise/compare/v5.2.0...v5.3.0
