@@ -7,6 +7,7 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
+import com.intellij.ui.RawCommandLineEditor
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
@@ -20,6 +21,7 @@ class MiseTomlTaskRunConfigurationEditor(
 
     private val miseConfigEnvironmentTf = JBTextField()
     private val miseTaskNameTf = JBTextField()
+    private val miseTaskArgsComponent = RawCommandLineEditor()
     private val workingDirectoryTf = TextFieldWithBrowseButton()
     private val envVarsComponent = EnvironmentVariablesComponent()
 
@@ -40,6 +42,9 @@ class MiseTomlTaskRunConfigurationEditor(
             row("Mise task name:") {
                 cell(miseTaskNameTf).align(AlignX.FILL)
             }
+            row("Mise task arguments:") {
+                cell(miseTaskArgsComponent).align(AlignX.FILL)
+            }
             row("Working directory:") {
                 cell(workingDirectoryTf).align(AlignX.FILL)
             }
@@ -53,6 +58,7 @@ class MiseTomlTaskRunConfigurationEditor(
     override fun resetEditorFrom(configuration: MiseTomlTaskRunConfiguration) {
         miseConfigEnvironmentTf.text = configuration.miseConfigEnvironment
         miseTaskNameTf.text = configuration.miseTaskName
+        miseTaskArgsComponent.text = configuration.taskParams
         workingDirectoryTf.text = configuration.workingDirectory ?: ""
         envVarsComponent.envData = configuration.envVars
     }
@@ -62,5 +68,6 @@ class MiseTomlTaskRunConfigurationEditor(
         configuration.miseTaskName = miseTaskNameTf.text
         configuration.workingDirectory = workingDirectoryTf.text
         configuration.envVars = envVarsComponent.envData
+        configuration.taskParams = miseTaskArgsComponent.text
     }
 }
