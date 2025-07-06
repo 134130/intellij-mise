@@ -22,6 +22,7 @@ import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.vfs.encoding.EncodingManager
 import com.intellij.util.EnvironmentUtil
 import com.intellij.util.application
+import com.intellij.util.execution.ParametersListUtil
 import org.jdom.Element
 
 class MiseTomlTaskRunConfiguration(
@@ -36,6 +37,7 @@ class MiseTomlTaskRunConfiguration(
     var miseTaskName: String = ""
     var workingDirectory: String? = project.basePath
     var envVars: EnvironmentVariablesData = EnvironmentVariablesData.DEFAULT
+    var taskParams: String = ""
 
     override fun getState(
         executor: Executor,
@@ -53,6 +55,8 @@ class MiseTomlTaskRunConfiguration(
                     params += listOf("--env", miseConfigEnvironment)
                 }
                 params += listOf("run", miseTaskName)
+                params += "--"
+                params += ParametersListUtil.parse(taskParams)
 
                 val commandLine = PtyCommandLine()
                 if (!SystemInfo.isWindows) {
@@ -85,6 +89,7 @@ class MiseTomlTaskRunConfiguration(
         child.setAttribute("configEnvironment", miseConfigEnvironment ?: "")
         child.setAttribute("taskName", miseTaskName)
         child.setAttribute("workingDirectory", workingDirectory ?: "")
+        child.setAttribute("taskParams", taskParams)
         envVars.writeExternal(child)
     }
 
@@ -94,6 +99,7 @@ class MiseTomlTaskRunConfiguration(
         miseConfigEnvironment = child.getAttributeValue("configEnvironment")
         miseTaskName = child.getAttributeValue("taskName") ?: ""
         workingDirectory = child.getAttributeValue("workingDirectory")
+        taskParams = child.getAttributeValue("taskParams") ?: ""
         envVars = EnvironmentVariablesData.readExternal(child)
     }
 }
