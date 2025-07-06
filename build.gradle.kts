@@ -44,6 +44,7 @@ dependencies {
         pluginModule(implementation(project(":mise-products-nodejs")))
         pluginModule(implementation(project(":mise-products-pycharm")))
         pluginModule(implementation(project(":mise-products-rider")))
+        pluginModule(implementation(project(":mise-products-ruby")))
         pluginModule(implementation(project(":mise-products-sh")))
 
         plugins(listOf())
@@ -171,6 +172,7 @@ allprojects {
         detekt(project(":mise-products-nodejs"))
         detekt(project(":mise-products-pycharm"))
         detekt(project(":mise-products-rider"))
+        detekt(project(":mise-products-ruby"))
         detekt(project(":mise-products-sh"))
     }
 

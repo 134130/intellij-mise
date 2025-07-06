@@ -1,0 +1,5 @@
+<idea-plugin require-restart="false">
+    <extensions defaultExtensionNs="org.jetbrains.plugins.ruby">
+        <runConfigurationExtension implementation="com.github.l34130.mise.ruby.run.MiseRubyMineRunConfigurationExtension"/>
+    </extensions>
+</idea-plugin>
