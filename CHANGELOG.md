@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [5.4.0] - 2025-07-06
+
+### Added
+
+- Add Ruby support by @134130 in https://github.com/134130/intellij-mise/pull/283
+- Add support for args in run configurations by @bamorim in https://github.com/134130/intellij-mise/pull/281
+
+### Fixed
+
+- Improve command execution handling in terminal widget by @134130 in https://github.com/134130/intellij-mise/pull/282
+
 ## [5.3.3] - 2025-06-19
 
 ### Fixed
@@ -365,7 +376,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.3.3...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.4.0...HEAD
+[5.4.0]: https://github.com/134130/intellij-mise/compare/v5.3.3...v5.4.0
 [5.3.3]: https://github.com/134130/intellij-mise/compare/v5.3.2...v5.3.3
 [5.3.2]: https://github.com/134130/intellij-mise/compare/v5.3.1...v5.3.2
 [5.3.1]: https://github.com/134130/intellij-mise/compare/v5.3.0...v5.3.1
