@@ -55,6 +55,7 @@ class MiseTomlTaskRunConfiguration(
                     params += listOf("--env", miseConfigEnvironment)
                 }
                 params += listOf("run", miseTaskName)
+                params += "--"
                 params += ParametersListUtil.parse(taskParams)
 
                 val commandLine = PtyCommandLine()
