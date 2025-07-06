@@ -43,6 +43,7 @@
   - CMake Application
   - Makefile target
 - **C#**
+- **Ruby**
 - _Submit issue if you need others_
 
 <!-- Plugin description end -->
