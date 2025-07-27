@@ -16,7 +16,7 @@ dependencies {
     intellijPlatform {
         create(IntelliJPlatformType.IntellijIdeaUltimate, properties("platformVersion"), false)
 
-        bundledPlugin("org.jetbrains.plugins.go")
+        compatiblePlugin("org.jetbrains.plugins.go")
 
         jetbrainsRuntime()
 

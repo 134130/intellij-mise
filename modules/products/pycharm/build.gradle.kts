@@ -16,9 +16,11 @@ dependencies {
     intellijPlatform {
         create(IntelliJPlatformType.IntellijIdeaUltimate, properties("platformVersion"), false)
 
-        bundledPlugins("PythonCore")
+        compatiblePlugin("PythonCore")
 
         jetbrainsRuntime()
+
         testFramework(TestFrameworkType.Platform)
+        testImplementation("org.opentest4j:opentest4j:1.3.0")
     }
 }
