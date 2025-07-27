@@ -14,7 +14,7 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.RubyMine, properties("platformVersion")) // RubyMine does not support installing with `false` for `useInstaller`
+        create(IntelliJPlatformType.IntellijIdeaUltimate, properties("platformVersion"), false)
 
         plugin("org.jetbrains.plugins.ruby:251.23774.16")
 
