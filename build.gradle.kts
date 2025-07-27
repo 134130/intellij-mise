@@ -233,6 +233,7 @@ runIdePlatformTypes.forEach { platformType ->
     intellijPlatformTesting.runIde.register("run${platformType.name}") {
         type = platformType
         version = "2025.1"
+        useInstaller = false
 
         plugins {
 //            plugin("pluginId", "1.0.0")
