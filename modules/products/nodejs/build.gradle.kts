@@ -14,28 +14,6 @@ val IntelliJPlatformDependenciesExtension.pluginRepository by lazy {
     PluginRepositoryFactory.create("https://plugins.jetbrains.com")
 }
 
-fun IntelliJPlatformDependenciesExtension.pluginsInLatestCompatibleVersion(vararg pluginIds: String) =
-    plugins(
-        provider {
-            pluginIds.map { pluginId ->
-                val platformType = intellijPlatform.productInfo.productCode
-                val platformVersion = intellijPlatform.productInfo.buildNumber
-
-                val plugin =
-                    pluginRepository.pluginManager
-                        .searchCompatibleUpdates(
-                            build = "$platformType-$platformVersion",
-                            xmlIds = listOf(pluginId),
-                        ).firstOrNull()
-                        ?: throw GradleException(
-                            "No plugin update with id='$pluginId' compatible with '$platformType-$platformVersion' found in JetBrains Marketplace",
-                        )
-
-                "${plugin.pluginXmlId}:${plugin.version}"
-            }
-        },
-    )
-
 dependencies {
     implementation(project(":mise-core"))
     testImplementation(libs.junit)
@@ -45,9 +23,10 @@ dependencies {
         create(IntelliJPlatformType.IntellijIdeaUltimate, properties("platformVersion"), false)
 
         bundledPlugins("JavaScript", "NodeJS")
-        pluginsInLatestCompatibleVersion("deno")
+        compatiblePlugin("deno")
 
         jetbrainsRuntime()
+
         testFramework(TestFrameworkType.Platform)
         testImplementation("org.opentest4j:opentest4j:1.3.0")
     }
