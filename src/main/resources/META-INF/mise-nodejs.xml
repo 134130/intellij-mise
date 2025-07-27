@@ -4,8 +4,7 @@
     </extensions>
     <extensions defaultExtensionNs="JavaScript">
         <nodeRunConfigurationExtension
-                implementation="com.github.l34130.mise.nodejs.run.MiseNodeRunConfigurationExtension"
-                                   id="miseNodeJS"/>
+                implementation="com.github.l34130.mise.nodejs.run.MiseNodeRunConfigurationExtension"/>
     </extensions>
     <actions>
         <action id="com.github.l34130.mise.nodejs.node.MiseProjectNodeSetup"

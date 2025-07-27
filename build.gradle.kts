@@ -236,9 +236,7 @@ runIdePlatformTypes.forEach { platformType ->
         useInstaller = false
 
         plugins {
-//            plugin("pluginId", "1.0.0")
             compatiblePlugin("org.toml.lang")
-            disablePlugin("bundledPluginId")
         }
     }
 }
