@@ -19,7 +19,7 @@ class MisePythonRunConfigurationExtension : PythonRunConfigurationExtension() {
     ): Boolean = true
 
     override fun <P : AbstractPythonRunConfiguration<*>> createEditor(configuration: P): SettingsEditor<P> =
-        MiseRunConfigurationSettingsEditor(configuration.project)
+        MiseRunConfigurationSettingsEditor()
 
     override fun getSerializationId(): String = MiseRunConfigurationSettingsEditor.SERIALIZATION_ID
 

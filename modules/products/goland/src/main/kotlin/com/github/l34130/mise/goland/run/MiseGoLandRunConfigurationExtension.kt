@@ -13,8 +13,7 @@ import org.jdom.Element
 class MiseGoLandRunConfigurationExtension : GoRunConfigurationExtension() {
     override fun getEditorTitle(): String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
-    override fun <P : GoRunConfigurationBase<*>> createEditor(configuration: P): SettingsEditor<P> =
-        MiseRunConfigurationSettingsEditor(configuration.getProject())
+    override fun <P : GoRunConfigurationBase<*>> createEditor(configuration: P): SettingsEditor<P> = MiseRunConfigurationSettingsEditor()
 
     override fun getSerializationId(): String = MiseRunConfigurationSettingsEditor.SERIALIZATION_ID
 

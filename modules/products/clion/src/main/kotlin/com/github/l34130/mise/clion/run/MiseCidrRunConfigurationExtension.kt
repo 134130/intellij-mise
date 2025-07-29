@@ -26,8 +26,7 @@ class MiseCidrRunConfigurationExtension : CidrRunConfigurationExtensionBase() {
     override fun getEditorTitle(): @NlsContexts.TabTitle String? = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
     // NOTE: C/C++, CMake, Makefile doesn't allow extending the run configuration editor
-    override fun <P : OCRunConfiguration<*, *>> createEditor(configuration: P): SettingsEditor<P> =
-        MiseRunConfigurationSettingsEditor(configuration.project)
+    override fun <P : OCRunConfiguration<*, *>> createEditor(configuration: P): SettingsEditor<P> = MiseRunConfigurationSettingsEditor()
 
     override fun readExternal(
         runConfiguration: OCRunConfiguration<*, *>,
