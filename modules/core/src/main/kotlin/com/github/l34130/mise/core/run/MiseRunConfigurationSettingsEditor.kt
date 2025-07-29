@@ -114,7 +114,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>> : Settings
             val configEnvironmentStrategy =
                 element.getAttributeValue("myConfigEnvironmentStrategy")?.let {
                     ConfigEnvironmentStrategy.from(it)
-                } ?: ConfigEnvironmentStrategy.USE_PROJECT_SETTINGS
+                } ?: MiseRunConfigurationState().configEnvironmentStrategy
             val miseDirEnvCb = element.getAttributeValue("myMiseDirEnvCb")?.toBoolean() ?: false
             val miseConfigEnvironment = element.getAttributeValue("myMiseConfigEnvironmentTf") ?: ""
 
