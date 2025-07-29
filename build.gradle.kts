@@ -32,16 +32,16 @@ dependencies {
     intellijPlatform {
         create(IntelliJPlatformType.IntellijIdeaCommunity, providers.gradleProperty("platformVersion"), false)
 
-        pluginModule(implementation(project(":mise-products-clion")))
-        pluginModule(implementation(project(":mise-products-diagram")))
-        pluginModule(implementation(project(":mise-products-goland")))
-        pluginModule(implementation(project(":mise-products-gradle")))
-        pluginModule(implementation(project(":mise-products-idea")))
-        pluginModule(implementation(project(":mise-products-nodejs")))
-        pluginModule(implementation(project(":mise-products-pycharm")))
-        pluginModule(implementation(project(":mise-products-rider")))
-        pluginModule(implementation(project(":mise-products-ruby")))
-        pluginModule(implementation(project(":mise-products-sh")))
+        pluginComposedModule(implementation(project(":mise-products-clion")))
+        pluginComposedModule(implementation(project(":mise-products-diagram")))
+        pluginComposedModule(implementation(project(":mise-products-goland")))
+        pluginComposedModule(implementation(project(":mise-products-gradle")))
+        pluginComposedModule(implementation(project(":mise-products-idea")))
+        pluginComposedModule(implementation(project(":mise-products-nodejs")))
+        pluginComposedModule(implementation(project(":mise-products-pycharm")))
+        pluginComposedModule(implementation(project(":mise-products-rider")))
+        pluginComposedModule(implementation(project(":mise-products-ruby")))
+        pluginComposedModule(implementation(project(":mise-products-sh")))
 
         plugins(listOf())
 
