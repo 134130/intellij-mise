@@ -19,8 +19,7 @@ class MiseNodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension(
 
     override fun getEditorTitle(): String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
-    override fun <P : AbstractNodeTargetRunProfile> createEditor(configuration: P): SettingsEditor<P> =
-        MiseRunConfigurationSettingsEditor(configuration.project)
+    override fun <P : AbstractNodeTargetRunProfile> createEditor(configuration: P): SettingsEditor<P> = MiseRunConfigurationSettingsEditor()
 
     override fun getSerializationId(): String = MiseRunConfigurationSettingsEditor.SERIALIZATION_ID
 

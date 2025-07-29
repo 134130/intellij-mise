@@ -3,6 +3,7 @@ package com.github.l34130.mise.core
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
+import com.github.l34130.mise.core.run.ConfigEnvironmentStrategy
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.configurations.RunConfigurationBase
@@ -23,14 +24,18 @@ object MiseHelper {
         val projectState = project.service<MiseProjectSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
+        val isRunConfigDisabled = runConfigState?.useMiseDirEnv == false
+        val useOverrideSettings = runConfigState?.configEnvironmentStrategy == ConfigEnvironmentStrategy.OVERRIDE_PROJECT_SETTINGS
+        val useProjectSettings = projectState.useMiseDirEnv
+
         val (workDir, configEnvironment) =
             when {
-                projectState.useMiseDirEnv -> {
-                    project.basePath to projectState.miseConfigEnvironment
+                isRunConfigDisabled -> return emptyMap()
+                useOverrideSettings -> {
+                    val workDir = workingDirectory.get()?.takeIf { it.isNotBlank() } ?: project.basePath
+                    workDir to runConfigState.miseConfigEnvironment
                 }
-                runConfigState?.useMiseDirEnv == true -> {
-                    (workingDirectory.get()?.takeIf { it.isNotBlank() } ?: project.basePath) to runConfigState.miseConfigEnvironment
-                }
+                useProjectSettings -> project.basePath to projectState.miseConfigEnvironment
                 else -> return emptyMap()
             }
 

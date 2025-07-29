@@ -32,7 +32,7 @@ class MiseRubyMineRunConfigurationExtension : RubyRunConfigurationExtension() {
     }
 
     override fun <P : AbstractRubyRunConfiguration<*>> createEditor(configuration: P): SettingsEditor<P> =
-        MiseRunConfigurationSettingsEditor(configuration.project)
+        MiseRunConfigurationSettingsEditor()
 
     override fun isApplicableFor(configuration: AbstractRubyRunConfiguration<*>): Boolean = true
 
