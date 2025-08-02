@@ -17,7 +17,7 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
     override fun setupSdk(
         tool: MiseDevTool,
         project: Project,
-    ): Boolean {
+    ): SetupSdkResult {
         val rubySdks = RubySdkType.getAllValidRubySdks()
         val miseSdkName = "mise: ${tool.version}"
 
@@ -36,12 +36,20 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
         val oldSdk = ProjectRootManager.getInstance(project).projectSdk
         if (oldSdk?.name == miseSdkName) {
             // If the SDK is already set, no need to change
-            return false
+            return SetupSdkResult.NoChange(
+                sdkName = oldSdk.name,
+                version = oldSdk.versionString,
+                installPath = oldSdk.homePath ?: "",
+            )
         }
 
         // Set the new SDK as the project SDK
         ProjectRootManager.getInstance(project).projectSdk = miseSdk
-        return true
+        return SetupSdkResult.Updated(
+            sdkName = miseSdk.name,
+            version = miseSdk.versionString ?: tool.version,
+            installPath = miseSdk.homePath ?: tool.installPath,
+        )
     }
 
     // Application configurable
