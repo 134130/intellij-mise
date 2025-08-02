@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+## [5.5.0] - 2025-08-02
+
+### Added
+
+- Make run configuration can override project settings by @134130 in https://github.com/134130/intellij-mise/pull/296
+- Ruby SDK setup support by @134130 in https://github.com/134130/intellij-mise/pull/299
+- Python SDK setup for `uv` by @134130 in https://github.com/134130/intellij-mise/pull/303
+
+### Fixed
+
+- `run` table contains a string array in a toml file doesn't support language injection by @134130 in https://github.com/134130/intellij-mise/pull/300
+- Execute mise command on background thread by @134130 in https://github.com/134130/intellij-mise/pull/301
+
 ## [5.4.0] - 2025-07-06
 
 ### Added
@@ -376,7 +389,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.4.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.5.0...HEAD
+[5.5.0]: https://github.com/134130/intellij-mise/compare/v5.4.0...v5.5.0
 [5.4.0]: https://github.com/134130/intellij-mise/compare/v5.3.3...v5.4.0
 [5.3.3]: https://github.com/134130/intellij-mise/compare/v5.3.2...v5.3.3
 [5.3.2]: https://github.com/134130/intellij-mise/compare/v5.3.1...v5.3.2
