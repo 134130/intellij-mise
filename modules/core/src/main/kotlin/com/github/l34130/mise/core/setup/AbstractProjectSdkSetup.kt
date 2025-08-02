@@ -11,7 +11,6 @@ import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ShowSettingsUtil
@@ -19,7 +18,8 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
-import com.intellij.openapi.util.io.FileUtil
+import com.intellij.util.ui.Html
+import kotlinx.html.HtmlBlockTag
 import kotlin.reflect.KClass
 
 abstract class AbstractProjectSdkSetup :
@@ -36,10 +36,10 @@ abstract class AbstractProjectSdkSetup :
 
     abstract fun getDevToolName(): MiseDevToolName
 
-    abstract fun setupSdk(
+    protected abstract fun setupSdk(
         tool: MiseDevTool,
         project: Project,
-    ): Boolean
+    ): SetupSdkResult
 
     abstract fun <T : Configurable> getConfigurableClass(): KClass<out T>?
 
@@ -110,22 +110,58 @@ abstract class AbstractProjectSdkSetup :
                 return@executeOnPooledThread
             }
 
-            WriteAction.runAndWait<Throwable> {
-                try {
-                    val updated = setupSdk(tool, project)
-                    if (updated || isUserInteraction) {
-                        miseNotificationService.info(
-                            "${devToolName.canonicalName()} configured to ${devToolName.value}@${tool.version}",
-                            tool.source?.absolutePath?.let(FileUtil::getLocationRelativeToUserHome) ?: "unknown source",
-                        )
-                    }
-                } catch (e: Exception) {
-                    miseNotificationService.error(
-                        "Failed to set ${devToolName.canonicalName()} to ${devToolName.value}@${tool.version}",
-                        e.message ?: e.javaClass.simpleName,
+            try {
+                val result = setupSdk(tool, project)
+                if (result is SetupSdkResult.Updated || isUserInteraction) {
+                    miseNotificationService.info(
+                        "${devToolName.canonicalName()} configured to '${result.sdkName()}'",
+                        buildString {
+                            result.version()?.let {
+                                appendLine("<b>Version:</b> $it")
+                                appendLine()
+                            }
+                            append("<i>${result.installPath()}</i>")
+                        },
                     )
                 }
+            } catch (e: Exception) {
+                miseNotificationService.error(
+                    "Failed to set ${devToolName.canonicalName()} to ${devToolName.value}@${tool.version}",
+                    e.message ?: e.javaClass.simpleName,
+                )
             }
         }
+    }
+
+    protected sealed interface SetupSdkResult {
+        class Updated(
+            val sdkName: String,
+            val version: String? = null,
+            val installPath: String,
+        ) : SetupSdkResult
+
+        class NoChange(
+            val sdkName: String,
+            val version: String? = null,
+            val installPath: String,
+        ) : SetupSdkResult
+
+        fun sdkName(): String =
+            when (this) {
+                is Updated -> sdkName
+                is NoChange -> sdkName
+            }
+
+        fun version(): String? =
+            when (this) {
+                is Updated -> version
+                is NoChange -> version
+            }
+
+        fun installPath(): String =
+            when (this) {
+                is Updated -> installPath
+                is NoChange -> installPath
+            }
     }
 }
