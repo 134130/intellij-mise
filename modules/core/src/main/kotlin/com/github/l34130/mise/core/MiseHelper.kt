@@ -13,6 +13,8 @@ import com.intellij.openapi.diagnostic.debug
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.util.application
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import java.util.function.Supplier
 
 object MiseHelper {
@@ -56,8 +58,10 @@ object MiseHelper {
                 }
                 result ?: throw ProcessCanceledException()
             } else {
-                logger.debug { "unable to open the dialog. just load synchronously" }
-                MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
+                logger.debug { "read access allowed, executing on background thread" }
+                runBlocking(Dispatchers.IO) {
+                    MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
+                }
             }
 
         return result
