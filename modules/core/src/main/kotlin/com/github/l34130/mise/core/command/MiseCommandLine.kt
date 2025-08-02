@@ -14,8 +14,6 @@ internal class MiseCommandLine(
     private val workDir: String? = null,
     private val configEnvironment: String? = null,
 ) {
-    inline fun <reified T> runCommandLine(vararg params: String): Result<T> = runCommandLine(params.toList())
-
     @RequiresBackgroundThread
     inline fun <reified T> runCommandLine(params: List<String>): Result<T> {
         val typeReference = object : TypeReference<T>() {}
@@ -27,6 +25,15 @@ internal class MiseCommandLine(
         params: List<String>,
         typeReference: TypeReference<T>,
     ): Result<T> {
+        val rawResult = runRawCommandLine(params)
+        return rawResult.fold(
+            onSuccess = { output -> Result.success(MiseCommandLineOutputParser.parse(output, typeReference)) },
+            onFailure = { return Result.failure(it) },
+        )
+    }
+
+    @RequiresBackgroundThread
+    fun runRawCommandLine(params: List<String>): Result<String> {
         val miseVersion = getMiseVersion()
 
         val executablePath = application.service<MiseApplicationSettings>().state.executablePath
@@ -43,17 +50,11 @@ internal class MiseCommandLine(
         }
 
         commandLineArgs.addAll(params)
-
-        return runCommandLine(commandLineArgs) {
-            MiseCommandLineOutputParser.parse(it, typeReference)
-        }
+        return runCommandLineInternal(commandLineArgs)
     }
 
     @RequiresBackgroundThread
-    private fun <T> runCommandLine(
-        commandLineArgs: List<String>,
-        transform: (String) -> T,
-    ): Result<T> {
+    private fun runCommandLineInternal(commandLineArgs: List<String>): Result<String> {
         val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workDir)
         val processOutput =
             try {
@@ -95,7 +96,7 @@ internal class MiseCommandLine(
         }
 
         logger.debug("Command executed successfully. (command=$generalCommandLine)")
-        return Result.success(transform(processOutput.stdout))
+        return Result.success(processOutput.stdout)
     }
 
     companion object {
@@ -103,7 +104,7 @@ internal class MiseCommandLine(
         fun getMiseVersion(): MiseVersion {
             val miseCommandLine = MiseCommandLine()
             val miseExecutable = application.service<MiseApplicationSettings>().state.executablePath
-            val versionString = miseCommandLine.runCommandLine(listOf(miseExecutable, "version")) { it }
+            val versionString = miseCommandLine.runCommandLineInternal(listOf(miseExecutable, "version"))
 
             val miseVersion =
                 versionString.fold(
