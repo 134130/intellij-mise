@@ -24,9 +24,7 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
         var miseSdk = rubySdks.firstOrNull { it.name == miseSdkName }
         if (miseSdk == null) {
             // Create a new Ruby SDK
-            miseSdk = ProjectJdkImpl(miseSdkName, RubySdkType.getInstance())
-            miseSdk.homePath = tool.installPath
-            miseSdk.versionString = tool.version
+            miseSdk = ProjectJdkImpl(miseSdkName, RubySdkType.getInstance(), tool.installPath, tool.version)
 
             // Add the new SDK to the project JDK table
             ProjectJdkTable.getInstance().addJdk(miseSdk)
