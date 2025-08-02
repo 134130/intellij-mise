@@ -9,8 +9,6 @@ import com.intellij.openapi.util.NlsContexts
 import org.jdom.Element
 import org.jetbrains.plugins.ruby.ruby.run.configuration.AbstractRubyRunConfiguration
 import org.jetbrains.plugins.ruby.ruby.run.configuration.RubyRunConfigurationExtension
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 class MiseRubyMineRunConfigurationExtension : RubyRunConfigurationExtension() {
     override fun getEditorTitle(): @NlsContexts.TabTitle String? = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
