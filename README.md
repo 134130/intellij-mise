@@ -58,7 +58,7 @@
 
 ![language-reference](https://github.com/user-attachments/assets/426f0f1b-6824-4dc5-8ab9-e52f76cd9f69)
 
-![run](https://github.com/user-attachments/assets/6b5ef885-17d0-4865-ac3e-150a588d4d02)
+![run-configuration](./assets/run-configuration.png)
 
 ## Installation
 
