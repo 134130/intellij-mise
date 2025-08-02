@@ -8,6 +8,7 @@ import com.intellij.javascript.nodejs.interpreter.local.NodeJsLocalInterpreter
 import com.intellij.javascript.nodejs.npm.NpmManager
 import com.intellij.javascript.nodejs.settings.NodeSettingsConfigurable
 import com.intellij.javascript.nodejs.util.NodePackageRef
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
@@ -22,34 +23,47 @@ class MiseProjectNodeSetup : AbstractProjectSdkSetup() {
     override fun setupSdk(
         tool: MiseDevTool,
         project: Project,
-    ): Boolean {
-        val nodeJsInterpreterManager = NodeJsInterpreterManager.getInstance(project)
-        val oldInterpreter = nodeJsInterpreterManager.interpreter
+    ): SetupSdkResult =
+        WriteAction.computeAndWait<SetupSdkResult, Throwable> {
+            val nodeJsInterpreterManager = NodeJsInterpreterManager.getInstance(project)
+            val oldInterpreter = nodeJsInterpreterManager.interpreter
 
-        val newNodePath =
-            if (SystemInfo.isWindows) {
-                Path(FileUtil.expandUserHome(tool.installPath), "node.exe")
+            val newNodePath =
+                if (SystemInfo.isWindows) {
+                    Path(FileUtil.expandUserHome(tool.installPath), "node.exe")
+                } else {
+                    Path(FileUtil.expandUserHome(tool.installPath), "bin", "node")
+                }.toAbsolutePath()
+                    .normalize()
+                    .toString()
+            val newInterpreter = NodeJsLocalInterpreter(newNodePath)
+
+            // Setup NodeJS Interpreter
+            nodeJsInterpreterManager.setInterpreterRef(newInterpreter.toRef())
+
+            // Setup Node Package Manager
+            val packageManager = inspectPackageManager(project)
+            try {
+                val nodePackage = NodePackageRef.create(packageManager)
+                NpmManager.getInstance(project).packageRef = nodePackage
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to set package manager to $packageManager", e)
+            }
+
+            if (oldInterpreter?.referenceName == newInterpreter.referenceName) {
+                SetupSdkResult.NoChange(
+                    sdkName = oldInterpreter.referenceName,
+                    version = oldInterpreter.cachedVersion?.get()?.parsedVersion ?: tool.version,
+                    installPath = newInterpreter.interpreterSystemDependentPath,
+                )
             } else {
-                Path(FileUtil.expandUserHome(tool.installPath), "bin", "node")
-            }.toAbsolutePath()
-                .normalize()
-                .toString()
-        val newInterpreter = NodeJsLocalInterpreter(newNodePath)
-
-        // Setup NodeJS Interpreter
-        nodeJsInterpreterManager.setInterpreterRef(newInterpreter.toRef())
-
-        // Setup Node Package Manager
-        val packageManager = inspectPackageManager(project)
-        try {
-            val nodePackage = NodePackageRef.create(packageManager)
-            NpmManager.getInstance(project).packageRef = nodePackage
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to set package manager to $packageManager", e)
+                SetupSdkResult.Updated(
+                    sdkName = newInterpreter.referenceName,
+                    version = newInterpreter.cachedVersion?.get()?.parsedVersion ?: tool.version,
+                    installPath = newInterpreter.interpreterSystemDependentPath,
+                )
+            }
         }
-
-        return oldInterpreter?.referenceName != newInterpreter.referenceName
-    }
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = NodeSettingsConfigurable::class as KClass<out T>

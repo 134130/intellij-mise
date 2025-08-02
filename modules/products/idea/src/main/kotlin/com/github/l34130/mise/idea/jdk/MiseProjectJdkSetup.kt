@@ -3,6 +3,7 @@ package com.github.l34130.mise.idea.jdk
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
@@ -16,31 +17,44 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
     override fun setupSdk(
         tool: MiseDevTool,
         project: Project,
-    ): Boolean {
-        val projectJdkTable = ProjectJdkTable.getInstance()
+    ): SetupSdkResult =
+        WriteAction.computeAndWait<SetupSdkResult, Throwable> {
+            val projectJdkTable = ProjectJdkTable.getInstance()
 
-        cleanDeprecatedMiseJdks(projectJdkTable) // TODO: Drop after later version
+            cleanDeprecatedMiseJdks(projectJdkTable) // TODO: Drop after later version
 
-        val jdkName = "${tool.requestedVersion ?: tool.version} (mise)"
+            val jdkName = "${tool.requestedVersion ?: tool.version} (mise)"
 
-        val oldJdk = projectJdkTable.findJdk(jdkName)
-        val newJdk =
-            JavaSdk.getInstance().createJdk(
-                jdkName,
-                tool.installPath,
-                false, // isJre
-            )
+            val oldJdk = projectJdkTable.findJdk(jdkName)
+            val newJdk =
+                JavaSdk.getInstance().createJdk(
+                    jdkName,
+                    tool.installPath,
+                    false, // isJre
+                )
 
-        if (oldJdk != null) {
-            projectJdkTable.updateJdk(oldJdk, newJdk)
-        } else {
-            projectJdkTable.addJdk(newJdk)
+            if (oldJdk != null) {
+                projectJdkTable.updateJdk(oldJdk, newJdk)
+            } else {
+                projectJdkTable.addJdk(newJdk)
+            }
+
+            ProjectRootManager.getInstance(project).projectSdk = newJdk
+
+            if (oldJdk?.homePath == newJdk.homePath) {
+                SetupSdkResult.NoChange(
+                    sdkName = newJdk.name,
+                    version = newJdk.versionString,
+                    installPath = newJdk.homePath ?: tool.installPath,
+                )
+            } else {
+                SetupSdkResult.Updated(
+                    sdkName = newJdk.name,
+                    version = newJdk.versionString,
+                    installPath = newJdk.homePath ?: tool.installPath,
+                )
+            }
         }
-
-        ProjectRootManager.getInstance(project).projectSdk = newJdk
-
-        return oldJdk?.homePath != newJdk.homePath
-    }
 
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null
 
