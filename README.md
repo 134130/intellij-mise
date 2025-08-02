@@ -17,7 +17,7 @@
 - **Environment Variables**: Set environment variables for your run configurations from `mise.toml` files.
   - See [Supported Run configurations](#supported-run-configurations) for the list of supported Run configurations.
 - **Tool Integration**: Set project's SDK automatically from `mise.toml` files.
-  - `java`, `go`, `node`, `deno` SDKs are supported.
+  - `java`, `go`, `node`, `deno` and `ruby` SDKs are supported.
 - **Language Support**: Provides language features for `mise.toml` files.
   - Code completion
   - Reference (refactoring)
