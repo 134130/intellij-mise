@@ -7,19 +7,14 @@ import com.github.l34130.mise.core.run.ConfigEnvironmentStrategy
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.configurations.RunConfigurationBase
-import com.intellij.execution.process.OSProcessHandler
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.debug
 import com.intellij.openapi.progress.ProcessCanceledException
-import com.intellij.openapi.progress.ProgressManager
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
-import com.intellij.platform.ide.progress.withBackgroundProgress
 import com.intellij.util.application
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import java.util.function.Supplier
 
 object MiseHelper {
