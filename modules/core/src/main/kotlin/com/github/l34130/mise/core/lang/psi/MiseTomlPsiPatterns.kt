@@ -113,7 +113,9 @@ object MiseTomlPsiPatterns {
     val inTaskWaitForString = tomlPsiElement<PsiElement>().inside(onTaskWaitForString)
 
     val onTaskRunString = miseTomlStringLiteral.withParent(onTaskProperty("run"))
-    val inTaskRunString = tomlPsiElement<PsiElement>().inside(onTaskRunString)
+    val onTaskRunStringArray = psiElement<TomlArray>().withParent(onTaskProperty("run"))
+    val onTaskRunStringOrArray = onTaskRunString or onTaskRunStringArray
+    val inTaskRunStringOrArray = tomlPsiElement<PsiElement>().inside(onTaskRunStringOrArray)
 
     fun <T : Any, Self : ObjectPattern<T, Self>> ObjectPattern<T, Self>.with(
         name: String,
