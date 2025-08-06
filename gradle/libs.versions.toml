@@ -3,7 +3,7 @@
 junit = "4.13.2"
 
 # plugins
-changelog = "2.3.0"
+changelog = "2.4.0"
 gradleIdeaExt = "1.2"
 kotlin = "2.2.0"
 kover = "0.9.1"
