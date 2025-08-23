@@ -18,8 +18,8 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
-import com.intellij.util.ui.Html
-import kotlinx.html.HtmlBlockTag
+import com.intellij.openapi.util.io.FileUtil
+import com.intellij.util.application
 import kotlin.reflect.KClass
 
 abstract class AbstractProjectSdkSetup :
@@ -36,10 +36,15 @@ abstract class AbstractProjectSdkSetup :
 
     abstract fun getDevToolName(): MiseDevToolName
 
-    protected abstract fun setupSdk(
+    protected abstract fun checkSdkStatus(
         tool: MiseDevTool,
         project: Project,
-    ): SetupSdkResult
+    ): SdkStatus
+
+    protected abstract fun applySdkConfiguration(
+        tool: MiseDevTool,
+        project: Project,
+    ): ApplySdkResult
 
     abstract fun <T : Configurable> getConfigurableClass(): KClass<out T>?
 
@@ -47,7 +52,7 @@ abstract class AbstractProjectSdkSetup :
         project: Project,
         isUserInteraction: Boolean,
     ) {
-        ApplicationManager.getApplication().executeOnPooledThread {
+        application.executeOnPooledThread {
             val devToolName = getDevToolName()
             val miseNotificationService = project.service<MiseNotificationService>()
 
@@ -111,15 +116,43 @@ abstract class AbstractProjectSdkSetup :
             }
 
             try {
-                val result = setupSdk(tool, project)
-                if (result is SetupSdkResult.Updated || isUserInteraction) {
-                    miseNotificationService.info(
-                        buildString {
-                            append("${devToolName.canonicalName()} configured to '${result.sdkName()}'")
-                            append(" (${tool.version})")
-                        },
-                        result.installPath(),
-                    )
+                val status = checkSdkStatus(tool, project)
+                when (status) {
+                    is SdkStatus.NeedsUpdate -> {
+                        val title =
+                            if (status.currentSdkName == null) {
+                                "${devToolName.canonicalName()} is not configured"
+                            } else {
+                                val path = FileUtil.getLocationRelativeToUserHome(status.currentSdkName)
+                                "${devToolName.canonicalName()} is misconfigured as $path"
+                            }
+
+                        if (isUserInteraction) {
+                            applySdkConfiguration(tool, project)
+                            miseNotificationService.info(
+                                "${devToolName.canonicalName()} is configured to '${status.requestedSdkName}'",
+                                FileUtil.getLocationRelativeToUserHome(status.requestedInstallPath),
+                            )
+                        } else {
+                            miseNotificationService.info(title, "Can configure as ${status.requestedSdkName}") {
+                                NotificationAction.createSimpleExpiring("Apply") {
+                                    applySdkConfiguration(tool, project)
+                                    miseNotificationService.info(
+                                        "${devToolName.canonicalName()} is configured to '${status.requestedSdkName}'",
+                                        FileUtil.getLocationRelativeToUserHome(status.requestedInstallPath),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    SdkStatus.UpToDate -> {
+                        if (!isUserInteraction) return@executeOnPooledThread
+
+                        miseNotificationService.info(
+                            "${devToolName.canonicalName()} is up to date",
+                            "Currently using ${devToolName.value}@${tool.version}",
+                        )
+                    }
                 }
             } catch (e: Throwable) {
                 miseNotificationService.error(
@@ -130,35 +163,20 @@ abstract class AbstractProjectSdkSetup :
         }
     }
 
-    protected sealed interface SetupSdkResult {
-        class Updated(
-            val sdkName: String,
-            val version: String? = null,
-            val installPath: String,
-        ) : SetupSdkResult
+    protected sealed interface SdkStatus {
+        data class NeedsUpdate(
+            val currentSdkName: String?,
+            val currentInstallPath: String?,
+            val requestedSdkName: String,
+            val requestedInstallPath: String,
+        ) : SdkStatus
 
-        class NoChange(
-            val sdkName: String,
-            val version: String? = null,
-            val installPath: String,
-        ) : SetupSdkResult
-
-        fun sdkName(): String =
-            when (this) {
-                is Updated -> sdkName
-                is NoChange -> sdkName
-            }
-
-        fun version(): String? =
-            when (this) {
-                is Updated -> version
-                is NoChange -> version
-            }
-
-        fun installPath(): String =
-            when (this) {
-                is Updated -> installPath
-                is NoChange -> installPath
-            }
+        object UpToDate : SdkStatus
     }
+
+    protected data class ApplySdkResult(
+        val sdkName: String,
+        val sdkVersion: String,
+        val sdkPath: String,
+    )
 }
