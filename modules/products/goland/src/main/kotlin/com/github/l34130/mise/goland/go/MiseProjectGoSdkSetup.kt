@@ -15,6 +15,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VfsUtil
 import kotlin.reflect.KClass
 
 class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
@@ -32,12 +33,12 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
             }
         val newSdk = tool.asGoSdk()
 
-        if (currentSdk == GoSdk.NULL || currentSdk.name != newSdk.name && currentSdk.homeUrl != newSdk.homeUrl) {
+        if (currentSdk == GoSdk.NULL || currentSdk.name != newSdk.name || currentSdk.homeUrl != newSdk.homeUrl) {
             return SdkStatus.NeedsUpdate(
                 currentSdkName = currentSdk.name,
-                currentInstallPath = currentSdk.homeUrl.replace("file://", ""),
+                currentInstallPath = VfsUtil.urlToPath(currentSdk.homeUrl),
                 requestedSdkName = newSdk.name,
-                requestedInstallPath = newSdk.homeUrl.replace("file://", ""),
+                requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
             )
         }
 

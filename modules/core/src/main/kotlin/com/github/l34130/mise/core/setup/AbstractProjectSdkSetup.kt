@@ -120,10 +120,10 @@ abstract class AbstractProjectSdkSetup :
                 when (status) {
                     is SdkStatus.NeedsUpdate -> {
                         val title =
-                            if (status.currentSdkName == null) {
+                            if (status.currentInstallPath == null) {
                                 "${devToolName.canonicalName()} is not configured"
                             } else {
-                                val path = FileUtil.getLocationRelativeToUserHome(status.currentSdkName)
+                                val path = FileUtil.getLocationRelativeToUserHome(status.currentInstallPath)
                                 "${devToolName.canonicalName()} is misconfigured as $path"
                             }
 

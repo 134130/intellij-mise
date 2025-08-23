@@ -22,7 +22,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
         val currentSdk = ProjectRootManager.getInstance(project).projectSdk
         val newSdk = tool.asJavaSdk()
 
-        if (currentSdk == null || currentSdk.name != newSdk.name && currentSdk.homePath != newSdk.homePath) {
+        if (currentSdk == null || currentSdk.name != newSdk.name || currentSdk.homePath != newSdk.homePath) {
             return SdkStatus.NeedsUpdate(
                 currentSdkName = currentSdk?.name,
                 currentInstallPath = currentSdk?.homePath,
@@ -37,26 +37,27 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
     override fun applySdkConfiguration(
         tool: MiseDevTool,
         project: Project,
-    ): ApplySdkResult {
-        val projectJdkTable = ProjectJdkTable.getInstance()
+    ): ApplySdkResult =
+        WriteAction.computeAndWait<ApplySdkResult, Throwable> {
+            val projectJdkTable = ProjectJdkTable.getInstance()
 
-        val sdk =
-            tool.asJavaSdk().also { sdk ->
-                val oldJdk = projectJdkTable.findJdk(tool.jdkName())
-                if (oldJdk != null) {
-                    projectJdkTable.updateJdk(oldJdk, sdk)
-                } else {
-                    projectJdkTable.addJdk(sdk)
+            val sdk =
+                tool.asJavaSdk().also { sdk ->
+                    val oldJdk = projectJdkTable.findJdk(tool.jdkName())
+                    if (oldJdk != null) {
+                        projectJdkTable.updateJdk(oldJdk, sdk)
+                    } else {
+                        projectJdkTable.addJdk(sdk)
+                    }
                 }
-            }
 
-        ProjectRootManager.getInstance(project).projectSdk = sdk
-        return ApplySdkResult(
-            sdkName = sdk.name,
-            sdkVersion = sdk.versionString ?: tool.version,
-            sdkPath = sdk.homePath ?: tool.installPath,
-        )
-    }
+            ProjectRootManager.getInstance(project).projectSdk = sdk
+            ApplySdkResult(
+                sdkName = sdk.name,
+                sdkVersion = sdk.versionString ?: tool.version,
+                sdkPath = sdk.homePath ?: tool.installPath,
+            )
+        }
 
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null
 
