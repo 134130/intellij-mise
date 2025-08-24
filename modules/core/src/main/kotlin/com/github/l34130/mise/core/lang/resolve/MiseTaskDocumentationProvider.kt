@@ -57,7 +57,7 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
                                 .containingFile.viewProvider.virtualFile.path,
                         )
                     is MiseTomlTableTask -> presentablePath(element.project, task.keySegment.containingFile.viewProvider.virtualFile.path)
-                    is MiseUnknownTask -> task.source?.let { presentablePath(element.project, it) } ?: "unknown"
+                    is MiseUnknownTask -> presentablePath(element.project, task.source)
                 },
             )
             append(DocumentationMarkup.SECTIONS_END)

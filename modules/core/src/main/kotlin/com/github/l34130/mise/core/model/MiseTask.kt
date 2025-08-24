@@ -17,6 +17,8 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.childrenOfType
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
+import com.intellij.util.concurrency.annotations.RequiresReadLock
 import com.intellij.util.containers.addIfNotNull
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlInlineTable
@@ -37,13 +39,15 @@ sealed interface MiseTask {
     val description: String?
 
     @AbsolutePath
-    val source: String?
+    val source: String
 
     companion object {
         val DATA_KEY = DataKey.create<MiseTask>(javaClass.simpleName)
     }
 }
 
+@RequiresBackgroundThread
+@RequiresReadLock
 fun MiseTask.psiLocation(project: Project): PsiLocation<*>? =
     when (this) {
         is MiseShellScriptTask -> {
@@ -52,7 +56,7 @@ fun MiseTask.psiLocation(project: Project): PsiLocation<*>? =
         }
         is MiseTomlTableTask -> PsiLocation(this.keySegment)
         is MiseUnknownTask -> {
-            val source = this.source ?: return null
+            val source = this.source
             val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return null
             val psiFile = runReadAction { file.findPsiFile(project) } ?: return null
             PsiLocation(psiFile)
@@ -67,7 +71,7 @@ class MiseUnknownTask internal constructor(
     override val dependsPost: List<List<String>>? = null,
     override val description: String? = null,
     @AbsolutePath
-    override val source: String? = null,
+    override val source: String,
 ) : MiseTask
 
 class MiseShellScriptTask internal constructor(
@@ -77,7 +81,7 @@ class MiseShellScriptTask internal constructor(
     override val waitFor: List<List<String>>? = null,
     override val dependsPost: List<List<String>>? = null,
     override val description: String? = null,
-    override val source: String? = null,
+    override val source: String,
     val file: VirtualFile,
 ) : MiseTask {
     companion object {
@@ -100,7 +104,7 @@ class MiseTomlTableTask internal constructor(
     override val waitFor: List<List<String>>? = null,
     override val dependsPost: List<List<String>>? = null,
     override val description: String? = null,
-    override val source: String? = null,
+    override val source: String,
     val keySegment: TomlKeySegment,
 ) : MiseTask {
     companion object {

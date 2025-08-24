@@ -64,6 +64,17 @@ object MiseCommandLineHelper {
         return miseCommandLine.runRawCommandLine(commandLineArgs)
     }
 
+    // mise config --tracked-configs
+    @RequiresBackgroundThread
+    fun getTrackedConfigs(): Result<List<String>> {
+        val commandLineArgs = mutableListOf("config", "--tracked-configs")
+        val miseCommandLine = MiseCommandLine(null, null)
+        return miseCommandLine
+            .runRawCommandLine(commandLineArgs)
+            .map { it.split('\n').map { it.trim() } }
+            .map { it.filter { it.isNotEmpty() } }
+    }
+
     // mise exec
     @RequiresBackgroundThread
     fun executeCommand(

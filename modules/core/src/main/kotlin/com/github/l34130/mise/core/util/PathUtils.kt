@@ -7,7 +7,9 @@ import com.intellij.openapi.project.BaseProjectDirectories.Companion.getBaseDire
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.getPresentablePath
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.util.PathUtil
 import com.intellij.util.application
 import java.io.File
 
@@ -23,9 +25,9 @@ fun presentablePath(
     project: Project?,
     path: String,
 ): String {
-    val baseDir: String = project?.basePath ?: ProjectUtil.getBaseDir()
-    if (path.startsWith(baseDir)) {
-        return path.substring(baseDir.length + 1)
+    val projectHomeUrl: String = PathUtil.toSystemDependentName(project?.basePath ?: ProjectUtil.getBaseDir())
+    if (path.startsWith(projectHomeUrl)) {
+        return StringUtil.ELLIPSIS + path.substring(projectHomeUrl.length)
     }
 
     return getPresentablePath(path)

@@ -11,6 +11,7 @@ import com.github.l34130.mise.core.util.presentablePath
 import com.intellij.icons.AllIcons
 import com.intellij.ide.DataManager
 import com.intellij.ide.projectView.PresentationData
+import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.InplaceCommentAppender
 import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.ActionUiKind
@@ -25,17 +26,38 @@ import java.util.concurrent.ConcurrentHashMap
 
 class MiseTaskServiceNode(
     project: Project,
-    val tasks: Collection<MiseTaskNode>,
+    val nodes: Collection<AbstractTreeNode<*>>,
 ) : MiseNode<String>(
         project,
         "Tasks",
         AllIcons.Nodes.ConfigFolder,
     ) {
-    override fun getChildren(): Collection<MiseTaskNode> = tasks
+    override fun getChildren(): Collection<AbstractTreeNode<*>> = nodes
+}
+
+class MiseTaskDirectoryNode(
+    project: Project,
+    val directoryPath: String,
+    val directoryName: String,
+    val parent: MiseTaskDirectoryNode?,
+    val children: MutableList<MiseTaskDirectoryNode>,
+    val tasks: MutableList<MiseTaskNode>,
+) : MiseNode<String>(
+        project,
+        directoryPath,
+        AllIcons.Nodes.Folder,
+    ) {
+    override fun displayName(): String {
+        val relPath = if (parent == null) directoryPath else directoryName
+        return presentablePath(project, relPath)
+    }
+
+    override fun getChildren(): Collection<AbstractTreeNode<*>> = children + tasks
 }
 
 class MiseTaskNode(
     project: Project,
+    val parent: MiseTaskDirectoryNode?,
     val taskInfo: MiseTask,
 ) : MiseLeafNode<MiseTask>(
         project,
@@ -47,7 +69,11 @@ class MiseTaskNode(
     override fun displayName(): String = taskInfo.name
 
     override fun appendInplaceComments(appender: InplaceCommentAppender) {
-        appender.append(" ${taskInfo.source?.let { presentablePath(project, it) }}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+        val relPath =
+            parent?.directoryPath?.let {
+                taskInfo.source.replace("$it/", "")
+            } ?: taskInfo.source
+        appender.append(" ${presentablePath(project, relPath)}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
     }
 
     override fun createPresentation(): PresentationData =
@@ -97,7 +123,7 @@ class MiseTaskNode(
                 is MiseUnknownTask -> null
             },
         ).toMutableList().apply {
-            addAll(MiseTaskNode.EP_NAME.flatMap { it.contributeActions(taskInfo) })
+            addAll(EP_NAME.flatMap { it.contributeActions(taskInfo) })
         }
     }
 

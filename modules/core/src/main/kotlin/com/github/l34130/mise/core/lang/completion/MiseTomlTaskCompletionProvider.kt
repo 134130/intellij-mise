@@ -106,7 +106,7 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
                                 result.addElement(
                                     LookupElementBuilder.create(task.name)
                                         .withInsertHandler(StringLiteralInsertionHandler())
-                                        .withTypeText(task.source?.let { presentablePath(project, it) }),
+                                        .withTypeText(presentablePath(project, task.source)),
                                 )
                                 continue
                             }
