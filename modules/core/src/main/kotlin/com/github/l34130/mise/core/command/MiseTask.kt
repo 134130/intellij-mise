@@ -8,6 +8,6 @@ data class MiseTask(
     val dependsPost: List<List<String>>? = null,
     val description: String? = null,
     val hide: Boolean = false,
-    val source: String? = null,
+    val source: String,
     val command: String?,
 )

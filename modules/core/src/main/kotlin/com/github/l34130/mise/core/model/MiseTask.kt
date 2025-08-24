@@ -6,9 +6,6 @@ import com.github.l34130.mise.core.lang.psi.or
 import com.github.l34130.mise.core.lang.psi.stringArray
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.util.AbsolutePath
-import com.github.l34130.mise.core.util.RelativePath
-import com.github.l34130.mise.core.util.baseDirectory
-import com.github.l34130.mise.core.util.collapsePath
 import com.github.l34130.mise.core.util.getRelativePath
 import com.intellij.execution.PsiLocation
 import com.intellij.openapi.actionSystem.DataKey
@@ -20,6 +17,8 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.childrenOfType
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
+import com.intellij.util.concurrency.annotations.RequiresReadLock
 import com.intellij.util.containers.addIfNotNull
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlInlineTable
@@ -30,9 +29,6 @@ import org.toml.lang.psi.TomlKeyValueOwner
 import org.toml.lang.psi.TomlLiteral
 import org.toml.lang.psi.TomlTable
 import org.toml.lang.psi.TomlTableHeader
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.text.split
 
 sealed interface MiseTask {
     val name: String
@@ -42,14 +38,16 @@ sealed interface MiseTask {
     val dependsPost: List<List<String>>?
     val description: String?
 
-    @RelativePath
-    val source: String?
+    @AbsolutePath
+    val source: String
 
     companion object {
         val DATA_KEY = DataKey.create<MiseTask>(javaClass.simpleName)
     }
 }
 
+@RequiresBackgroundThread
+@RequiresReadLock
 fun MiseTask.psiLocation(project: Project): PsiLocation<*>? =
     when (this) {
         is MiseShellScriptTask -> {
@@ -58,7 +56,7 @@ fun MiseTask.psiLocation(project: Project): PsiLocation<*>? =
         }
         is MiseTomlTableTask -> PsiLocation(this.keySegment)
         is MiseUnknownTask -> {
-            val source = this.source ?: return null
+            val source = this.source
             val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return null
             val psiFile = runReadAction { file.findPsiFile(project) } ?: return null
             PsiLocation(psiFile)
@@ -73,7 +71,7 @@ class MiseUnknownTask internal constructor(
     override val dependsPost: List<List<String>>? = null,
     override val description: String? = null,
     @AbsolutePath
-    override val source: String? = null,
+    override val source: String,
 ) : MiseTask
 
 class MiseShellScriptTask internal constructor(
@@ -83,19 +81,18 @@ class MiseShellScriptTask internal constructor(
     override val waitFor: List<List<String>>? = null,
     override val dependsPost: List<List<String>>? = null,
     override val description: String? = null,
-    override val source: String? = null,
+    override val source: String,
     val file: VirtualFile,
 ) : MiseTask {
     companion object {
         fun resolveOrNull(
-            project: Project,
             baseDir: VirtualFile,
             file: VirtualFile,
         ): MiseShellScriptTask? =
             MiseShellScriptTask(
                 name = FileUtil.splitPath(getRelativePath(baseDir, file)!!.substringBeforeLast('.')).joinToString(":"),
                 file = file,
-                source = getRelativePath(project.baseDirectory(), file.path),
+                source = file.path,
             )
     }
 }
@@ -107,7 +104,7 @@ class MiseTomlTableTask internal constructor(
     override val waitFor: List<List<String>>? = null,
     override val dependsPost: List<List<String>>? = null,
     override val description: String? = null,
-    override val source: String? = null,
+    override val source: String,
     val keySegment: TomlKeySegment,
 ) : MiseTask {
     companion object {
@@ -237,7 +234,7 @@ class MiseTomlTableTask internal constructor(
                 waitFor = table.getValueWithKey("wait_for")?.stringArray?.map { it.split(' ', ignoreCase = false) },
                 dependsPost = table.getValueWithKey("depends_post")?.stringArray?.map { it.split(' ', ignoreCase = false) },
                 aliases = table.getValueWithKey("alias")?.stringArray,
-                source = collapsePath(keySegment.containingFile, keySegment.project),
+                source = keySegment.containingFile.viewProvider.virtualFile.path,
                 keySegment = keySegment,
             )
         }

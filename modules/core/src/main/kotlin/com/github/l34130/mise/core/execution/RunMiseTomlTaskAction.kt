@@ -2,6 +2,7 @@ package com.github.l34130.mise.core.execution
 
 import com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationProducer
 import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.github.l34130.mise.core.model.psiLocation
 import com.intellij.execution.Executor
 import com.intellij.execution.Location
@@ -26,36 +27,38 @@ internal class RunMiseTomlTaskAction(
     override fun actionPerformed(event: AnActionEvent) {
         val project = event.project ?: return
 
-        val psiLocation = miseTask.psiLocation(project) ?: return
+        if (miseTask is MiseUnknownTask) {
+            TODO("Handle unknown task")
+        } else {
+            val psiLocation = miseTask.psiLocation(project) ?: return
 
-        var dataContext =
-            SimpleDataContext.getSimpleContext(
-                Location.DATA_KEY,
-                psiLocation,
-                event.dataContext,
-            )
+            var dataContext =
+                SimpleDataContext.getSimpleContext(
+                    Location.DATA_KEY,
+                    psiLocation,
+                    event.dataContext,
+                )
 
-        dataContext =
-            SimpleDataContext.getSimpleContext(
-                MiseTask.DATA_KEY,
-                miseTask,
-                dataContext,
-            )
+            dataContext =
+                SimpleDataContext.getSimpleContext(
+                    MiseTask.DATA_KEY,
+                    miseTask,
+                    dataContext,
+                )
 
-        val context = ConfigurationContext.getFromContext(dataContext, event.place)
-
-        val producer = MiseTomlTaskRunConfigurationProducer()
-        val configuration: RunnerAndConfigurationSettings =
-            run {
-                producer.findOrCreateConfigurationFromContext(context)?.configurationSettings
-                    ?: event.project?.let { project ->
-                        RunManager.getInstance(project).getConfigurationTemplate(producer.configurationFactory)
-                    }
-            } ?: return
-
-        val runManager = (context.runManager as? RunManagerEx) ?: return
-        runManager.setTemporaryConfiguration(configuration)
-        ExecutionUtil.runConfiguration(configuration, Executor.EXECUTOR_EXTENSION_NAME.extensionList.first())
+            val context = ConfigurationContext.getFromContext(dataContext, event.place)
+            val producer = MiseTomlTaskRunConfigurationProducer()
+            val configuration: RunnerAndConfigurationSettings =
+                run {
+                    producer.findOrCreateConfigurationFromContext(context)?.configurationSettings
+                        ?: event.project?.let { project ->
+                            RunManager.getInstance(project).getConfigurationTemplate(producer.configurationFactory)
+                        }
+                } ?: return
+            val runManager = (context.runManager as? RunManagerEx) ?: return
+            runManager.setTemporaryConfiguration(configuration)
+            ExecutionUtil.runConfiguration(configuration, Executor.EXECUTOR_EXTENSION_NAME.extensionList.first())
+        }
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT

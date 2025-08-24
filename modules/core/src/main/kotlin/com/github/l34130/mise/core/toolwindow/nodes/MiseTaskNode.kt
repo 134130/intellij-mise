@@ -7,11 +7,14 @@ import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.github.l34130.mise.core.toolwindow.ActionOnRightClick
 import com.github.l34130.mise.core.toolwindow.DoubleClickable
+import com.github.l34130.mise.core.util.presentablePath
 import com.intellij.icons.AllIcons
 import com.intellij.ide.DataManager
 import com.intellij.ide.projectView.PresentationData
+import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.InplaceCommentAppender
 import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.ActionUiKind
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
@@ -23,17 +26,38 @@ import java.util.concurrent.ConcurrentHashMap
 
 class MiseTaskServiceNode(
     project: Project,
-    val tasks: Collection<MiseTaskNode>,
+    val nodes: Collection<AbstractTreeNode<*>>,
 ) : MiseNode<String>(
         project,
         "Tasks",
         AllIcons.Nodes.ConfigFolder,
     ) {
-    override fun getChildren(): Collection<MiseTaskNode> = tasks
+    override fun getChildren(): Collection<AbstractTreeNode<*>> = nodes
+}
+
+class MiseTaskDirectoryNode(
+    project: Project,
+    val directoryPath: String,
+    val directoryName: String,
+    val parent: MiseTaskDirectoryNode?,
+    val children: MutableList<MiseTaskDirectoryNode>,
+    val tasks: MutableList<MiseTaskNode>,
+) : MiseNode<String>(
+        project,
+        directoryPath,
+        AllIcons.Nodes.Folder,
+    ) {
+    override fun displayName(): String {
+        val relPath = if (parent == null) directoryPath else directoryName
+        return presentablePath(project, relPath)
+    }
+
+    override fun getChildren(): Collection<AbstractTreeNode<*>> = children + tasks
 }
 
 class MiseTaskNode(
     project: Project,
+    val parent: MiseTaskDirectoryNode?,
     val taskInfo: MiseTask,
 ) : MiseLeafNode<MiseTask>(
         project,
@@ -45,7 +69,11 @@ class MiseTaskNode(
     override fun displayName(): String = taskInfo.name
 
     override fun appendInplaceComments(appender: InplaceCommentAppender) {
-        appender.append(" ${taskInfo.source}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+        val relPath =
+            parent?.directoryPath?.let {
+                taskInfo.source.replace("$it/", "")
+            } ?: taskInfo.source
+        appender.append(" ${presentablePath(project, relPath)}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
     }
 
     override fun createPresentation(): PresentationData =
@@ -54,20 +82,26 @@ class MiseTaskNode(
         }
 
     override fun onDoubleClick(event: MouseEvent) {
+        if (taskInfo is MiseUnknownTask) return
+
         val action = RunMiseTomlTaskAction(taskInfo)
         val actionEvent =
-            AnActionEvent.createFromAnAction(
+            AnActionEvent.createEvent(
                 action,
-                event,
-                ActionPlaces.TOOLWINDOW_CONTENT,
                 DataManager.getInstance().getDataContext(event.component),
+                null,
+                ActionPlaces.TOOLWINDOW_CONTENT,
+                ActionUiKind.NONE,
+                event,
             )
 
         action.actionPerformed(actionEvent)
     }
 
-    override fun actions(): List<AnAction> =
-        listOfNotNull(
+    override fun actions(): List<AnAction> {
+        if (taskInfo is MiseUnknownTask) return emptyList()
+
+        return listOfNotNull(
             RunMiseTomlTaskAction(taskInfo),
             when (taskInfo) {
                 is MiseShellScriptTask -> {
@@ -77,6 +111,7 @@ class MiseTaskNode(
                         }
                     }
                 }
+
                 is MiseTomlTableTask -> {
                     object : AnAction("Go to Declaration", "Go to Declaration", AllIcons.General.Locate) {
                         override fun actionPerformed(e: AnActionEvent) {
@@ -84,11 +119,13 @@ class MiseTaskNode(
                         }
                     }
                 }
+
                 is MiseUnknownTask -> null
             },
         ).toMutableList().apply {
-            addAll(MiseTaskNode.EP_NAME.flatMap { it.contributeActions(taskInfo) })
+            addAll(EP_NAME.flatMap { it.contributeActions(taskInfo) })
         }
+    }
 
     companion object {
         val EP_NAME = ConcurrentHashMap.newKeySet<MiseTaskNodeActionsContributor>()

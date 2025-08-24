@@ -64,6 +64,8 @@ class MiseProjectService(
         taskConfigDirectories.clear()
         tasks.clear()
 
+        // TODO: Use [MiseTaskResolver]
+
         loadMiseTomlFiles()
         loadFileTaskDirectories()
         loadTasks()
@@ -173,7 +175,7 @@ class MiseProjectService(
                         val nioPath = it.toNioPathOrNull() ?: return@filter true
                         nioPath.isExecutable()
                     }.mapNotNullTo(result) {
-                        MiseShellScriptTask.resolveOrNull(project, directory, it)
+                        MiseShellScriptTask.resolveOrNull(directory, it)
                     }
             }
 
