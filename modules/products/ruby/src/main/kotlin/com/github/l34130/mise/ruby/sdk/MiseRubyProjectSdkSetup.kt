@@ -15,7 +15,7 @@ import org.jetbrains.plugins.ruby.ruby.sdk.RubySdkType
 import kotlin.reflect.KClass
 
 class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
-    override fun getDevToolName(): MiseDevToolName = MiseDevToolName("ruby")
+    override fun getDevToolName(project: Project): MiseDevToolName = MiseDevToolName("ruby")
 
     override fun checkSdkStatus(
         tool: MiseDevTool,
@@ -29,9 +29,7 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
 
         if (currentSdk == null || currentSdk.name != newSdk.name && currentSdk.homePath != newSdk.homePath) {
             return SdkStatus.NeedsUpdate(
-                currentSdkName = currentSdk?.name,
-                currentInstallPath = currentSdk?.homePath,
-                requestedSdkName = newSdk.name,
+                currentSdkVersion = currentSdk?.versionString,
                 requestedInstallPath = newSdk.homePath ?: tool.installPath,
             )
         }

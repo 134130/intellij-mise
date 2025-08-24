@@ -10,7 +10,6 @@ import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ShowSettingsUtil
@@ -34,7 +33,7 @@ abstract class AbstractProjectSdkSetup :
         configureSdk(project, false)
     }
 
-    abstract fun getDevToolName(): MiseDevToolName
+    abstract fun getDevToolName(project: Project): MiseDevToolName
 
     protected abstract fun checkSdkStatus(
         tool: MiseDevTool,
@@ -53,7 +52,7 @@ abstract class AbstractProjectSdkSetup :
         isUserInteraction: Boolean,
     ) {
         application.executeOnPooledThread {
-            val devToolName = getDevToolName()
+            val devToolName = getDevToolName(project)
             val miseNotificationService = project.service<MiseNotificationService>()
 
             val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
@@ -120,28 +119,25 @@ abstract class AbstractProjectSdkSetup :
                 when (status) {
                     is SdkStatus.NeedsUpdate -> {
                         val title =
-                            if (status.currentInstallPath == null) {
+                            if (status.currentSdkVersion == null) {
                                 "${devToolName.canonicalName()} is not configured"
                             } else {
-                                val path = FileUtil.getLocationRelativeToUserHome(status.currentInstallPath)
-                                "${devToolName.canonicalName()} is misconfigured as $path"
+                                "${devToolName.canonicalName()} is misconfigured as '${devToolName.value}@${status.currentSdkVersion}'"
                             }
 
-                        if (isUserInteraction) {
+                        val applyAction = {
                             applySdkConfiguration(tool, project)
                             miseNotificationService.info(
-                                "${devToolName.canonicalName()} is configured to '${status.requestedSdkName}'",
+                                "${devToolName.canonicalName()} is configured to '${devToolName.value}@${tool.version}'",
                                 FileUtil.getLocationRelativeToUserHome(status.requestedInstallPath),
                             )
+                        }
+
+                        if (isUserInteraction) {
+                            applyAction()
                         } else {
-                            miseNotificationService.info(title, "Can configure as ${status.requestedSdkName}") {
-                                NotificationAction.createSimpleExpiring("Apply") {
-                                    applySdkConfiguration(tool, project)
-                                    miseNotificationService.info(
-                                        "${devToolName.canonicalName()} is configured to '${status.requestedSdkName}'",
-                                        FileUtil.getLocationRelativeToUserHome(status.requestedInstallPath),
-                                    )
-                                }
+                            miseNotificationService.info(title, "Can configure as '${devToolName.value}@${tool.version}'") {
+                                NotificationAction.createSimpleExpiring("Apply", applyAction)
                             }
                         }
                     }
@@ -165,9 +161,7 @@ abstract class AbstractProjectSdkSetup :
 
     protected sealed interface SdkStatus {
         data class NeedsUpdate(
-            val currentSdkName: String?,
-            val currentInstallPath: String?,
-            val requestedSdkName: String,
+            val currentSdkVersion: String?,
             val requestedInstallPath: String,
         ) : SdkStatus
 

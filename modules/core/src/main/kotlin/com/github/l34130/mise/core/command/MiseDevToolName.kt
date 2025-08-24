@@ -32,6 +32,9 @@ value class MiseDevToolName(
                 "dotnet" to ".NET",
                 "terraform" to "Terraform",
                 "docker" to "Docker",
+                "npm" to "npm",
+                "pnpm" to "pnpm",
+                "yarn" to "Yarn",
             )
     }
 

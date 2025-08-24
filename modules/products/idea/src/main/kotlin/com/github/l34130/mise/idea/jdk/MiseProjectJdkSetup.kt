@@ -13,7 +13,7 @@ import com.intellij.openapi.roots.ProjectRootManager
 import kotlin.reflect.KClass
 
 class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
-    override fun getDevToolName() = MiseDevToolName("java")
+    override fun getDevToolName(project: Project) = MiseDevToolName("java")
 
     override fun checkSdkStatus(
         tool: MiseDevTool,
@@ -24,9 +24,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
 
         if (currentSdk == null || currentSdk.name != newSdk.name || currentSdk.homePath != newSdk.homePath) {
             return SdkStatus.NeedsUpdate(
-                currentSdkName = currentSdk?.name,
-                currentInstallPath = currentSdk?.homePath,
-                requestedSdkName = newSdk.name,
+                currentSdkVersion = currentSdk?.versionString,
                 requestedInstallPath = newSdk.homePath ?: tool.installPath,
             )
         }

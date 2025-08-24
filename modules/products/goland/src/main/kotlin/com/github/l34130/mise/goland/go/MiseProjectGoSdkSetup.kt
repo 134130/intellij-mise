@@ -5,21 +5,16 @@ import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.goide.configuration.GoSdkConfigurable
 import com.goide.sdk.GoSdk
-import com.goide.sdk.GoSdkImpl
 import com.goide.sdk.GoSdkService
-import com.goide.sdk.GoSdkUtil
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.projectRoots.Sdk
-import com.intellij.openapi.util.io.FileUtil
-import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import kotlin.reflect.KClass
 
 class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
-    override fun getDevToolName() = MiseDevToolName("go")
+    override fun getDevToolName(project: Project) = MiseDevToolName("go")
 
     override fun checkSdkStatus(
         tool: MiseDevTool,
@@ -27,17 +22,22 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
     ): SdkStatus {
         val sdkService = GoSdkService.getInstance(project)
 
-        val currentSdk =
+        val currentSdk: GoSdk =
             ReadAction.compute<GoSdk, Throwable> {
                 sdkService.getSdk(null)
             }
         val newSdk = tool.asGoSdk()
 
-        if (currentSdk == GoSdk.NULL || currentSdk.name != newSdk.name || currentSdk.homeUrl != newSdk.homeUrl) {
+        if (currentSdk == GoSdk.NULL) {
             return SdkStatus.NeedsUpdate(
-                currentSdkName = currentSdk.name,
-                currentInstallPath = VfsUtil.urlToPath(currentSdk.homeUrl),
-                requestedSdkName = newSdk.name,
+                currentSdkVersion = null,
+                requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
+            )
+        }
+
+        if (currentSdk.name != newSdk.name || currentSdk.homeUrl != newSdk.homeUrl) {
+            return SdkStatus.NeedsUpdate(
+                currentSdkVersion = newSdk.version ?: newSdk.majorVersion.name,
                 requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
             )
         }

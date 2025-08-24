@@ -7,7 +7,6 @@ import com.intellij.deno.DenoConfigurable
 import com.intellij.deno.DenoSettings
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.application.writeAction
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
@@ -15,7 +14,7 @@ import kotlin.io.path.Path
 import kotlin.reflect.KClass
 
 class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
-    override fun getDevToolName() = MiseDevToolName("deno")
+    override fun getDevToolName(project: Project) = MiseDevToolName("deno")
 
     override fun checkSdkStatus(
         tool: MiseDevTool,
@@ -33,9 +32,7 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
             SdkStatus.UpToDate
         } else {
             SdkStatus.NeedsUpdate(
-                currentSdkName = "deno",
-                currentInstallPath = currentDenoPath,
-                requestedSdkName = "deno",
+                currentSdkVersion = null,
                 requestedInstallPath = newDenoPath,
             )
         }

@@ -16,6 +16,7 @@ object MiseNotificationServiceUtils {
     ) {
         val notificationService = MiseNotificationService.getInstance(project)
         when (throwable) {
+            // TODO: Handle other exceptions (e.g. MiseCommandLineNotFoundException)
             is MiseCommandLineException -> {
                 when (throwable) {
                     is MiseCommandLineNotTrustedConfigFileException -> {
