@@ -4,7 +4,7 @@ import com.github.l34130.mise.core.MiseProjectService
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
-import com.github.l34130.mise.core.util.collapsePath
+import com.github.l34130.mise.core.util.presentablePath
 import com.intellij.lang.documentation.AbstractDocumentationProvider
 import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.components.service
@@ -50,9 +50,14 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
             appendKeyValueSection(
                 "File:",
                 when (task) {
-                    is MiseShellScriptTask -> collapsePath(element as PsiFile, element.project)
-                    is MiseTomlTableTask -> collapsePath(task.keySegment.containingFile, element.project)
-                    is MiseUnknownTask -> task.source?.let { collapsePath(it, element.project) } ?: "unknown"
+                    is MiseShellScriptTask ->
+                        presentablePath(
+                            element.project,
+                            (element as PsiFile)
+                                .containingFile.viewProvider.virtualFile.path,
+                        )
+                    is MiseTomlTableTask -> presentablePath(element.project, task.keySegment.containingFile.viewProvider.virtualFile.path)
+                    is MiseUnknownTask -> task.source?.let { presentablePath(element.project, it) } ?: "unknown"
                 },
             )
             append(DocumentationMarkup.SECTIONS_END)

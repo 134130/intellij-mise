@@ -173,7 +173,7 @@ class MiseProjectService(
                         val nioPath = it.toNioPathOrNull() ?: return@filter true
                         nioPath.isExecutable()
                     }.mapNotNullTo(result) {
-                        MiseShellScriptTask.resolveOrNull(project, directory, it)
+                        MiseShellScriptTask.resolveOrNull(directory, it)
                     }
             }
 

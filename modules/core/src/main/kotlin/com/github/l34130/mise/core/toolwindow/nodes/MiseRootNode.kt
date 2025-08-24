@@ -6,7 +6,6 @@ import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.github.l34130.mise.core.setting.MiseProjectSettings
-import com.github.l34130.mise.core.util.collapsePath
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
@@ -123,7 +122,7 @@ class MiseRootNode(
                             aliases = it.aliases,
                             depends = it.depends,
                             description = it.description,
-                            source = it.source?.let { source -> collapsePath(source, project) },
+                            source = it.source,
                         ),
                 )
             }

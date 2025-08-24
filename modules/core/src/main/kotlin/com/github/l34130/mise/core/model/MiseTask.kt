@@ -6,9 +6,6 @@ import com.github.l34130.mise.core.lang.psi.or
 import com.github.l34130.mise.core.lang.psi.stringArray
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.util.AbsolutePath
-import com.github.l34130.mise.core.util.RelativePath
-import com.github.l34130.mise.core.util.baseDirectory
-import com.github.l34130.mise.core.util.collapsePath
 import com.github.l34130.mise.core.util.getRelativePath
 import com.intellij.execution.PsiLocation
 import com.intellij.openapi.actionSystem.DataKey
@@ -30,9 +27,6 @@ import org.toml.lang.psi.TomlKeyValueOwner
 import org.toml.lang.psi.TomlLiteral
 import org.toml.lang.psi.TomlTable
 import org.toml.lang.psi.TomlTableHeader
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.text.split
 
 sealed interface MiseTask {
     val name: String
@@ -42,7 +36,7 @@ sealed interface MiseTask {
     val dependsPost: List<List<String>>?
     val description: String?
 
-    @RelativePath
+    @AbsolutePath
     val source: String?
 
     companion object {
@@ -88,14 +82,13 @@ class MiseShellScriptTask internal constructor(
 ) : MiseTask {
     companion object {
         fun resolveOrNull(
-            project: Project,
             baseDir: VirtualFile,
             file: VirtualFile,
         ): MiseShellScriptTask? =
             MiseShellScriptTask(
                 name = FileUtil.splitPath(getRelativePath(baseDir, file)!!.substringBeforeLast('.')).joinToString(":"),
                 file = file,
-                source = getRelativePath(project.baseDirectory(), file.path),
+                source = file.path,
             )
     }
 }
@@ -237,7 +230,7 @@ class MiseTomlTableTask internal constructor(
                 waitFor = table.getValueWithKey("wait_for")?.stringArray?.map { it.split(' ', ignoreCase = false) },
                 dependsPost = table.getValueWithKey("depends_post")?.stringArray?.map { it.split(' ', ignoreCase = false) },
                 aliases = table.getValueWithKey("alias")?.stringArray,
-                source = collapsePath(keySegment.containingFile, keySegment.project),
+                source = keySegment.containingFile.viewProvider.virtualFile.path,
                 keySegment = keySegment,
             )
         }
