@@ -14,7 +14,7 @@ import kotlin.io.path.Path
 import kotlin.reflect.KClass
 
 class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
-    override fun getDevToolName() = MiseDevToolName("deno")
+    override fun getDevToolName(project: Project) = MiseDevToolName("deno")
 
     override fun checkSdkStatus(
         tool: MiseDevTool,
@@ -32,7 +32,6 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
             SdkStatus.UpToDate
         } else {
             SdkStatus.NeedsUpdate(
-                currentInstallPath = currentDenoPath,
                 currentSdkVersion = null,
                 requestedInstallPath = newDenoPath,
             )

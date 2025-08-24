@@ -33,7 +33,7 @@ abstract class AbstractProjectSdkSetup :
         configureSdk(project, false)
     }
 
-    abstract fun getDevToolName(): MiseDevToolName
+    abstract fun getDevToolName(project: Project): MiseDevToolName
 
     protected abstract fun checkSdkStatus(
         tool: MiseDevTool,
@@ -52,7 +52,7 @@ abstract class AbstractProjectSdkSetup :
         isUserInteraction: Boolean,
     ) {
         application.executeOnPooledThread {
-            val devToolName = getDevToolName()
+            val devToolName = getDevToolName(project)
             val miseNotificationService = project.service<MiseNotificationService>()
 
             val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
@@ -119,11 +119,10 @@ abstract class AbstractProjectSdkSetup :
                 when (status) {
                     is SdkStatus.NeedsUpdate -> {
                         val title =
-                            if (status.currentInstallPath == null) {
+                            if (status.currentSdkVersion == null) {
                                 "${devToolName.canonicalName()} is not configured"
                             } else {
-                                val path = FileUtil.getLocationRelativeToUserHome(status.currentInstallPath)
-                                "${devToolName.canonicalName()} is misconfigured as $path"
+                                "${devToolName.canonicalName()} is misconfigured as '${devToolName.value}@${status.currentSdkVersion}'"
                             }
 
                         val applyAction = {
@@ -163,7 +162,6 @@ abstract class AbstractProjectSdkSetup :
     protected sealed interface SdkStatus {
         data class NeedsUpdate(
             val currentSdkVersion: String?,
-            val currentInstallPath: String?,
             val requestedInstallPath: String,
         ) : SdkStatus
 

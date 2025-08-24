@@ -14,7 +14,7 @@ import com.intellij.openapi.vfs.VfsUtil
 import kotlin.reflect.KClass
 
 class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
-    override fun getDevToolName() = MiseDevToolName("go")
+    override fun getDevToolName(project: Project) = MiseDevToolName("go")
 
     override fun checkSdkStatus(
         tool: MiseDevTool,
@@ -30,7 +30,6 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
 
         if (currentSdk == GoSdk.NULL) {
             return SdkStatus.NeedsUpdate(
-                currentInstallPath = null,
                 currentSdkVersion = null,
                 requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
             )
@@ -38,7 +37,6 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
 
         if (currentSdk.name != newSdk.name || currentSdk.homeUrl != newSdk.homeUrl) {
             return SdkStatus.NeedsUpdate(
-                currentInstallPath = VfsUtil.urlToPath(currentSdk.homeUrl),
                 currentSdkVersion = newSdk.version ?: newSdk.majorVersion.name,
                 requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
             )

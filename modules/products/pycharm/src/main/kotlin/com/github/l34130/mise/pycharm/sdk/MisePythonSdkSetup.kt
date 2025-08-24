@@ -18,7 +18,7 @@ import com.jetbrains.python.sdk.PythonSdkUtil
 import kotlin.reflect.KClass
 
 class MisePythonSdkSetup : AbstractProjectSdkSetup() {
-    override fun getDevToolName(): MiseDevToolName = MiseDevToolName("python")
+    override fun getDevToolName(project: Project): MiseDevToolName = MiseDevToolName("python")
 
     override fun checkSdkStatus(
         tool: MiseDevTool,
@@ -34,7 +34,6 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
 
         if (currentSdk == null || !currentSdk.homePath.equals(newSdk.homePath)) {
             return SdkStatus.NeedsUpdate(
-                currentInstallPath = currentSdk?.homePath,
                 currentSdkVersion = currentSdk?.versionString,
                 requestedInstallPath = newSdk.homePath ?: tool.installPath,
             )
