@@ -36,13 +36,12 @@ class MiseProjectNodeSetup : AbstractProjectSdkSetup() {
 
         if (currentInterpreter == null || !currentInterpreter.deepEquals(newInterpreter)) {
             return SdkStatus.NeedsUpdate(
-                currentSdkName = currentInterpreter?.referenceName,
                 currentInstallPath =
                     when (currentInterpreter) {
                         is NodeJsLocalInterpreter -> currentInterpreter.interpreterSystemDependentPath
                         else -> "unknown"
                     },
-                requestedSdkName = newInterpreter.referenceName,
+                currentSdkVersion = currentInterpreter?.cachedVersion?.get()?.parsedVersion,
                 requestedInstallPath = newInterpreter.interpreterSystemDependentPath,
             )
         }
@@ -61,7 +60,7 @@ class MiseProjectNodeSetup : AbstractProjectSdkSetup() {
             nodeJsInterpreterManager.setInterpreterRef(newInterpreter.toRef())
             setupNodePackageManager(project)
             ApplySdkResult(
-                sdkName = newInterpreter.referenceName,
+                sdkName = newInterpreter.presentableName,
                 sdkVersion = newInterpreter.cachedVersion?.get()?.parsedVersion ?: tool.version,
                 sdkPath = newInterpreter.interpreterSystemDependentPath,
             )

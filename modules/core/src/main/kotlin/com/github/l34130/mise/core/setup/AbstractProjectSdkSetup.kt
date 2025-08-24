@@ -10,7 +10,6 @@ import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ShowSettingsUtil
@@ -127,21 +126,19 @@ abstract class AbstractProjectSdkSetup :
                                 "${devToolName.canonicalName()} is misconfigured as $path"
                             }
 
-                        if (isUserInteraction) {
+                        val applyAction = {
                             applySdkConfiguration(tool, project)
                             miseNotificationService.info(
-                                "${devToolName.canonicalName()} is configured to '${status.requestedSdkName}'",
+                                "${devToolName.canonicalName()} is configured to '${devToolName.value}@${tool.version}'",
                                 FileUtil.getLocationRelativeToUserHome(status.requestedInstallPath),
                             )
+                        }
+
+                        if (isUserInteraction) {
+                            applyAction()
                         } else {
-                            miseNotificationService.info(title, "Can configure as ${status.requestedSdkName}") {
-                                NotificationAction.createSimpleExpiring("Apply") {
-                                    applySdkConfiguration(tool, project)
-                                    miseNotificationService.info(
-                                        "${devToolName.canonicalName()} is configured to '${status.requestedSdkName}'",
-                                        FileUtil.getLocationRelativeToUserHome(status.requestedInstallPath),
-                                    )
-                                }
+                            miseNotificationService.info(title, "Can configure as '${devToolName.value}@${tool.version}'") {
+                                NotificationAction.createSimpleExpiring("Apply", applyAction)
                             }
                         }
                     }
@@ -165,9 +162,8 @@ abstract class AbstractProjectSdkSetup :
 
     protected sealed interface SdkStatus {
         data class NeedsUpdate(
-            val currentSdkName: String?,
+            val currentSdkVersion: String?,
             val currentInstallPath: String?,
-            val requestedSdkName: String,
             val requestedInstallPath: String,
         ) : SdkStatus
 

@@ -34,9 +34,8 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
 
         if (currentSdk == null || !currentSdk.homePath.equals(newSdk.homePath)) {
             return SdkStatus.NeedsUpdate(
-                currentSdkName = currentSdk?.name,
                 currentInstallPath = currentSdk?.homePath,
-                requestedSdkName = newSdk.name,
+                currentSdkVersion = currentSdk?.versionString,
                 requestedInstallPath = newSdk.homePath ?: tool.installPath,
             )
         }

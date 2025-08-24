@@ -5,16 +5,11 @@ import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.goide.configuration.GoSdkConfigurable
 import com.goide.sdk.GoSdk
-import com.goide.sdk.GoSdkImpl
 import com.goide.sdk.GoSdkService
-import com.goide.sdk.GoSdkUtil
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.projectRoots.Sdk
-import com.intellij.openapi.util.io.FileUtil
-import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import kotlin.reflect.KClass
 
@@ -35,9 +30,8 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
 
         if (currentSdk == GoSdk.NULL || currentSdk.name != newSdk.name || currentSdk.homeUrl != newSdk.homeUrl) {
             return SdkStatus.NeedsUpdate(
-                currentSdkName = currentSdk.name,
                 currentInstallPath = VfsUtil.urlToPath(currentSdk.homeUrl),
-                requestedSdkName = newSdk.name,
+                currentSdkVersion = newSdk.version ?: newSdk.majorVersion.name,
                 requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
             )
         }
