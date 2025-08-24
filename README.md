@@ -19,6 +19,9 @@
 - **Tool Integration**: Set project's SDK automatically from `mise.toml` files.
   - `java`, `go`, `node`, `deno` and `ruby` SDKs are supported.
   - For `python`, only `uv` is supported.
+- **Task Execution**: Run tasks from `mise.toml` files.
+  - Show the task list on the right side tool window.
+  - Execute tasks defined in the configuration files of the project or subdirectory.
 - **Language Support**: Provides language features for `mise.toml` files.
   - Code completion
   - Reference (refactoring)
