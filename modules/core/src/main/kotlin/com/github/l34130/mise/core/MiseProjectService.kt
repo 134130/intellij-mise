@@ -64,6 +64,8 @@ class MiseProjectService(
         taskConfigDirectories.clear()
         tasks.clear()
 
+        // TODO: Use [MiseTaskResolver]
+
         loadMiseTomlFiles()
         loadFileTaskDirectories()
         loadTasks()
