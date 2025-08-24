@@ -22,13 +22,21 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
     ): SdkStatus {
         val sdkService = GoSdkService.getInstance(project)
 
-        val currentSdk =
+        val currentSdk: GoSdk =
             ReadAction.compute<GoSdk, Throwable> {
                 sdkService.getSdk(null)
             }
         val newSdk = tool.asGoSdk()
 
-        if (currentSdk == GoSdk.NULL || currentSdk.name != newSdk.name || currentSdk.homeUrl != newSdk.homeUrl) {
+        if (currentSdk == GoSdk.NULL) {
+            return SdkStatus.NeedsUpdate(
+                currentInstallPath = null,
+                currentSdkVersion = null,
+                requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
+            )
+        }
+
+        if (currentSdk.name != newSdk.name || currentSdk.homeUrl != newSdk.homeUrl) {
             return SdkStatus.NeedsUpdate(
                 currentInstallPath = VfsUtil.urlToPath(currentSdk.homeUrl),
                 currentSdkVersion = newSdk.version ?: newSdk.majorVersion.name,
