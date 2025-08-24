@@ -71,8 +71,7 @@ object MiseCommandLineHelper {
         val miseCommandLine = MiseCommandLine(null, null)
         return miseCommandLine
             .runRawCommandLine(commandLineArgs)
-            .map { it.split('\n').map { it.trim() } }
-            .map { it.filter { it.isNotEmpty() } }
+            .map { it.lines().map { it.trim() }.filter { it.isNotEmpty() } }
     }
 
     // mise exec

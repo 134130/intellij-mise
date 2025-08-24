@@ -7,7 +7,6 @@ import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.setting.MiseProjectSettings
-import com.github.l34130.mise.core.util.presentablePath
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -16,13 +15,11 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.PathUtil
-import fleet.util.computeIfAbsentShim
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Paths
-import java.util.Queue
 
 class MiseRootNode(
     nodeProject: Project,
@@ -196,10 +193,4 @@ class MiseRootNode(
         private val logger =
             Logger.getInstance(MiseRootNode::class.java)
     }
-
-    private class DirectoryNode(
-        val full: String,
-        val part: String,
-        val children: MutableMap<String, DirectoryNode> = mutableMapOf(),
-    )
 }
