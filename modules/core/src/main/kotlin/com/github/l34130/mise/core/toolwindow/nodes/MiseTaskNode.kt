@@ -12,6 +12,7 @@ import com.intellij.ide.DataManager
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.InplaceCommentAppender
 import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.ActionUiKind
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
@@ -56,11 +57,13 @@ class MiseTaskNode(
     override fun onDoubleClick(event: MouseEvent) {
         val action = RunMiseTomlTaskAction(taskInfo)
         val actionEvent =
-            AnActionEvent.createFromAnAction(
+            AnActionEvent.createEvent(
                 action,
-                event,
-                ActionPlaces.TOOLWINDOW_CONTENT,
                 DataManager.getInstance().getDataContext(event.component),
+                null,
+                ActionPlaces.TOOLWINDOW_CONTENT,
+                ActionUiKind.NONE,
+                event,
             )
 
         action.actionPerformed(actionEvent)
