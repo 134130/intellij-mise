@@ -8,69 +8,60 @@ import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
+import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.ProjectRootManager
 import kotlin.reflect.KClass
 
 class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
     override fun getDevToolName() = MiseDevToolName("java")
 
-    override fun setupSdk(
+    override fun checkSdkStatus(
         tool: MiseDevTool,
         project: Project,
-    ): SetupSdkResult =
-        WriteAction.computeAndWait<SetupSdkResult, Throwable> {
+    ): SdkStatus {
+        val currentSdk = ProjectRootManager.getInstance(project).projectSdk
+        val newSdk = tool.asJavaSdk()
+
+        if (currentSdk == null || currentSdk.name != newSdk.name || currentSdk.homePath != newSdk.homePath) {
+            return SdkStatus.NeedsUpdate(
+                currentSdkName = currentSdk?.name,
+                currentInstallPath = currentSdk?.homePath,
+                requestedSdkName = newSdk.name,
+                requestedInstallPath = newSdk.homePath ?: tool.installPath,
+            )
+        }
+
+        return SdkStatus.UpToDate
+    }
+
+    override fun applySdkConfiguration(
+        tool: MiseDevTool,
+        project: Project,
+    ): ApplySdkResult =
+        WriteAction.computeAndWait<ApplySdkResult, Throwable> {
             val projectJdkTable = ProjectJdkTable.getInstance()
 
-            cleanDeprecatedMiseJdks(projectJdkTable) // TODO: Drop after later version
+            val sdk =
+                tool.asJavaSdk().also { sdk ->
+                    val oldJdk = projectJdkTable.findJdk(tool.jdkName())
+                    if (oldJdk != null) {
+                        projectJdkTable.updateJdk(oldJdk, sdk)
+                    } else {
+                        projectJdkTable.addJdk(sdk)
+                    }
+                }
 
-            val jdkName = "${tool.requestedVersion ?: tool.version} (mise)"
-
-            val oldJdk = projectJdkTable.findJdk(jdkName)
-            val newJdk =
-                JavaSdk.getInstance().createJdk(
-                    jdkName,
-                    tool.installPath,
-                    false, // isJre
-                )
-
-            if (oldJdk != null) {
-                projectJdkTable.updateJdk(oldJdk, newJdk)
-            } else {
-                projectJdkTable.addJdk(newJdk)
-            }
-
-            ProjectRootManager.getInstance(project).projectSdk = newJdk
-
-            if (oldJdk?.homePath == newJdk.homePath) {
-                SetupSdkResult.NoChange(
-                    sdkName = newJdk.name,
-                    version = newJdk.versionString,
-                    installPath = newJdk.homePath ?: tool.installPath,
-                )
-            } else {
-                SetupSdkResult.Updated(
-                    sdkName = newJdk.name,
-                    version = newJdk.versionString,
-                    installPath = newJdk.homePath ?: tool.installPath,
-                )
-            }
+            ProjectRootManager.getInstance(project).projectSdk = sdk
+            ApplySdkResult(
+                sdkName = sdk.name,
+                sdkVersion = sdk.versionString ?: tool.version,
+                sdkPath = sdk.homePath ?: tool.installPath,
+            )
         }
 
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null
 
-    // Clean deprecated JDKs (before Mise 2.3.0)
-    private fun cleanDeprecatedMiseJdks(projectJdkTable: ProjectJdkTable) {
-        val regex = Regex("JDK of project .+ (.*mise.+)")
+    private fun MiseDevTool.asJavaSdk(): Sdk = JavaSdk.getInstance().createJdk(this.jdkName(), this.installPath, false)
 
-        val allJdks = projectJdkTable.allJdks
-
-        for (jdk in allJdks) {
-            runCatching {
-                val matches = regex.matches(jdk.name)
-                if (matches) {
-                    projectJdkTable.removeJdk(jdk)
-                }
-            }
-        }
-    }
+    private fun MiseDevTool.jdkName(): String = "${this.requestedVersion ?: this.version} (mise)"
 }
