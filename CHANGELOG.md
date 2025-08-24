@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+## [5.6.0] - 2025-08-24
+
+### Added
+
+- Discovery subdirectory configuration files by @134130 in https://github.com/134130/intellij-mise/pull/318
+- Reload Dev tools requires users' confirmation by @134130 in https://github.com/134130/intellij-mise/pull/316
+- Separate NodeJS interpreter setup and Package manager setup by @134130 in https://github.com/134130/intellij-mise/pull/317
+
+### Fixed
+
+- GOROOT reload is not working correctly by @134130 in https://github.com/134130/intellij-mise/pull/316
+- JS Package Manager reload is not working correctly by @134130 in https://github.com/134130/intellij-mise/pull/317
+
 ## [5.5.0] - 2025-08-02
 
 ### Added
@@ -389,7 +402,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.5.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.6.0...HEAD
+[5.6.0]: https://github.com/134130/intellij-mise/compare/v5.5.0...v5.6.0
 [5.5.0]: https://github.com/134130/intellij-mise/compare/v5.4.0...v5.5.0
 [5.4.0]: https://github.com/134130/intellij-mise/compare/v5.3.3...v5.4.0
 [5.3.3]: https://github.com/134130/intellij-mise/compare/v5.3.2...v5.3.3
