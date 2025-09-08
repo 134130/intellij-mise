@@ -3,8 +3,6 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.Constants.Constraints
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
-import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformPluginsExtension
-import org.jetbrains.intellij.pluginRepository.PluginRepositoryFactory
 
 plugins {
     id("java") // Java support
@@ -22,7 +20,7 @@ version = providers.gradleProperty("pluginVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(17)
 }
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
@@ -30,18 +28,15 @@ dependencies {
     testImplementation(libs.junit)
 
     intellijPlatform {
-        create(IntelliJPlatformType.IntellijIdeaCommunity, providers.gradleProperty("platformVersion"), false)
+        create(IntelliJPlatformType.IntellijIdeaCommunity, "2022.3.3", false)
 
-        pluginComposedModule(implementation(project(":mise-products-clion")))
-        pluginComposedModule(implementation(project(":mise-products-diagram")))
-        pluginComposedModule(implementation(project(":mise-products-goland")))
-        pluginComposedModule(implementation(project(":mise-products-gradle")))
-        pluginComposedModule(implementation(project(":mise-products-idea")))
-        pluginComposedModule(implementation(project(":mise-products-nodejs")))
-        pluginComposedModule(implementation(project(":mise-products-pycharm")))
-        pluginComposedModule(implementation(project(":mise-products-rider")))
-        pluginComposedModule(implementation(project(":mise-products-ruby")))
-        pluginComposedModule(implementation(project(":mise-products-sh")))
+        pluginModule(implementation(project(":mise-products-goland")))
+        pluginModule(implementation(project(":mise-products-gradle")))
+        pluginModule(implementation(project(":mise-products-idea")))
+        pluginModule(implementation(project(":mise-products-nodejs")))
+        pluginModule(implementation(project(":mise-products-pycharm")))
+        pluginModule(implementation(project(":mise-products-rider")))
+        pluginModule(implementation(project(":mise-products-toml")))
 
         plugins(listOf())
 
@@ -109,7 +104,7 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            recommended()
+//            recommended()
         }
     }
 
@@ -164,29 +159,23 @@ val runIdeForUnitTests by intellijPlatformTesting.runIde.registering {
 
 val runIdePlatformTypes =
     listOf(
-//        IntelliJPlatformType.CLion,
-//        IntelliJPlatformType.GoLand,
-//        IntelliJPlatformType.IntellijIdeaCommunity,
+        IntelliJPlatformType.GoLand,
+        IntelliJPlatformType.IntellijIdeaCommunity,
         IntelliJPlatformType.IntellijIdeaUltimate,
-//        IntelliJPlatformType.WebStorm,
-//        IntelliJPlatformType.PyCharmCommunity,
-//        IntelliJPlatformType.PyCharmProfessional,
-//        IntelliJPlatformType.Rider,
+        IntelliJPlatformType.WebStorm,
+        IntelliJPlatformType.PyCharmCommunity,
+        IntelliJPlatformType.PyCharmProfessional,
+        IntelliJPlatformType.Rider,
     )
-
-val IntelliJPlatformPluginsExtension.pluginRepository by lazy {
-    PluginRepositoryFactory.create("https://plugins.jetbrains.com")
-}
 
 runIdePlatformTypes.forEach { platformType ->
     intellijPlatformTesting.runIde.register("run${platformType.name}") {
         type = platformType
-        version = "2025.1"
-        useInstaller = false
+        version = "2024.1"
 
         plugins {
-            compatiblePlugin("org.toml.lang")
-            compatiblePlugin("org.jetbrains.plugins.go")
+//            plugin("pluginId", "1.0.0")
+            disablePlugin("bundledPluginId")
         }
     }
 }
