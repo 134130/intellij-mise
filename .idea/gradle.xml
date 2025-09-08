@@ -9,16 +9,20 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/modules/core" />
+            <option value="$PROJECT_DIR$/modules/products/clion" />
+            <option value="$PROJECT_DIR$/modules/products/diagram" />
             <option value="$PROJECT_DIR$/modules/products/goland" />
             <option value="$PROJECT_DIR$/modules/products/gradle" />
             <option value="$PROJECT_DIR$/modules/products/idea" />
             <option value="$PROJECT_DIR$/modules/products/nodejs" />
             <option value="$PROJECT_DIR$/modules/products/pycharm" />
             <option value="$PROJECT_DIR$/modules/products/rider" />
-            <option value="$PROJECT_DIR$/modules/products/toml" />
+            <option value="$PROJECT_DIR$/modules/products/ruby" />
+            <option value="$PROJECT_DIR$/modules/products/sh" />
           </set>
         </option>
       </GradleProjectSettings>
     </option>
+    <option name="parallelModelFetch" value="true" />
   </component>
 </project>

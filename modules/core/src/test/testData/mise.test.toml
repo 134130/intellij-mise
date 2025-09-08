@@ -1,0 +1,5 @@
+[env]
+MISE_TEST = 'it works for config too!'
+
+[tasks.'task-in-test-config']
+run = 'echo "test"'

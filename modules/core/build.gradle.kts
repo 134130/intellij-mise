@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 fun properties(key: String) = project.findProperty(key).toString()
 
@@ -8,14 +9,18 @@ plugins {
 }
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
+    testImplementation(libs.junit)
 
     intellijPlatform {
         create(IntelliJPlatformType.IntellijIdeaCommunity, properties("platformVersion"), false)
 
         bundledPlugin("com.intellij.java")
         bundledPlugin("org.jetbrains.plugins.terminal")
+        bundledPlugin("org.toml.lang")
 
         jetbrainsRuntime()
+
+        testFramework(TestFrameworkType.Platform)
+        testImplementation("org.opentest4j:opentest4j:1.3.0")
     }
 }

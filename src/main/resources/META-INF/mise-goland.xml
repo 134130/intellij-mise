@@ -1,15 +1,15 @@
 <idea-plugin require-restart="false">
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.github.l34130.mise.goland.go.ProjectGoSdkSetup"/>
+        <postStartupActivity implementation="com.github.l34130.mise.goland.go.MiseProjectGoSdkSetup"/>
     </extensions>
     <extensions defaultExtensionNs="com.goide">
-        <runConfigurationExtension implementation="com.github.l34130.mise.goland.run.GoLandRunConfigurationExtension"
+        <runConfigurationExtension implementation="com.github.l34130.mise.goland.run.MiseGoLandRunConfigurationExtension"
                                    id="miseGoLand"/>
     </extensions>
 
     <actions>
-        <action id="com.github.l34130.mise.goland.go.ProjectGoSdkSetup"
-                class="com.github.l34130.mise.goland.go.ProjectGoSdkSetup"
+        <action id="com.github.l34130.mise.goland.go.MiseProjectGoSdkSetup"
+                class="com.github.l34130.mise.goland.go.MiseProjectGoSdkSetup"
                 text="Reload GOROOT"
         >
             <add-to-group group-id="com.github.l34130.mise.actions"/>

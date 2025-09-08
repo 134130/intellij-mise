@@ -1,26 +1,45 @@
 package com.github.l34130.mise.core.command
 
-import com.google.gson.FieldNamingPolicy
-import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
+import com.fasterxml.jackson.core.type.TypeReference
+import com.github.l34130.mise.core.setting.MiseApplicationSettings
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.util.application
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
 
 internal class MiseCommandLine(
     private val workDir: String? = null,
     private val configEnvironment: String? = null,
 ) {
-    inline fun <reified T> runCommandLine(vararg params: String): Result<T> =
-        runCommandLine(params.toList())
-
+    @RequiresBackgroundThread
     inline fun <reified T> runCommandLine(params: List<String>): Result<T> {
+        val typeReference = object : TypeReference<T>() {}
+        return runCommandLine(params, typeReference)
+    }
+
+    @RequiresBackgroundThread
+    fun <T> runCommandLine(
+        params: List<String>,
+        typeReference: TypeReference<T>,
+    ): Result<T> {
+        val rawResult = runRawCommandLine(params)
+        return rawResult.fold(
+            onSuccess = { output -> Result.success(MiseCommandLineOutputParser.parse(output, typeReference)) },
+            onFailure = { return Result.failure(it) },
+        )
+    }
+
+    @RequiresBackgroundThread
+    fun runRawCommandLine(params: List<String>): Result<String> {
         val miseVersion = getMiseVersion()
 
-        val commandLineArgs = mutableListOf("mise")
+        val executablePath = application.service<MiseApplicationSettings>().state.executablePath
+        val commandLineArgs = executablePath.split(' ').toMutableList()
 
-        if (configEnvironment != null) {
+        if (!configEnvironment.isNullOrBlank()) {
             if (miseVersion >= MiseVersion(2024, 12, 2)) {
                 commandLineArgs.add("--env")
                 commandLineArgs.add(configEnvironment)
@@ -31,34 +50,26 @@ internal class MiseCommandLine(
         }
 
         commandLineArgs.addAll(params)
-
-        return if (T::class == String::class) {
-            runCommandLine(commandLineArgs) { it as T }
-        } else {
-            runCommandLine(commandLineArgs) {
-                GsonBuilder()
-                    .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                    .create()
-                    .fromJson(it, object : TypeToken<T>() {})
-            }
-        }
+        return runCommandLineInternal(commandLineArgs)
     }
 
-    private fun <T> runCommandLine(commandLineArgs: List<String>, transform: (String) -> T): Result<T> {
+    @RequiresBackgroundThread
+    private fun runCommandLineInternal(commandLineArgs: List<String>): Result<String> {
         val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workDir)
-        val processOutput = try {
-            logger.debug("Running command: $commandLineArgs")
-            ExecUtil.execAndGetOutput(generalCommandLine, 5000)
-        } catch (e: ExecutionException) {
-            logger.info("Failed to execute command. (command=$generalCommandLine)", e)
-            return Result.failure(
-                MiseCommandLineNotFoundException(
-                    generalCommandLine,
-                    e.message ?: "Failed to execute command.",
-                    e
+        val processOutput =
+            try {
+                logger.debug("Running command: $commandLineArgs")
+                ExecUtil.execAndGetOutput(generalCommandLine, 3000)
+            } catch (e: ExecutionException) {
+                logger.info("Failed to execute command. (command=$generalCommandLine)", e)
+                return Result.failure(
+                    MiseCommandLineNotFoundException(
+                        generalCommandLine,
+                        e.message ?: "Failed to execute command.",
+                        e,
+                    ),
                 )
-            )
-        }
+            }
 
         if (!processOutput.isExitCodeSet) {
             when {
@@ -85,22 +96,25 @@ internal class MiseCommandLine(
         }
 
         logger.debug("Command executed successfully. (command=$generalCommandLine)")
-        return Result.success(transform(processOutput.stdout))
+        return Result.success(processOutput.stdout)
     }
 
     companion object {
+        @RequiresBackgroundThread
         fun getMiseVersion(): MiseVersion {
             val miseCommandLine = MiseCommandLine()
-            val versionString = miseCommandLine.runCommandLine(listOf("mise", "version")) { it }
+            val miseExecutable = application.service<MiseApplicationSettings>().state.executablePath
+            val versionString = miseCommandLine.runCommandLineInternal(listOf(miseExecutable, "version"))
 
-            val miseVersion = versionString.fold(
-                onSuccess = {
-                    MiseVersion.parse(it)
-                },
-                onFailure = { _ ->
-                    MiseVersion(0, 0, 0)
-                }
-            )
+            val miseVersion =
+                versionString.fold(
+                    onSuccess = {
+                        MiseVersion.parse(it)
+                    },
+                    onFailure = { _ ->
+                        MiseVersion(0, 0, 0)
+                    },
+                )
 
             return miseVersion
         }

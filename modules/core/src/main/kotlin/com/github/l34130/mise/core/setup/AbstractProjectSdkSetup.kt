@@ -6,11 +6,10 @@ import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.notification.MiseNotificationService
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
-import com.github.l34130.mise.core.setting.MiseSettings
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ShowSettingsUtil
@@ -19,6 +18,7 @@ import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.util.application
 import kotlin.reflect.KClass
 
 abstract class AbstractProjectSdkSetup :
@@ -33,12 +33,17 @@ abstract class AbstractProjectSdkSetup :
         configureSdk(project, false)
     }
 
-    abstract fun getDevToolName(): MiseDevToolName
+    abstract fun getDevToolName(project: Project): MiseDevToolName
 
-    abstract fun setupSdk(
+    protected abstract fun checkSdkStatus(
         tool: MiseDevTool,
         project: Project,
-    ): Boolean
+    ): SdkStatus
+
+    protected abstract fun applySdkConfiguration(
+        tool: MiseDevTool,
+        project: Project,
+    ): ApplySdkResult
 
     abstract fun <T : Configurable> getConfigurableClass(): KClass<out T>?
 
@@ -46,82 +51,126 @@ abstract class AbstractProjectSdkSetup :
         project: Project,
         isUserInteraction: Boolean,
     ) {
-        val devToolName = getDevToolName()
-        val miseNotificationService = project.service<MiseNotificationService>()
+        application.executeOnPooledThread {
+            val devToolName = getDevToolName(project)
+            val miseNotificationService = project.service<MiseNotificationService>()
 
-        val configEnvironment = MiseSettings.getService(project).state.miseConfigEnvironment
-        val toolsResult =
-            MiseCommandLineHelper.getDevTools(workDir = project.basePath, configEnvironment = configEnvironment)
-        val tools = toolsResult.fold(
-            onSuccess = { tools -> tools[devToolName] },
-            onFailure = {
-                if (it !is MiseCommandLineNotFoundException) {
-                    MiseNotificationServiceUtils.notifyException("Failed to load dev tools", it)
-                }
-                emptyList()
-            }
-        )
+            val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
+            val toolsResult =
+                MiseCommandLineHelper.getDevTools(workDir = project.basePath, configEnvironment = configEnvironment)
+            val tools =
+                toolsResult.fold(
+                    onSuccess = { tools -> tools[devToolName] },
+                    onFailure = {
+                        if (it !is MiseCommandLineNotFoundException) {
+                            MiseNotificationServiceUtils.notifyException("Failed to load dev tools", it, project)
+                        }
+                        emptyList()
+                    },
+                )
 
-        if (tools.isNullOrEmpty() || tools.size > 1) {
-            if (!isUserInteraction) return
+            if (tools.isNullOrEmpty() || tools.size > 1) {
+                if (!isUserInteraction) return@executeOnPooledThread
 
-            val noOrMultiple =
-                if (tools.isNullOrEmpty()) {
-                    "No"
-                } else {
-                    "Multiple"
-                }
-
-            miseNotificationService.warn(
-                "$noOrMultiple dev tools configuration for ${devToolName.canonicalName()} found",
-                "Check your Mise configuration or configure it manually",
-            ) {
-                NotificationAction.createSimple("Configure") {
-                    val configurableClass = getConfigurableClass<Configurable>()
-                    if (configurableClass != null) {
-                        ShowSettingsUtil.getInstance().showSettingsDialog(project, configurableClass.javaObjectType)
+                val noOrMultiple =
+                    if (tools.isNullOrEmpty()) {
+                        "No"
                     } else {
-                        ShowSettingsUtil.getInstance().showSettingsDialog(project)
+                        "Multiple"
+                    }
+
+                miseNotificationService.warn(
+                    "$noOrMultiple dev tools configuration for ${devToolName.canonicalName()} found",
+                    "Check your Mise configuration or configure it manually",
+                ) {
+                    NotificationAction.createSimple("Configure") {
+                        val configurableClass = getConfigurableClass<Configurable>()
+                        if (configurableClass != null) {
+                            ShowSettingsUtil.getInstance().showSettingsDialog(project, configurableClass.javaObjectType)
+                        } else {
+                            ShowSettingsUtil.getInstance().showSettingsDialog(project)
+                        }
                     }
                 }
+
+                return@executeOnPooledThread
             }
 
-            return
-        }
+            val tool = tools.first()
 
-        val tool = tools.first()
-
-        if (!tool.installed) {
-            miseNotificationService.warn(
-                "$devToolName@${tool.version} is not installed",
-                "Run `mise install` command to install the tool",
-            ) {
-                NotificationAction.createSimple("Run `mise install`") {
-                    TerminalUtils.executeCommand(
-                        project = project,
-                        command = "mise install",
-                        tabName = "mise install",
-                    )
+            if (!tool.installed) {
+                miseNotificationService.warn(
+                    "$devToolName@${tool.version} is not installed",
+                    "Run `mise install` command to install the tool",
+                ) {
+                    NotificationAction.createSimple("Run `mise install`") {
+                        TerminalUtils.executeCommand(
+                            project = project,
+                            command = "mise install",
+                            tabName = "mise install",
+                        )
+                    }
                 }
+                return@executeOnPooledThread
             }
-            return
-        }
 
-        WriteAction.runAndWait<Throwable> {
             try {
-                val updated = setupSdk(tool, project)
-                if (updated || isUserInteraction) {
-                    miseNotificationService.info(
-                        "${devToolName.canonicalName()} configured to $devToolName@${tool.version}",
-                        tool.source?.absolutePath?.let(FileUtil::getLocationRelativeToUserHome) ?: "unknown source",
-                    )
+                val status = checkSdkStatus(tool, project)
+                when (status) {
+                    is SdkStatus.NeedsUpdate -> {
+                        val title =
+                            if (status.currentSdkVersion == null) {
+                                "${devToolName.canonicalName()} is not configured"
+                            } else {
+                                "${devToolName.canonicalName()} is misconfigured as '${devToolName.value}@${status.currentSdkVersion}'"
+                            }
+
+                        val applyAction = {
+                            applySdkConfiguration(tool, project)
+                            miseNotificationService.info(
+                                "${devToolName.canonicalName()} is configured to '${devToolName.value}@${tool.version}'",
+                                FileUtil.getLocationRelativeToUserHome(status.requestedInstallPath),
+                            )
+                        }
+
+                        if (isUserInteraction) {
+                            applyAction()
+                        } else {
+                            miseNotificationService.info(title, "Can configure as '${devToolName.value}@${tool.version}'") {
+                                NotificationAction.createSimpleExpiring("Apply", applyAction)
+                            }
+                        }
+                    }
+                    SdkStatus.UpToDate -> {
+                        if (!isUserInteraction) return@executeOnPooledThread
+
+                        miseNotificationService.info(
+                            "${devToolName.canonicalName()} is up to date",
+                            "Currently using ${devToolName.value}@${tool.version}",
+                        )
+                    }
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 miseNotificationService.error(
-                    "Failed to set ${devToolName.canonicalName()} to $devToolName@${tool.version}",
+                    "Failed to set ${devToolName.canonicalName()} to ${devToolName.value}@${tool.version}",
                     e.message ?: e.javaClass.simpleName,
                 )
             }
         }
     }
+
+    protected sealed interface SdkStatus {
+        data class NeedsUpdate(
+            val currentSdkVersion: String?,
+            val requestedInstallPath: String,
+        ) : SdkStatus
+
+        object UpToDate : SdkStatus
+    }
+
+    protected data class ApplySdkResult(
+        val sdkName: String,
+        val sdkVersion: String,
+        val sdkPath: String,
+    )
 }

@@ -12,10 +12,11 @@ object MiseNotificationServiceUtils {
     fun notifyException(
         title: String,
         throwable: Throwable,
-        project: Project? = null,
+        project: Project,
     ) {
         val notificationService = MiseNotificationService.getInstance(project)
         when (throwable) {
+            // TODO: Handle other exceptions (e.g. MiseCommandLineNotFoundException)
             is MiseCommandLineException -> {
                 when (throwable) {
                     is MiseCommandLineNotTrustedConfigFileException -> {
@@ -31,14 +32,14 @@ object MiseNotificationServiceUtils {
                                 val absolutePath = FileUtil.expandUserHome(throwable.configFilePath)
 
                                 runAsync {
-                                    MiseCommandLineHelper.trustConfigFile(absolutePath)
+                                    MiseCommandLineHelper
+                                        .trustConfigFile(absolutePath)
                                         .onSuccess {
                                             notificationService.info(
                                                 "Config file trusted",
-                                                "Config file <code>${throwable.configFilePath}</code> is now trusted"
+                                                "Config file <code>${throwable.configFilePath}</code> is now trusted",
                                             )
-                                        }
-                                        .onFailure {
+                                        }.onFailure {
                                             notifyException("Failed to trust config file", it, project)
                                         }
                                 }

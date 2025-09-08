@@ -5,12 +5,46 @@
     <vendor>134130</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.toml.lang</depends>
+
+    <!-- Language Support -->
+    <extensions defaultExtensionNs="com.intellij">
+        <iconProvider implementation="com.github.l34130.mise.core.icon.MiseIconProvider"/>
+
+        <psi.referenceContributor
+                order="first" language="TOML"
+                implementation="com.github.l34130.mise.core.lang.resolve.MiseTomlReferenceContributor"/>
+        <completion.contributor
+                order="first" language="TOML"
+                implementationClass="com.github.l34130.mise.core.lang.completion.MiseTomlCompletionContributor"/>
+        <lang.documentationProvider
+                order="first" language="TOML"
+                implementationClass="com.github.l34130.mise.core.lang.resolve.MiseTaskDocumentationProvider"/>
+        <annotator
+                order="first" language="TOML"
+                implementationClass="com.github.l34130.mise.core.lang.annotation.MiseAnnotator"/>
+
+        <iconProvider implementation="com.github.l34130.mise.core.icon.MiseIconProvider"/>
+    </extensions>
+
+    <!-- Execution Support -->
+    <extensions defaultExtensionNs="com.intellij">
+        <configurationType implementation="com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationType"/>
+        <runLineMarkerContributor language="TOML" implementationClass="com.github.l34130.mise.core.execution.MiseTomlTaskRunLineMarkerContributor"/>
+        <runConfigurationProducer implementation="com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationProducer"/>
+    </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="com.github.l34130.mise.core.MiseStartupActivity"/>
+
         <projectConfigurable id="com.github.l34130.mise.core.setting.MiseConfigurable"
                              instance="com.github.l34130.mise.core.setting.MiseConfigurable"
                              groupId="tools"
                              displayName="Mise Settings"/>
+
+        <lang.psiStructureViewFactory
+                language="TOML"
+                implementationClass="com.github.l34130.mise.core.lang.structure.MiseTomlFileStructureViewFactory"/>
 
         <toolWindow id="Mise"
                     secondary="true"
@@ -33,11 +67,14 @@
         </group>
     </actions>
 
+    <depends optional="true" config-file="mise-clion.xml">com.intellij.clion</depends>
+    <depends optional="true" config-file="mise-diagram.xml">com.intellij.diagram</depends>
     <depends optional="true" config-file="mise-goland.xml">org.jetbrains.plugins.go</depends>
     <depends optional="true" config-file="mise-gradle.xml">com.intellij.gradle</depends>
     <depends optional="true" config-file="mise-idea.xml">com.intellij.java</depends>
     <depends optional="true" config-file="mise-javascript.xml">JavaScript</depends>
     <depends optional="true" config-file="mise-pycharm.xml">com.intellij.modules.python</depends>
     <depends optional="true" config-file="mise-rider.xml">com.intellij.modules.rider</depends>
-    <depends optional="true" config-file="mise-toml.xml">org.toml.lang</depends>
+    <depends optional="true" config-file="mise-ruby.xml">com.intellij.modules.ruby</depends>
+    <depends optional="true" config-file="mise-sh.xml">com.jetbrains.sh</depends>
 </idea-plugin>

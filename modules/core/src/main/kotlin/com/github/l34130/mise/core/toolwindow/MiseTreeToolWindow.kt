@@ -9,6 +9,7 @@ import com.intellij.ide.util.treeView.NodeRenderer
 import com.intellij.ide.util.treeView.TreeState
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DataProvider
@@ -121,22 +122,17 @@ class MiseTreeToolWindow(
                         val node = getSelectedNodesSameType<AbstractTreeNode<*>>()?.get(0) ?: return
                         val actionManager = ActionManager.getInstance()
                         val totalActions = mutableListOf<AnAction>()
-//                        if (node is ActionGroupOnRightClick) {
-//                            val actionGroupName = node.actionGroupName()
-//
-//                            (actionGroupName.let { groupName -> actionManager.getAction(groupName) } as? ActionGroup)?.let { group ->
-//                                val context =
-//                                    comp?.let { DataManager.getInstance().getDataContext(it, x, y) } ?: return@let
-//                                val event = AnActionEvent.createFromDataContext(actionPlace, null, context)
-//                                totalActions.addAll(group.getChildren(event))
-//                            }
-//                        }
+                        val actionPlace = ActionPlaces.TOOLWINDOW_CONTENT
+                        if (node is ActionOnRightClick) {
+                            val actions = node.actions()
+                            totalActions.addAll(actions)
+                        }
 
                         val actionGroup = DefaultActionGroup(totalActions)
                         if (actionGroup.childrenCount > 0) {
-                            // val popupMenu = actionManager.createActionPopupMenu(actionPlace, actionGroup)
-//                            popupMenu.setTargetComponent(this@AbstractExplorerTreeToolWindow)
-//                            popupMenu.component.show(comp, x, y)
+                            val popupMenu = actionManager.createActionPopupMenu(actionPlace, actionGroup)
+                            popupMenu.setTargetComponent(this@MiseTreeToolWindow)
+                            popupMenu.component.show(comp, x, y)
                         }
                     }
                 }
