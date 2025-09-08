@@ -3,12 +3,16 @@ package com.github.l34130.mise.core
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
+import com.github.l34130.mise.core.run.ConfigEnvironmentStrategy
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.components.service
-import com.intellij.platform.ide.progress.TaskCancellation
-import com.intellij.platform.ide.progress.withBackgroundProgress
+import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.debug
+import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.platform.ide.progress.runWithModalProgressBlocking
+import com.intellij.util.application
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import java.util.function.Supplier
@@ -22,31 +26,55 @@ object MiseHelper {
         val projectState = project.service<MiseProjectSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
+        val isRunConfigDisabled = runConfigState?.useMiseDirEnv == false
+        val useOverrideSettings = runConfigState?.configEnvironmentStrategy == ConfigEnvironmentStrategy.OVERRIDE_PROJECT_SETTINGS
+        val useProjectSettings = projectState.useMiseDirEnv
+
         val (workDir, configEnvironment) =
             when {
-                projectState.useMiseDirEnv -> {
-                    project.basePath to projectState.miseConfigEnvironment
+                isRunConfigDisabled -> return emptyMap()
+                useOverrideSettings -> {
+                    val workDir = workingDirectory.get()?.takeIf { it.isNotBlank() } ?: project.basePath
+                    workDir to runConfigState.miseConfigEnvironment
                 }
-                runConfigState?.useMiseDirEnv == true -> {
-                    (workingDirectory.get() ?: project.basePath) to runConfigState.miseConfigEnvironment
-                }
+                useProjectSettings -> project.basePath to projectState.miseConfigEnvironment
                 else -> return emptyMap()
             }
 
-        return runBlocking(Dispatchers.IO) {
-            withBackgroundProgress(configuration.project, "Getting Mise envvars", TaskCancellation.nonCancellable()) {
-                MiseCommandLineHelper
-                    .getEnvVars(workDir, configEnvironment)
-                    .fold(
-                        onSuccess = { envVars -> envVars },
-                        onFailure = {
-                            if (it !is MiseCommandLineNotFoundException) {
-                                MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
-                            }
-                            mapOf()
-                        },
-                    )
+        val result =
+            if (application.isDispatchThread) {
+                logger.debug { "dispatch thread detected, loading env vars on current thread" }
+                runWithModalProgressBlocking(project, "Loading Mise Environment Variables") {
+                    MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
+                }
+            } else if (!application.isReadAccessAllowed) {
+                logger.debug { "no read lock detected, loading env vars on dispatch thread" }
+                var result: Result<Map<String, String>>? = null
+                application.invokeAndWait {
+                    logger.debug { "loading env vars on invokeAndWait" }
+                    runWithModalProgressBlocking(project, "Loading Mise Environment Variables") {
+                        result = MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
+                    }
+                }
+                result ?: throw ProcessCanceledException()
+            } else {
+                logger.debug { "read access allowed, executing on background thread" }
+                runBlocking(Dispatchers.IO) {
+                    MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
+                }
             }
-        }
+
+        return result
+            .fold(
+                onSuccess = { envVars -> envVars },
+                onFailure = {
+                    if (it !is MiseCommandLineNotFoundException) {
+                        MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
+                    }
+                    mapOf()
+                },
+            )
     }
+
+    private val logger = Logger.getInstance(MiseHelper::class.java)
 }

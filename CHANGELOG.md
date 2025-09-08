@@ -4,7 +4,99 @@
 
 ## [Unreleased]
 
-## [4.5.0] - 2024-04-06
+## [5.6.0] - 2025-08-24
+
+### Added
+
+- Discovery subdirectory configuration files by @134130 in https://github.com/134130/intellij-mise/pull/318
+- Reload Dev tools requires users' confirmation by @134130 in https://github.com/134130/intellij-mise/pull/316
+- Separate NodeJS interpreter setup and Package manager setup by @134130 in https://github.com/134130/intellij-mise/pull/317
+
+### Fixed
+
+- GOROOT reload is not working correctly by @134130 in https://github.com/134130/intellij-mise/pull/316
+- JS Package Manager reload is not working correctly by @134130 in https://github.com/134130/intellij-mise/pull/317
+
+## [5.5.0] - 2025-08-02
+
+### Added
+
+- Make run configuration can override project settings by @134130 in https://github.com/134130/intellij-mise/pull/296
+- Ruby SDK setup support by @134130 in https://github.com/134130/intellij-mise/pull/299
+- Python SDK setup for `uv` by @134130 in https://github.com/134130/intellij-mise/pull/303
+
+### Fixed
+
+- `run` table contains a string array in a toml file doesn't support language injection by @134130 in https://github.com/134130/intellij-mise/pull/300
+- Execute mise command on background thread by @134130 in https://github.com/134130/intellij-mise/pull/301
+
+## [5.4.0] - 2025-07-06
+
+### Added
+
+- Add Ruby support by @134130 in https://github.com/134130/intellij-mise/pull/283
+- Add support for args in run configurations by @bamorim in https://github.com/134130/intellij-mise/pull/281
+
+### Fixed
+
+- Improve command execution handling in terminal widget by @134130 in https://github.com/134130/intellij-mise/pull/282
+
+## [5.3.3] - 2025-06-19
+
+### Fixed
+
+- Calling invokeAndWait from read-action leads to possible deadlock by @134130 in https://github.com/134130/intellij-mise/pull/272
+- class `MnRunConfiguration` cannot be cast to class `GradleRunConfiguration` by @134130 in https://github.com/134130/intellij-mise/pull/273
+- Read access is allowed from inside read-action only by @134130 in https://github.com/134130/intellij-mise/pull/274
+
+## [5.3.2] - 2025-06-15
+
+### Fixed
+
+- Plugin verification failing with `Package 'com.intellij.deno' is not found` and `Package 'com.jetbrains.nodejs' is not found`
+
+## [5.3.1] - 2025-06-08
+
+### Fixed
+
+- Test is cached when running tests with `gradle` and no source code changes
+- Indicate progress when running Mise commands on background
+- NullPointerException when indicating Mise file icon
+
+## [5.3.0] - 2025-05-11
+
+### Added
+
+- getMiseExecutablePath supports WinGet path resolving by @134130 in https://github.com/134130/intellij-mise/pull/242
+
+## [5.2.0] - 2025-05-01
+
+### Added
+
+- Add environment variable injection for C/C++ by @134130 in https://github.com/134130/intellij-mise/pull/237
+
+### Fixed
+
+- Invalid thread access for psi by @134130 in https://github.com/134130/intellij-mise/pull/235
+- `ignore duplicated child at 1: Environment` warnings from AsyncTreeModel by @134130 in https://github.com/134130/intellij-mise/pull/236
+
+## [5.1.0] - 2025-04-26
+
+### Added
+
+- Support structure tree by @134130 in https://github.com/134130/intellij-mise/pull/229
+
+### Fixed
+
+- Python: Run configration envvars are not restoring by @134130 in https://github.com/134130/intellij-mise/pull/230
+
+## [5.0.0] - 2025-04-19
+
+### Changed
+
+- Change minimum support version from `2024.2` to `2025.1`
+
+## [4.5.0] - 2025-04-06
 
 ### Changed
 
@@ -17,14 +109,14 @@
 - Read access is allowed from inside read-action in RunMiseTomlTaskAction
 - Remove internal API usage: `IdeaReportingEvent`
 
-## [4.4.1] - 2024-03-21
+## [4.4.1] - 2025-03-21
 
 ### Fixed
 
 - Mise settings panel cannot be opened when `mise` is not installed
 - Mise 'depends' with arguments occurs an `Cannot resolve symbol` error
 
-## [4.4.0] - 2024-03-03
+## [4.4.0] - 2025-03-03
 
 ### Added
 
@@ -35,7 +127,7 @@
 
 - Slow operation on `Run Mise Task` on ToolWindow
 
-## [4.3.0] - 2024-02-22
+## [4.3.0] - 2025-02-22
 
 ### Added
 
@@ -49,14 +141,14 @@
 - Some IDEs are not bundled with `ShLanguage` plugin
 - Ensure `mise` command is initialized before drawing the ToolWindow
 
-## [4.2.1] - 2024-02-21
+## [4.2.1] - 2025-02-21
 
 ### Fixed
 
 - Fix `nodejs` sdk is not loaded properly on Windows
 - Fix Mise ToolWindow cannot run File tasks
 
-## [4.2.0] - 2024-02-09
+## [4.2.0] - 2025-02-09
 
 ### Added
 
@@ -69,19 +161,19 @@
 - Add `wait_for` for tasks completion
 - RunLineMarkerContributor is contributing on non-leaf nodes
 
-## [4.1.0] - 2024-02-01
+## [4.1.0] - 2025-02-01
 
 ### Added
 
 - Support run configuration for PyCharm Community & Professional
 
-## [4.0.0] - 2024-01-31
+## [4.0.0] - 2025-01-31
 
 ### BREAKING CHANGE
 
 - Change minimum support version from `2023.3` to `2024.2` to support `2025.1+` IDEs
 
-## [3.5.0] - 2024-01-30
+## [3.5.0] - 2025-01-30
 
 ### Added
 
@@ -94,7 +186,7 @@
 
 - Refactoring `mise.toml` files are not working properly.
 
-## [3.4.1] - 2024-01-22
+## [3.4.1] - 2025-01-22
 
 ### Fixed
 
@@ -310,7 +402,17 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v4.5.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.6.0...HEAD
+[5.6.0]: https://github.com/134130/intellij-mise/compare/v5.5.0...v5.6.0
+[5.5.0]: https://github.com/134130/intellij-mise/compare/v5.4.0...v5.5.0
+[5.4.0]: https://github.com/134130/intellij-mise/compare/v5.3.3...v5.4.0
+[5.3.3]: https://github.com/134130/intellij-mise/compare/v5.3.2...v5.3.3
+[5.3.2]: https://github.com/134130/intellij-mise/compare/v5.3.1...v5.3.2
+[5.3.1]: https://github.com/134130/intellij-mise/compare/v5.3.0...v5.3.1
+[5.3.0]: https://github.com/134130/intellij-mise/compare/v5.2.0...v5.3.0
+[5.2.0]: https://github.com/134130/intellij-mise/compare/v5.1.0...v5.2.0
+[5.1.0]: https://github.com/134130/intellij-mise/compare/v5.0.0...v5.1.0
+[5.0.0]: https://github.com/134130/intellij-mise/compare/v4.5.0...v5.0.0
 [4.5.0]: https://github.com/134130/intellij-mise/compare/v4.4.1...v4.5.0
 [4.4.1]: https://github.com/134130/intellij-mise/compare/v4.4.0...v4.4.1
 [4.4.0]: https://github.com/134130/intellij-mise/compare/v4.3.0...v4.4.0

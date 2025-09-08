@@ -10,8 +10,6 @@ import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.TerminalUtils
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ShowSettingsUtil
@@ -20,6 +18,7 @@ import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.util.application
 import kotlin.reflect.KClass
 
 abstract class AbstractProjectSdkSetup :
@@ -34,12 +33,17 @@ abstract class AbstractProjectSdkSetup :
         configureSdk(project, false)
     }
 
-    abstract fun getDevToolName(): MiseDevToolName
+    abstract fun getDevToolName(project: Project): MiseDevToolName
 
-    abstract fun setupSdk(
+    protected abstract fun checkSdkStatus(
         tool: MiseDevTool,
         project: Project,
-    ): Boolean
+    ): SdkStatus
+
+    protected abstract fun applySdkConfiguration(
+        tool: MiseDevTool,
+        project: Project,
+    ): ApplySdkResult
 
     abstract fun <T : Configurable> getConfigurableClass(): KClass<out T>?
 
@@ -47,8 +51,8 @@ abstract class AbstractProjectSdkSetup :
         project: Project,
         isUserInteraction: Boolean,
     ) {
-        ApplicationManager.getApplication().executeOnPooledThread {
-            val devToolName = getDevToolName()
+        application.executeOnPooledThread {
+            val devToolName = getDevToolName(project)
             val miseNotificationService = project.service<MiseNotificationService>()
 
             val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
@@ -110,22 +114,63 @@ abstract class AbstractProjectSdkSetup :
                 return@executeOnPooledThread
             }
 
-            WriteAction.runAndWait<Throwable> {
-                try {
-                    val updated = setupSdk(tool, project)
-                    if (updated || isUserInteraction) {
+            try {
+                val status = checkSdkStatus(tool, project)
+                when (status) {
+                    is SdkStatus.NeedsUpdate -> {
+                        val title =
+                            if (status.currentSdkVersion == null) {
+                                "${devToolName.canonicalName()} is not configured"
+                            } else {
+                                "${devToolName.canonicalName()} is misconfigured as '${devToolName.value}@${status.currentSdkVersion}'"
+                            }
+
+                        val applyAction = {
+                            applySdkConfiguration(tool, project)
+                            miseNotificationService.info(
+                                "${devToolName.canonicalName()} is configured to '${devToolName.value}@${tool.version}'",
+                                FileUtil.getLocationRelativeToUserHome(status.requestedInstallPath),
+                            )
+                        }
+
+                        if (isUserInteraction) {
+                            applyAction()
+                        } else {
+                            miseNotificationService.info(title, "Can configure as '${devToolName.value}@${tool.version}'") {
+                                NotificationAction.createSimpleExpiring("Apply", applyAction)
+                            }
+                        }
+                    }
+                    SdkStatus.UpToDate -> {
+                        if (!isUserInteraction) return@executeOnPooledThread
+
                         miseNotificationService.info(
-                            "${devToolName.canonicalName()} configured to ${devToolName.value}@${tool.version}",
-                            tool.source?.absolutePath?.let(FileUtil::getLocationRelativeToUserHome) ?: "unknown source",
+                            "${devToolName.canonicalName()} is up to date",
+                            "Currently using ${devToolName.value}@${tool.version}",
                         )
                     }
-                } catch (e: Exception) {
-                    miseNotificationService.error(
-                        "Failed to set ${devToolName.canonicalName()} to ${devToolName.value}@${tool.version}",
-                        e.message ?: e.javaClass.simpleName,
-                    )
                 }
+            } catch (e: Throwable) {
+                miseNotificationService.error(
+                    "Failed to set ${devToolName.canonicalName()} to ${devToolName.value}@${tool.version}",
+                    e.message ?: e.javaClass.simpleName,
+                )
             }
         }
     }
+
+    protected sealed interface SdkStatus {
+        data class NeedsUpdate(
+            val currentSdkVersion: String?,
+            val requestedInstallPath: String,
+        ) : SdkStatus
+
+        object UpToDate : SdkStatus
+    }
+
+    protected data class ApplySdkResult(
+        val sdkName: String,
+        val sdkVersion: String,
+        val sdkPath: String,
+    )
 }

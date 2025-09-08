@@ -42,6 +42,10 @@
                              groupId="tools"
                              displayName="Mise Settings"/>
 
+        <lang.psiStructureViewFactory
+                language="TOML"
+                implementationClass="com.github.l34130.mise.core.lang.structure.MiseTomlFileStructureViewFactory"/>
+
         <toolWindow id="Mise"
                     secondary="true"
                     icon="com.github.l34130.mise.core.icon.MiseIcons.DEFAULT"
@@ -63,6 +67,7 @@
         </group>
     </actions>
 
+    <depends optional="true" config-file="mise-clion.xml">com.intellij.clion</depends>
     <depends optional="true" config-file="mise-diagram.xml">com.intellij.diagram</depends>
     <depends optional="true" config-file="mise-goland.xml">org.jetbrains.plugins.go</depends>
     <depends optional="true" config-file="mise-gradle.xml">com.intellij.gradle</depends>
@@ -70,6 +75,6 @@
     <depends optional="true" config-file="mise-javascript.xml">JavaScript</depends>
     <depends optional="true" config-file="mise-pycharm.xml">com.intellij.modules.python</depends>
     <depends optional="true" config-file="mise-rider.xml">com.intellij.modules.rider</depends>
-    <depends optional="true" config-file="mise-rust.xml">com.jetbrains.rust</depends>
+    <depends optional="true" config-file="mise-ruby.xml">com.intellij.modules.ruby</depends>
     <depends optional="true" config-file="mise-sh.xml">com.jetbrains.sh</depends>
 </idea-plugin>

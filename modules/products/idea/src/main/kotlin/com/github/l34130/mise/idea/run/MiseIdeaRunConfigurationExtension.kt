@@ -21,8 +21,7 @@ class MiseIdeaRunConfigurationExtension : RunConfigurationExtension() {
 
     override fun getEditorTitle(): String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
-    override fun <P : RunConfigurationBase<*>> createEditor(configuration: P): SettingsEditor<P> =
-        MiseRunConfigurationSettingsEditor(configuration.project)
+    override fun <P : RunConfigurationBase<*>> createEditor(configuration: P): SettingsEditor<P> = MiseRunConfigurationSettingsEditor()
 
     override fun getSerializationId(): String = MiseRunConfigurationSettingsEditor.SERIALIZATION_ID
 

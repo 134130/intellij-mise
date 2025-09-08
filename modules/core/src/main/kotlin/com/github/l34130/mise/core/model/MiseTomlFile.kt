@@ -16,8 +16,7 @@ class MiseTomlFile {
     class TaskConfig(
         origin: TomlTable,
     ) : TomlTable by origin {
-        val includes: List<String>?
-            get() = (getValueWithKey("includes") as? TomlArray)?.elements?.mapNotNull { it.stringValue }
+        val includes: List<String>? = (getValueWithKey("includes") as? TomlArray)?.elements?.mapNotNull { it.stringValue }
 
         companion object {
             fun resolveOrNull(file: TomlFile): TaskConfig? {
@@ -35,6 +34,7 @@ class MiseTomlFile {
             if (file.fileType != TomlFileType) return false
 
             val originalFile = if (file is LightVirtualFile) file.originalFile else file
+            if (originalFile == null) return false
 
             if (originalFile.name in listOf("mise.local.toml", ".mise.local.toml", "mise.toml", ".mise.toml") ||
                 originalFile.name.matches("^mise\\.(\\w+\\.)?toml$".toRegex())

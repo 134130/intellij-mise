@@ -1,7 +1,7 @@
 import org.jetbrains.intellij.platform.gradle.extensions.intellijPlatform
 
 plugins {
-    id("org.jetbrains.intellij.platform.settings") version "2.5.0"
+    id("org.jetbrains.intellij.platform.settings") version "2.7.2"
 }
 
 dependencyResolutionManagement {
@@ -18,6 +18,7 @@ dependencyResolutionManagement {
 
 include(
     "modules/core",
+    "modules/products/clion",
     "modules/products/diagram",
     "modules/products/goland",
     "modules/products/gradle",
@@ -25,7 +26,7 @@ include(
     "modules/products/nodejs",
     "modules/products/pycharm",
     "modules/products/rider",
-    "modules/products/rust",
+    "modules/products/ruby",
     "modules/products/sh",
 )
 

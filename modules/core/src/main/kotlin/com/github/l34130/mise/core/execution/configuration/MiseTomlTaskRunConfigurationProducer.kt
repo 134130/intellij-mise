@@ -7,6 +7,7 @@ import com.intellij.execution.actions.LazyRunConfigurationProducer
 import com.intellij.execution.configurations.ConfigurationFactory
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiElement
+import com.intellij.util.PathUtil
 
 internal class MiseTomlTaskRunConfigurationProducer : LazyRunConfigurationProducer<MiseTomlTaskRunConfiguration>() {
     override fun getConfigurationFactory(): ConfigurationFactory =
@@ -17,7 +18,7 @@ internal class MiseTomlTaskRunConfigurationProducer : LazyRunConfigurationProduc
         context: ConfigurationContext,
     ): Boolean {
         val task = context.dataContext.getData(MiseTask.DATA_KEY) ?: return false
-        return configuration.miseTaskName == task.name
+        return configuration.miseTaskName == task.name && configuration.workingDirectory == PathUtil.getParentPath(task.source)
     }
 
     override fun setupConfigurationFromContext(
@@ -27,7 +28,7 @@ internal class MiseTomlTaskRunConfigurationProducer : LazyRunConfigurationProduc
     ): Boolean {
         val task = context.dataContext.getData(MiseTask.DATA_KEY) ?: return false
         configuration.miseTaskName = task.name
-        configuration.workingDirectory = context.project.baseDirectory()
+        configuration.workingDirectory = PathUtil.getParentPath(task.source)
         configuration.name = "Run ${task.name}"
         return true
     }

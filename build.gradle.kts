@@ -1,15 +1,13 @@
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
-import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.Constants.Constraints
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformPluginsExtension
+import org.jetbrains.intellij.pluginRepository.PluginRepositoryFactory
 
 plugins {
     id("java") // Java support
-    id("idea") // IntelliJ IDEA support
     id("org.jetbrains.intellij.platform")
 
     alias(libs.plugins.kotlin) // Kotlin support
@@ -17,7 +15,6 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
-    alias(libs.plugins.detekt) // Gradle Detekt Plugin
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -28,13 +25,6 @@ kotlin {
     jvmToolchain(21)
 }
 
-idea {
-    module {
-        isDownloadJavadoc = true
-        isDownloadSources = true
-    }
-}
-
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     testImplementation(libs.junit)
@@ -42,15 +32,16 @@ dependencies {
     intellijPlatform {
         create(IntelliJPlatformType.IntellijIdeaCommunity, providers.gradleProperty("platformVersion"), false)
 
-        pluginModule(implementation(project(":mise-products-diagram")))
-        pluginModule(implementation(project(":mise-products-goland")))
-        pluginModule(implementation(project(":mise-products-gradle")))
-        pluginModule(implementation(project(":mise-products-idea")))
-        pluginModule(implementation(project(":mise-products-nodejs")))
-        pluginModule(implementation(project(":mise-products-pycharm")))
-        pluginModule(implementation(project(":mise-products-rider")))
-        pluginModule(implementation(project(":mise-products-rust")))
-        pluginModule(implementation(project(":mise-products-sh")))
+        pluginComposedModule(implementation(project(":mise-products-clion")))
+        pluginComposedModule(implementation(project(":mise-products-diagram")))
+        pluginComposedModule(implementation(project(":mise-products-goland")))
+        pluginComposedModule(implementation(project(":mise-products-gradle")))
+        pluginComposedModule(implementation(project(":mise-products-idea")))
+        pluginComposedModule(implementation(project(":mise-products-nodejs")))
+        pluginComposedModule(implementation(project(":mise-products-pycharm")))
+        pluginComposedModule(implementation(project(":mise-products-rider")))
+        pluginComposedModule(implementation(project(":mise-products-ruby")))
+        pluginComposedModule(implementation(project(":mise-products-sh")))
 
         plugins(listOf())
 
@@ -153,52 +144,6 @@ tasks {
     }
 }
 
-val detektReportMergeSarif by tasks.registering(ReportMergeTask::class) {
-    output = layout.buildDirectory.file("reports/detekt/merge.sarif.json")
-}
-
-allprojects {
-    apply(plugin = "io.gitlab.arturbosch.detekt")
-
-    detekt {
-        buildUponDefaultConfig = true
-        baseline = file("$rootDir/config/detekt/baseline.xml")
-    }
-
-    dependencies {
-        detekt("io.gitlab.arturbosch.detekt:detekt-cli:${rootProject.libs.versions.detekt.get()}")
-        detekt("io.gitlab.arturbosch.detekt:detekt-formatting:${rootProject.libs.versions.detekt.get()}")
-        detekt(project(":mise-core"))
-        detekt(project(":mise-products-diagram"))
-        detekt(project(":mise-products-goland"))
-        detekt(project(":mise-products-gradle"))
-        detekt(project(":mise-products-idea"))
-        detekt(project(":mise-products-nodejs"))
-        detekt(project(":mise-products-pycharm"))
-        detekt(project(":mise-products-rider"))
-        detekt(project(":mise-products-rust"))
-        detekt(project(":mise-products-sh"))
-    }
-
-    tasks.withType<Detekt>().configureEach {
-        enabled = false
-        jvmTarget = "21"
-        reports {
-            xml.required = true
-            html.required = true
-            sarif.required = true
-            md.required = true
-        }
-        basePath = rootDir.absolutePath
-    }
-    detektReportMergeSarif {
-        input.from(tasks.withType<Detekt>().map { it.reports.sarif.outputLocation })
-    }
-    tasks.withType<DetektCreateBaselineTask>().configureEach {
-        jvmTarget = "21"
-    }
-}
-
 val runIdeForUnitTests by intellijPlatformTesting.runIde.registering {
     task {
         jvmArgumentProviders +=
@@ -219,6 +164,7 @@ val runIdeForUnitTests by intellijPlatformTesting.runIde.registering {
 
 val runIdePlatformTypes =
     listOf(
+//        IntelliJPlatformType.CLion,
 //        IntelliJPlatformType.GoLand,
 //        IntelliJPlatformType.IntellijIdeaCommunity,
         IntelliJPlatformType.IntellijIdeaUltimate,
@@ -226,17 +172,21 @@ val runIdePlatformTypes =
 //        IntelliJPlatformType.PyCharmCommunity,
 //        IntelliJPlatformType.PyCharmProfessional,
 //        IntelliJPlatformType.Rider,
-        IntelliJPlatformType.RustRover
     )
+
+val IntelliJPlatformPluginsExtension.pluginRepository by lazy {
+    PluginRepositoryFactory.create("https://plugins.jetbrains.com")
+}
 
 runIdePlatformTypes.forEach { platformType ->
     intellijPlatformTesting.runIde.register("run${platformType.name}") {
         type = platformType
-        version = "2024.3"
+        version = "2025.1"
+        useInstaller = false
 
         plugins {
-//            plugin("pluginId", "1.0.0")
-            disablePlugin("bundledPluginId")
+            compatiblePlugin("org.toml.lang")
+            compatiblePlugin("org.jetbrains.plugins.go")
         }
     }
 }

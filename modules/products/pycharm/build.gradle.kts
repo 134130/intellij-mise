@@ -14,11 +14,13 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.PyCharmCommunity, properties("platformVersion"))
+        create(IntelliJPlatformType.IntellijIdeaUltimate, properties("platformVersion"), false)
 
-        bundledPlugins("PythonCore")
+        compatiblePlugin("PythonCore")
 
         jetbrainsRuntime()
+
         testFramework(TestFrameworkType.Platform)
+        testImplementation("org.opentest4j:opentest4j:1.3.0")
     }
 }

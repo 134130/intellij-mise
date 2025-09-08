@@ -2,10 +2,10 @@ package com.github.l34130.mise.core.toolwindow.nodes
 
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
+import com.github.l34130.mise.core.util.presentablePath
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.io.FileUtil
 
 class MiseToolServiceNode(
     project: Project,
@@ -27,7 +27,7 @@ class MiseToolConfigDirectoryNode(
         configDirPath,
         null,
     ) {
-    override fun displayName(): String = FileUtil.getLocationRelativeToUserHome(configDirPath)
+    override fun displayName(): String = presentablePath(project, configDirPath)
 
     override fun getChildren(): Collection<MiseToolNode> =
         tools

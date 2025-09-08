@@ -18,10 +18,8 @@ class MiseStartupActivity :
     override suspend fun execute(project: Project) {
         MiseTaskNode.EP_NAME.add(
             object : MiseTaskNode.MiseTaskNodeActionsContributor {
-                override fun contributeActions(task: MiseTask): List<AnAction> {
-                    val psiLocation = task.psiLocation(project) ?: return emptyList()
-
-                    return listOf(
+                override fun contributeActions(task: MiseTask): List<AnAction> =
+                    listOf(
                         object : ShowMiseTaskGraphDiagramAction() {
                             override fun update(e: AnActionEvent) {
                                 super.update(e)
@@ -29,6 +27,7 @@ class MiseStartupActivity :
                             }
 
                             override fun actionPerformed(e: AnActionEvent) {
+                                val psiLocation = task.psiLocation(project) ?: return // TODO: show error
                                 val dataContext =
                                     SimpleDataContext
                                         .builder()
@@ -51,7 +50,6 @@ class MiseStartupActivity :
                             }
                         },
                     )
-                }
             },
         )
     }

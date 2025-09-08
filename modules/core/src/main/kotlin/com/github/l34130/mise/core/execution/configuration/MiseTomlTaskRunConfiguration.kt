@@ -14,15 +14,20 @@ import com.intellij.execution.process.ColoredProcessHandler
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessTerminatedListener
 import com.intellij.execution.runners.ExecutionEnvironment
+import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.components.PathMacroManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.encoding.EncodingManager
 import com.intellij.util.EnvironmentUtil
+import com.intellij.util.PathUtil
 import com.intellij.util.application
+import com.intellij.util.execution.ParametersListUtil
 import org.jdom.Element
+import java.io.File
 
 class MiseTomlTaskRunConfiguration(
     project: Project,
@@ -34,8 +39,9 @@ class MiseTomlTaskRunConfiguration(
 
     var miseConfigEnvironment: String = projectSettings.miseConfigEnvironment
     var miseTaskName: String = ""
-    var workingDirectory: String? = project.basePath
+    var workingDirectory: String = project.basePath ?: ProjectUtil.getBaseDir()
     var envVars: EnvironmentVariablesData = EnvironmentVariablesData.DEFAULT
+    var taskParams: String = ""
 
     override fun getState(
         executor: Executor,
@@ -43,16 +49,24 @@ class MiseTomlTaskRunConfiguration(
     ): RunProfileState {
         return object : CommandLineState(executionEnvironment) {
             override fun startProcess(): ProcessHandler {
+                val projectBasePath = project.basePath ?: ProjectUtil.getBaseDir()
+
                 val macroManager = PathMacroManager.getInstance(project)
+                val expandedWorkingDirectory = macroManager.expandPath(workingDirectory)
                 val workDirectory =
-                    workingDirectory?.let { macroManager.expandPath(it) }
-                        ?: project.basePath
+                    FileUtil.getRelativePath(projectBasePath, expandedWorkingDirectory, File.separatorChar) ?: expandedWorkingDirectory
 
                 val params = mutableListOf<String>()
+                params += "-C"
+                params += workDirectory
                 if (miseConfigEnvironment.isNotBlank()) {
                     params += listOf("--env", miseConfigEnvironment)
                 }
                 params += listOf("run", miseTaskName)
+                if (taskParams.isNotBlank()) {
+                    params += "--"
+                    params += ParametersListUtil.parse(taskParams)
+                }
 
                 val commandLine = PtyCommandLine()
                 if (!SystemInfo.isWindows) {
@@ -63,7 +77,7 @@ class MiseTomlTaskRunConfiguration(
                 commandLine.withCharset(EncodingManager.getInstance().defaultConsoleEncoding)
                 commandLine.withEnvironment(EnvironmentUtil.getEnvironmentMap() + envVars.envs)
                 commandLine.withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-                commandLine.withWorkDirectory(workDirectory)
+                commandLine.withWorkDirectory(projectBasePath)
 
                 val miseExecutablePath = applicationSettings.executablePath
                 commandLine.withExePath(miseExecutablePath.substringBefore(" "))
@@ -82,9 +96,10 @@ class MiseTomlTaskRunConfiguration(
     override fun writeExternal(element: Element) {
         super.writeExternal(element)
         val child = element.getOrCreateChild("mise")
-        child.setAttribute("configEnvironment", miseConfigEnvironment ?: "")
+        child.setAttribute("configEnvironment", miseConfigEnvironment)
         child.setAttribute("taskName", miseTaskName)
-        child.setAttribute("workingDirectory", workingDirectory ?: "")
+        child.setAttribute("workingDirectory", workingDirectory)
+        child.setAttribute("taskParams", taskParams)
         envVars.writeExternal(child)
     }
 
@@ -94,6 +109,7 @@ class MiseTomlTaskRunConfiguration(
         miseConfigEnvironment = child.getAttributeValue("configEnvironment")
         miseTaskName = child.getAttributeValue("taskName") ?: ""
         workingDirectory = child.getAttributeValue("workingDirectory")
+        taskParams = child.getAttributeValue("taskParams") ?: ""
         envVars = EnvironmentVariablesData.readExternal(child)
     }
 }

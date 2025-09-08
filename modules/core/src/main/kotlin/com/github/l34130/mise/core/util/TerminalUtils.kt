@@ -1,5 +1,7 @@
 package com.github.l34130.mise.core.util
 
+import com.intellij.ide.impl.ProjectUtil
+import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
@@ -15,18 +17,32 @@ object TerminalUtils {
     ) {
         val shellWidget =
             project.service<TerminalToolWindowManager>().createShellWidget(
-                project.baseDirectory(),
+                ProjectUtil.getBaseDir(),
                 tabName ?: "Mise",
                 true,
                 true,
             )
-        val widget = ShellTerminalWidget.toShellJediTermWidgetOrThrow(shellWidget)
 
-        project
-            .service<ToolWindowManager>()
-            .getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID)
-            ?.show {
-                widget.executeCommand(command)
+        val widget: ShellTerminalWidget? = ShellTerminalWidget.asShellJediTermWidget(shellWidget)
+        val executeCommand: (command: String) -> Unit =
+            if (widget != null) {
+                widget::executeCommand
+            } else {
+                { command: String ->
+                    runInEdt { shellWidget.sendCommandToExecute(command) }
+                }
             }
+
+        val terminalToolWindow =
+            project
+                .service<ToolWindowManager>()
+                .getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID)
+
+        if (terminalToolWindow == null) {
+            executeCommand(command)
+        } else {
+            terminalToolWindow
+                .show { executeCommand(command) }
+        }
     }
 }

@@ -1,10 +1,6 @@
 package com.github.l34130.mise.core.command
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.github.l34130.mise.core.setting.MiseApplicationSettings
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -18,23 +14,32 @@ internal class MiseCommandLine(
     private val workDir: String? = null,
     private val configEnvironment: String? = null,
 ) {
-    inline fun <reified T> runCommandLine(vararg params: String): Result<T> = runCommandLine(params.toList())
-
+    @RequiresBackgroundThread
     inline fun <reified T> runCommandLine(params: List<String>): Result<T> {
         val typeReference = object : TypeReference<T>() {}
         return runCommandLine(params, typeReference)
     }
 
+    @RequiresBackgroundThread
     fun <T> runCommandLine(
         params: List<String>,
         typeReference: TypeReference<T>,
     ): Result<T> {
+        val rawResult = runRawCommandLine(params)
+        return rawResult.fold(
+            onSuccess = { output -> Result.success(MiseCommandLineOutputParser.parse(output, typeReference)) },
+            onFailure = { return Result.failure(it) },
+        )
+    }
+
+    @RequiresBackgroundThread
+    fun runRawCommandLine(params: List<String>): Result<String> {
         val miseVersion = getMiseVersion()
 
         val executablePath = application.service<MiseApplicationSettings>().state.executablePath
         val commandLineArgs = executablePath.split(' ').toMutableList()
 
-        if (configEnvironment != null) {
+        if (!configEnvironment.isNullOrBlank()) {
             if (miseVersion >= MiseVersion(2024, 12, 2)) {
                 commandLineArgs.add("--env")
                 commandLineArgs.add(configEnvironment)
@@ -45,26 +50,16 @@ internal class MiseCommandLine(
         }
 
         commandLineArgs.addAll(params)
-
-        return runCommandLine(commandLineArgs) {
-            ObjectMapper()
-                .registerKotlinModule()
-                .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-                .readValue(it, typeReference)
-        }
+        return runCommandLineInternal(commandLineArgs)
     }
 
-    private fun <T> runCommandLine(
-        commandLineArgs: List<String>,
-        transform: (String) -> T,
-    ): Result<T> {
+    @RequiresBackgroundThread
+    private fun runCommandLineInternal(commandLineArgs: List<String>): Result<String> {
         val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workDir)
         val processOutput =
             try {
                 logger.debug("Running command: $commandLineArgs")
-                ExecUtil.execAndGetOutput(generalCommandLine, 5000)
+                ExecUtil.execAndGetOutput(generalCommandLine, 3000)
             } catch (e: ExecutionException) {
                 logger.info("Failed to execute command. (command=$generalCommandLine)", e)
                 return Result.failure(
@@ -101,7 +96,7 @@ internal class MiseCommandLine(
         }
 
         logger.debug("Command executed successfully. (command=$generalCommandLine)")
-        return Result.success(transform(processOutput.stdout))
+        return Result.success(processOutput.stdout)
     }
 
     companion object {
@@ -109,7 +104,7 @@ internal class MiseCommandLine(
         fun getMiseVersion(): MiseVersion {
             val miseCommandLine = MiseCommandLine()
             val miseExecutable = application.service<MiseApplicationSettings>().state.executablePath
-            val versionString = miseCommandLine.runCommandLine(listOf(miseExecutable, "version")) { it }
+            val versionString = miseCommandLine.runCommandLineInternal(listOf(miseExecutable, "version"))
 
             val miseVersion =
                 versionString.fold(

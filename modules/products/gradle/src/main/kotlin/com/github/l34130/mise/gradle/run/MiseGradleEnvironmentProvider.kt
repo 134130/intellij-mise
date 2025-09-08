@@ -2,6 +2,7 @@ package com.github.l34130.mise.gradle.run
 
 import com.github.l34130.mise.core.MiseHelper
 import com.intellij.execution.Executor
+import com.intellij.execution.application.ApplicationConfiguration
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
@@ -11,15 +12,16 @@ import org.jetbrains.plugins.gradle.execution.build.GradleExecutionEnvironmentPr
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 import org.jetbrains.plugins.gradle.util.GradleConstants
 
+// It seems actually not working; the gradle task environment injection is handling on idea module.
 class MiseGradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
-    override fun isApplicable(task: ExecuteRunConfigurationTask?): Boolean = task?.runProfile is GradleRunConfiguration
+    override fun isApplicable(task: ExecuteRunConfigurationTask?): Boolean = task?.runProfile is ApplicationConfiguration
 
     override fun createExecutionEnvironment(
         project: Project,
         task: ExecuteRunConfigurationTask,
         executor: Executor,
     ): ExecutionEnvironment? {
-        val runProfile = task.runProfile as GradleRunConfiguration
+        val runProfile = task.runProfile as? GradleRunConfiguration ?: return null
         var environment: ExecutionEnvironment? = delegateProvider(task)?.createExecutionEnvironment(project, task, executor)
 
         // No registered environment provider. Gradle Task is in this case.

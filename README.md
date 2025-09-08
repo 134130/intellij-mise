@@ -17,7 +17,11 @@
 - **Environment Variables**: Set environment variables for your run configurations from `mise.toml` files.
   - See [Supported Run configurations](#supported-run-configurations) for the list of supported Run configurations.
 - **Tool Integration**: Set project's SDK automatically from `mise.toml` files.
-  - `java`, `go`, `node`, `deno` SDKs are supported.
+  - `java`, `go`, `node`, `deno` and `ruby` SDKs are supported.
+  - For `python`, only `uv` is supported.
+- **Task Execution**: Run tasks from `mise.toml` files.
+  - Show the task list on the right side tool window.
+  - Execute tasks defined in the configuration files of the project or subdirectory.
 - **Language Support**: Provides language features for `mise.toml` files.
   - Code completion
   - Reference (refactoring)
@@ -37,13 +41,20 @@
 - **Node.js**
   - Node.js
   - npm
-  - Deno 
+  - Deno
+- **C / C++** (only support for application level settings)
+  - C/C++ File
+  - CMake Application
+  - Makefile target
 - **C#**
+- **Ruby**
 - _Submit issue if you need others_
 
 <!-- Plugin description end -->
 
 ## Screenshots
+
+![demo-gif](./assets/demo.gif)
 
 ![main](https://github.com/user-attachments/assets/e668d651-9d39-497e-b1b6-d9f05d5c3232)
 
@@ -51,9 +62,7 @@
 
 ![language-reference](https://github.com/user-attachments/assets/426f0f1b-6824-4dc5-8ab9-e52f76cd9f69)
 
-![run](https://github.com/user-attachments/assets/6b5ef885-17d0-4865-ac3e-150a588d4d02)
-
-![run-gif](https://github.com/user-attachments/assets/1af82256-954c-4b3c-afcc-6bc8dd1f44a1)
+![run-configuration](./assets/run-configuration.png)
 
 ## Installation
 
@@ -66,6 +75,19 @@
 
   Download the [latest release](https://github.com/134130/intellij-mise/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+
+## Acknowledgements
+
+- [mirrord-intellij](https://github.com/metalbear-co/mirrord-intellij)
+- [EnvFile](https://github.com/ashald/EnvFile)
+- [ProjectEnv](https://github.com/BredoGen/ProjectEnv)
+- [intellij-direnv](https://github.com/fehnomenal/intellij-direnv)
+- [intellij-better-direnv](https://github.com/Fapiko/intellij-better-direnv)
+- [project-env-intellij-plugin](https://github.com/Project-Env/project-env-intellij-plugin)
+- [hermit-ij-plugin](https://github.com/cashapp/hermit-ij-plugin)
+- [github-workflow-plugin](https://github.com/YunaBraska/github-workflow-plugin)
+- [avro-schema-support](https://github.com/opwvhk/avro-schema-support)
+- [aws-toolkit-jetbrains](https://github.com/aws/aws-toolkit-jetbrains)
 
 ## Ecosystem
 

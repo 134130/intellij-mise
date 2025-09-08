@@ -51,6 +51,42 @@ object MiseCommandLineHelper {
         return miseCommandLine.runCommandLine(commandLineArgs)
     }
 
+    // mise config get
+    @RequiresBackgroundThread
+    fun getConfig(
+        workDir: String?,
+        configEnvironment: String?,
+        key: String,
+    ): Result<String> {
+        val commandLineArgs = mutableListOf("config", "get", key)
+
+        val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
+        return miseCommandLine.runRawCommandLine(commandLineArgs)
+    }
+
+    // mise config --tracked-configs
+    @RequiresBackgroundThread
+    fun getTrackedConfigs(): Result<List<String>> {
+        val commandLineArgs = mutableListOf("config", "--tracked-configs")
+        val miseCommandLine = MiseCommandLine(null, null)
+        return miseCommandLine
+            .runRawCommandLine(commandLineArgs)
+            .map { it.lines().map { it.trim() }.filter { it.isNotEmpty() } }
+    }
+
+    // mise exec
+    @RequiresBackgroundThread
+    fun executeCommand(
+        workDir: String?,
+        configEnvironment: String?,
+        command: List<String>,
+    ): Result<String> {
+        val commandLineArgs = mutableListOf("exec", "--") + command
+
+        val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
+        return miseCommandLine.runRawCommandLine(commandLineArgs)
+    }
+
     // mise trust
     @RequiresBackgroundThread
     fun trustConfigFile(configFilePath: String): Result<Unit> {

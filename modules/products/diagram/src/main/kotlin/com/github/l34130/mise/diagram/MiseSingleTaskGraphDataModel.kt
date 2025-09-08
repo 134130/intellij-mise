@@ -32,15 +32,15 @@ class MiseSingleTaskGraphDataModel(
         for (node in nodes) {
             val task = (node.identifyingElement as MiseTaskGraphableTaskWrapper<*>).task
 
-            for (item in task.depends ?: emptyList()) {
+            for (item in task.depends?.map { it.first() } ?: emptyList()) {
                 val target = nodes.find { (it.identifyingElement as MiseTaskGraphableTaskWrapper<*>).task.name == item } ?: continue
                 result.add(MiseTaskGraphEdge(target, node))
             }
-            for (item in task.waitFor ?: emptyList()) {
+            for (item in task.waitFor?.map { it.first() } ?: emptyList()) {
                 val target = nodes.find { (it.identifyingElement as MiseTaskGraphableTaskWrapper<*>).task.name == item } ?: continue
                 result.add(MiseTaskGraphEdge(target, node))
             }
-            for (item in task.dependsPost ?: emptyList()) {
+            for (item in task.dependsPost?.map { it.first() } ?: emptyList()) {
                 val target = nodes.find { (it.identifyingElement as MiseTaskGraphableTaskWrapper<*>).task.name == item } ?: continue
                 result.add(MiseTaskGraphEdge(node, target))
             }
@@ -69,21 +69,21 @@ class MiseSingleTaskGraphDataModel(
             myTask.task.depends?.let { depends ->
                 yieldAll(
                     tasks
-                        .filter { task -> task.name in depends }
+                        .filter { task -> task.name in depends.map { it.first() } }
                         .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
                 )
             }
             myTask.task.waitFor?.let { waitFor ->
                 yieldAll(
                     tasks
-                        .filter { task -> task.name in waitFor }
+                        .filter { task -> task.name in waitFor.map { it.first() } }
                         .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
                 )
             }
             myTask.task.dependsPost?.let { dependsPost ->
                 yieldAll(
                     tasks
-                        .filter { task -> task.name in dependsPost }
+                        .filter { task -> task.name in dependsPost.map { it.first() } }
                         .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
                 )
             }

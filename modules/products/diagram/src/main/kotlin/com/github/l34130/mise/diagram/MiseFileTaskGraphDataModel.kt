@@ -22,21 +22,21 @@ class MiseFileTaskGraphDataModel(
                 val tasks = project.service<MiseProjectService>().getTasks()
 
                 for (myTask in myTasks) {
-                    myTask.depends?.let { depends ->
+                    myTask.depends?.map { it.first() }?.let { depends ->
                         addAll(
                             tasks
                                 .filter { task -> task.name in depends }
                                 .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
                         )
                     }
-                    myTask.waitFor?.let { waitFor ->
+                    myTask.waitFor?.map { it.first() }?.let { waitFor ->
                         addAll(
                             tasks
                                 .filter { task -> task.name in waitFor }
                                 .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) },
                         )
                     }
-                    myTask.dependsPost?.let { dependsPost ->
+                    myTask.dependsPost?.map { it.first() }?.let { dependsPost ->
                         addAll(
                             tasks
                                 .filter { task -> task.name in dependsPost }
@@ -66,15 +66,15 @@ class MiseFileTaskGraphDataModel(
         for (node in nodes) {
             val task = (node.identifyingElement as MiseTaskGraphableTaskWrapper<*>).task
 
-            for (item in task.depends ?: emptyList()) {
+            for (item in task.depends?.map { it.first() } ?: emptyList()) {
                 val target = nodes.find { (it.identifyingElement as MiseTaskGraphableTaskWrapper<*>).task.name == item } ?: continue
                 result.add(MiseTaskGraphEdge(target, node))
             }
-            for (item in task.waitFor ?: emptyList()) {
+            for (item in task.waitFor?.map { it.first() } ?: emptyList()) {
                 val target = nodes.find { (it.identifyingElement as MiseTaskGraphableTaskWrapper<*>).task.name == item } ?: continue
                 result.add(MiseTaskGraphEdge(target, node))
             }
-            for (item in task.dependsPost ?: emptyList()) {
+            for (item in task.dependsPost?.map { it.first() } ?: emptyList()) {
                 val target = nodes.find { (it.identifyingElement as MiseTaskGraphableTaskWrapper<*>).task.name == item } ?: continue
                 result.add(MiseTaskGraphEdge(node, target))
             }

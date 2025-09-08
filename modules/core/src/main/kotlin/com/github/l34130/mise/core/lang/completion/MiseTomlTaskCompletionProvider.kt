@@ -5,7 +5,7 @@ import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
-import com.github.l34130.mise.core.util.collapsePath
+import com.github.l34130.mise.core.util.presentablePath
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
@@ -106,7 +106,7 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
                                 result.addElement(
                                     LookupElementBuilder.create(task.name)
                                         .withInsertHandler(StringLiteralInsertionHandler())
-                                        .withTypeText(task.source),
+                                        .withTypeText(presentablePath(project, task.source)),
                                 )
                                 continue
                             }
@@ -115,7 +115,7 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
                     val path =
                         when {
                             task is MiseTomlTableTask && task.keySegment.containingFile.virtualFile == originalFile -> "current file"
-                            else -> collapsePath(psiElement.containingFile, project)
+                            else -> presentablePath(project, psiElement.containingFile.viewProvider.virtualFile.path)
                         }
 
                     result.addElement(
