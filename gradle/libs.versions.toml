@@ -5,7 +5,7 @@ junit = "4.13.2"
 # plugins
 changelog = "2.4.0"
 gradleIdeaExt = "1.3"
-kotlin = "2.2.10"
+kotlin = "2.2.20"
 kover = "0.9.1"
 qodana = "2025.2.1"
 detekt = "1.23.7"
