@@ -11,6 +11,7 @@ import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
+import java.io.File
 import kotlin.reflect.KClass
 
 class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
@@ -53,6 +54,9 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
 
         return WriteAction.computeAndWait<ApplySdkResult, Throwable> {
             val sdk = tool.asGoSdk()
+            if (sdk == GoSdk.NULL) {
+                throw IllegalStateException("Failed to create Go SDK from path: ${tool.installPath}")
+            }
             sdkService.setSdk(sdk, true)
             ApplySdkResult(
                 sdkName = sdk.name,
@@ -65,5 +69,12 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
     @Suppress("UNCHECKED_CAST")
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = GoSdkConfigurable::class as KClass<out T>
 
-    private fun MiseDevTool.asGoSdk(): GoSdk = GoSdk.fromHomePath(this.installPath)
+    private fun MiseDevTool.asGoSdk(): GoSdk {
+        var sdk = GoSdk.fromHomePath(this.installPath)
+        if (sdk == GoSdk.NULL) {
+            // Go 1.25+
+            sdk = GoSdk.fromHomePath(this.installPath + File.separator + "go")
+        }
+        return sdk
+    }
 }
