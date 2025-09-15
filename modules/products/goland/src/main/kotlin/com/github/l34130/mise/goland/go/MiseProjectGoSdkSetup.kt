@@ -6,16 +6,11 @@ import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.goide.configuration.GoSdkConfigurable
 import com.goide.sdk.GoSdk
 import com.goide.sdk.GoSdkService
-import com.goide.sdk.GoSdkUtil
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.util.PathUtil
-import org.apache.commons.io.file.PathUtils
 import java.io.File
 import kotlin.reflect.KClass
 
