@@ -6,11 +6,17 @@ import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.goide.configuration.GoSdkConfigurable
 import com.goide.sdk.GoSdk
 import com.goide.sdk.GoSdkService
+import com.goide.sdk.GoSdkUtil
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.util.PathUtil
+import org.apache.commons.io.file.PathUtils
+import java.io.File
 import kotlin.reflect.KClass
 
 class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
@@ -53,6 +59,9 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
 
         return WriteAction.computeAndWait<ApplySdkResult, Throwable> {
             val sdk = tool.asGoSdk()
+            if (sdk == GoSdk.NULL) {
+                throw IllegalStateException("Failed to create Go SDK from path: ${tool.installPath}")
+            }
             sdkService.setSdk(sdk, true)
             ApplySdkResult(
                 sdkName = sdk.name,
@@ -65,5 +74,12 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
     @Suppress("UNCHECKED_CAST")
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = GoSdkConfigurable::class as KClass<out T>
 
-    private fun MiseDevTool.asGoSdk(): GoSdk = GoSdk.fromHomePath(this.installPath)
+    private fun MiseDevTool.asGoSdk(): GoSdk {
+        var sdk = GoSdk.fromHomePath(this.installPath)
+        if (sdk == GoSdk.NULL) {
+            // Go 1.25+
+            sdk = GoSdk.fromHomePath(this.installPath + File.separator + "go")
+        }
+        return sdk
+    }
 }
