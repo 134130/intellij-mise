@@ -7,7 +7,6 @@ import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -17,6 +16,7 @@ import com.intellij.openapi.vfs.isFile
 import com.intellij.openapi.vfs.resolveFromRootOrRelative
 import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.util.childrenOfType
+import fleet.multiplatform.shims.ConcurrentHashMap
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlTable
 import kotlin.io.path.isExecutable
@@ -25,12 +25,25 @@ import kotlin.io.path.isExecutable
 class MiseTaskResolver(
     val project: Project,
 ) {
-    suspend fun getMiseTasks(baseDir: String): List<MiseTask> {
-        val result = mutableListOf<MiseTask>()
+    private val cache = ConcurrentHashMap<String, List<MiseTask>>()
 
+    suspend fun getMiseTasks(
+        baseDir: String,
+        refresh: Boolean = false,
+    ): List<MiseTask> {
         val baseDirVf: VirtualFile =
             readAction { VirtualFileManager.getInstance().findFileByUrl("file://$baseDir") } ?: return emptyList()
-        val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, true)
+        return getMiseTasks(baseDirVf, refresh)
+    }
+
+    suspend fun getMiseTasks(
+        baseDirVf: VirtualFile,
+        refresh: Boolean = false,
+    ): List<MiseTask> {
+        if (!refresh) cache[baseDirVf.path]?.let { return it }
+
+        val result = mutableListOf<MiseTask>()
+        val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, refresh)
 
         // Resolve tasks from the config file
         readAction {
@@ -81,7 +94,6 @@ class MiseTaskResolver(
     }
 
     companion object {
-        private val logger = Logger.getInstance(MiseTaskResolver::class.java)
         private val DEFAULT_TASK_DIRECTORIES =
             listOf(
                 "mise-tasks",
