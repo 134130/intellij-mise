@@ -6,6 +6,7 @@ import com.github.l34130.mise.core.model.MiseTomlFile
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -16,7 +17,6 @@ import com.intellij.openapi.vfs.isFile
 import com.intellij.openapi.vfs.resolveFromRootOrRelative
 import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.util.childrenOfType
-import com.intellij.util.containers.addIfNotNull
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlTable
 import kotlin.io.path.isExecutable
@@ -30,7 +30,7 @@ class MiseTaskResolver(
 
         val baseDirVf: VirtualFile =
             readAction { VirtualFileManager.getInstance().findFileByUrl("file://$baseDir") } ?: return emptyList()
-        val configVfs = resolveConfigFiles(baseDirVf)
+        val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, true)
 
         // Resolve tasks from the config file
         readAction {
@@ -108,7 +108,7 @@ class MiseTaskResolver(
             }
 
             // Resolve task directories defined in the config file
-            val configVfs = resolveConfigFiles(baseDirVf)
+            val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, true)
             readAction {
                 for (configVf in configVfs) {
                     val psiFile = configVf.findPsiFile(project) as? TomlFile ?: continue
@@ -123,24 +123,6 @@ class MiseTaskResolver(
 
             return result
         }
-
-        private suspend fun resolveConfigFiles(baseDirVf: VirtualFile): List<VirtualFile> =
-            readAction {
-                buildList {
-                    addIfNotNull(baseDirVf.findFileOrDirectory("mise/config.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory(".mise/config.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise/config.toml")?.takeIf { it.isFile })
-                    // .config/mise/conf.d/*.toml
-                    baseDirVf.findFileOrDirectory(".config/mise/conf.d")?.takeIf { it.isDirectory }?.let { dir ->
-                        addAll(dir.children.filter { it.name.endsWith(".toml") && it.isFile })
-                    }
-                    addIfNotNull(baseDirVf.findFileOrDirectory("mise.local.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory("mise.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory(".mise.local.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory(".mise.toml")?.takeIf { it.isFile })
-                }
-            }
 
         private fun VirtualFile.leafChildren(): Sequence<VirtualFile> =
             children.asSequence().flatMap {
