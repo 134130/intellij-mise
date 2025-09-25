@@ -120,7 +120,7 @@ class MiseTaskResolver(
             }
 
             // Resolve task directories defined in the config file
-            val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, true)
+            val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, false)
             readAction {
                 for (configVf in configVfs) {
                     val psiFile = configVf.findPsiFile(project) as? TomlFile ?: continue
