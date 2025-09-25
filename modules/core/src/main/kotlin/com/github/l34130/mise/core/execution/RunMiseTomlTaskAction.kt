@@ -16,6 +16,11 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
+import com.intellij.openapi.application.readAction
+import com.intellij.openapi.application.readActionBlocking
+import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.smartReadActionBlocking
+import kotlinx.coroutines.runBlocking
 
 internal class RunMiseTomlTaskAction(
     private val miseTask: MiseTask,
@@ -30,7 +35,7 @@ internal class RunMiseTomlTaskAction(
         if (miseTask is MiseUnknownTask) {
             TODO("Handle unknown task")
         } else {
-            val psiLocation = miseTask.psiLocation(project) ?: return
+            val psiLocation = runReadAction { miseTask.psiLocation(project) } ?: return
 
             var dataContext =
                 SimpleDataContext.getSimpleContext(
@@ -49,7 +54,7 @@ internal class RunMiseTomlTaskAction(
             val context = ConfigurationContext.getFromContext(dataContext, event.place)
             val producer = MiseTomlTaskRunConfigurationProducer()
             val configuration: RunnerAndConfigurationSettings =
-                run {
+                runReadAction {
                     producer.findOrCreateConfigurationFromContext(context)?.configurationSettings
                         ?: event.project?.let { project ->
                             RunManager.getInstance(project).getConfigurationTemplate(producer.configurationFactory)
