@@ -5,9 +5,11 @@ import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.model.MiseTomlFile
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.util.baseDirectory
+import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -77,41 +79,16 @@ class MiseProjectService(
     }
 
     private suspend fun loadMiseTomlFiles() {
-        readAction {
-            val result = mutableListOf<VirtualFile>()
-
-            val baseDir =
+        val baseDir: VirtualFile =
+            readAction {
                 if (application.isUnitTestMode) {
-                    VirtualFileManager.getInstance().findFileByUrl("temp:///src") ?: return@readAction
+                    VirtualFileManager.getInstance().findFileByUrl("temp:///src")
                 } else {
-                    LocalFileSystem.getInstance().findFileByPath(project.baseDirectory()) ?: return@readAction
+                    LocalFileSystem.getInstance().findFileByPath(project.basePath ?: ProjectUtil.getBaseDir())
                 }
+            } ?: return
 
-            for (child in baseDir.children) {
-                if (child.isDirectory) {
-                    // mise/config.toml or .mise/config.toml
-                    if (child.name == "mise" || child.name == ".mise") {
-                        result.addIfNotNull(child.resolveFromRootOrRelative("config.toml"))
-                    }
-
-                    if (child.name == ".config") {
-                        // .config/mise.toml
-                        result.addIfNotNull(child.resolveFromRootOrRelative("mise.toml"))
-                        // .config/mise/config.toml
-                        result.addIfNotNull(child.resolveFromRootOrRelative("config.toml"))
-                        // .config/mise/conf.d/*.toml
-                        result.addAll(child.resolveFromRootOrRelative("conf.d")?.children.orEmpty())
-                    }
-                } else {
-                    // mise.local.toml, mise.toml, .mise.local.toml, .mise.toml
-                    if (child.name.matches(MISE_TOML_NAME_REGEX)) {
-                        result.add(child)
-                    }
-                }
-            }
-
-            miseTomlFiles.addAll(result)
-        }
+        miseTomlFiles.addAll(project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDir, true))
     }
 
     private suspend fun loadFileTaskDirectories() {
