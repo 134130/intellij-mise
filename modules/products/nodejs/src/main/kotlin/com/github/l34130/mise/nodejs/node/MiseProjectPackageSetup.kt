@@ -1,5 +1,6 @@
 package com.github.l34130.mise.nodejs.node
 
+import com.github.l34130.mise.core.ShimUtils
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
@@ -27,7 +28,7 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
             ReadAction.compute<NodePackage, Throwable> {
                 NpmManager.getInstance(project).`package`
             }
-        val newPackageManager = tool.asPackage()
+        val newPackageManager = tool.asPackage(project)
 
         if (currentPackageManager == null) {
             return SdkStatus.NeedsUpdate(
@@ -54,7 +55,7 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
         project: Project,
     ): ApplySdkResult {
         val packageManager = NpmManager.getInstance(project)
-        val newPackage = tool.asPackage()
+        val newPackage = tool.asPackage(project)
 
         return WriteAction.computeAndWait<ApplySdkResult, Throwable> {
             packageManager.packageRef = NodePackageRef.create(newPackage)
@@ -87,5 +88,13 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
         }
     }
 
-    private fun MiseDevTool.asPackage(): NodePackage = NpmUtil.DESCRIPTOR.createPackage(this.installPath)
+    private fun MiseDevTool.asPackage(project: Project): NodePackage {
+        val devToolName = getDevToolName(project).value
+        val path = ShimUtils.findExecutable(this.installPath, devToolName).path
+        val nodePackage = NpmUtil.DESCRIPTOR.createPackage(path)
+        check(nodePackage.isValid(project, null)) {
+            "Failed to create NodePackage for $devToolName at path: ${this.installPath} (resolved to $path)"
+        }
+        return nodePackage
+    }
 }
