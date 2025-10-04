@@ -5,6 +5,8 @@ data class MiseVersion(
     val minor: Int,
     val patch: Int,
 ) : Comparable<MiseVersion> {
+    override fun toString(): String = "$major.$minor.$patch"
+
     companion object {
         fun parse(str: String): MiseVersion {
             val versionStr = str.split(" ").firstOrNull()

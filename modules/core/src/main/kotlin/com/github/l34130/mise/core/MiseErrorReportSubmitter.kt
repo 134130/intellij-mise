@@ -14,15 +14,20 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.util.Consumer
 import org.apache.commons.lang3.StringUtils
+import org.bouncycastle.bcpg.HashUtils
+import org.bouncycastle.jcajce.util.MessageDigestUtils
 import java.awt.Component
 import java.awt.Desktop
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.util.regex.Pattern
 
 class MiseErrorReportSubmitter : ErrorReportSubmitter() {
     override fun getReportActionText(): String = "Report to Author"
 
+    @OptIn(ExperimentalStdlibApi::class)
     override fun submit(
         events: Array<out IdeaLoggingEvent>,
         additionalInfo: String?,
@@ -38,33 +43,41 @@ class MiseErrorReportSubmitter : ErrorReportSubmitter() {
                 val applicationNamesInfo = ApplicationNamesInfo.getInstance()
 
                 for (event in events) {
-                    val throwable = event.throwable
                     val description = additionalInfo ?: ""
 
                     val title = "[${applicationNamesInfo.productName} ${appInfo.fullVersion}] ${
-                        StringUtils.abbreviate(throwable.message, 80)
+                        StringUtils.abbreviate(event.throwableText, 80)
                     }"
 
                     val body =
                         buildString {
-                            appendLine("### Environment")
-                            appendLine("- IDE: ${applicationNamesInfo.productName} ${appInfo.fullVersion}")
-                            appendLine("- Plugin: ${pluginDescriptor.name} ${pluginDescriptor.version}")
-                            appendLine("- Mise: mise@${MiseCommandLine.getMiseVersion()}")
-                            appendLine("- OS: ${System.getProperty("os.name")} ${System.getProperty("os.version")}")
-                            appendLine("- Java: ${System.getProperty("java.version")} (${System.getProperty("java.vendor")})")
-
-                            appendLine()
-
                             appendLine("### Description")
                             appendLine("- $description")
 
                             appendLine()
 
+                            appendLine("### Environment")
+                            appendLine("- IDE: ${applicationNamesInfo.productName} ${appInfo.fullVersion}")
+                            appendLine("- Plugin: ${pluginDescriptor.name} ${pluginDescriptor.version}")
+                            appendLine("- Mise: mise@${MiseCommandLine.getMiseVersion()}")
+                            appendLine("- OS: ${System.getProperty("os.name")} ${System.getProperty("os.version")}")
+
+                            appendLine()
+
                             appendLine("### Stacktrace")
+                            val stacktrace =
+                                event.throwableText
+                                    .split("\n")
+                                    .filter { line -> EXCEPTION_EXCLUSIONS.none { it.containsMatchIn(line) } }
+
+                            appendLine(
+                                "Hash: `${MessageDigest.getInstance("MD5")
+                                    .digest(stacktrace.joinToString("\n").toByteArray())
+                                    .toHexString()}",
+                            )
+
                             appendLine("```")
-                            appendLine(throwable.message)
-                            appendLine(throwable.stackTrace.take(25).joinToString("\n"))
+                            appendLine(stacktrace.take(25).joinToString("\n"))
                             appendLine("```")
 
                             appendLine()
@@ -76,7 +89,7 @@ class MiseErrorReportSubmitter : ErrorReportSubmitter() {
                             URI.create(
                                 buildString {
                                     append(
-                                        "https://github.com/134130/intellij-mise/issues/new?labels=bug,${applicationNamesInfo.productName}",
+                                        "https://github.com/134130/intellij-mise/issues/new",
                                     )
                                     append("&title=${URLEncoder.encode(title, StandardCharsets.UTF_8)}")
                                     append("&body=${URLEncoder.encode(body, StandardCharsets.UTF_8)}")
@@ -97,5 +110,15 @@ class MiseErrorReportSubmitter : ErrorReportSubmitter() {
         }.queue()
 
         return true
+    }
+
+    companion object {
+        private val EXCEPTION_EXCLUSIONS =
+            setOf(
+                Regex("java\\.desktop/java\\.awt\\..+\\.dispatchEvent(Impl)?"),
+                Regex("java\\.desktop/java\\.awt\\..+\\.(process|retarget)MouseEvent"),
+                Regex("java\\.desktop/javax\\.swing\\..+\\.(process|retarget)MouseEvent"),
+                Regex("kotlinx\\.coroutines\\.scheduling\\.CoroutineScheduler"),
+            )
     }
 }
