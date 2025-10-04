@@ -188,7 +188,7 @@ class MiseTomlTableTask internal constructor(
                 if (psiElement is TomlKeySegment) {
                     psiElement.parent as? TomlKey
                 } else {
-                    psiElement.parent.parent as? TomlKey
+                    psiElement.parent?.parent as? TomlKey
                 } ?: return null
 
             val tomlTable = tomlKey.parent.parent as? TomlTable ?: return null
