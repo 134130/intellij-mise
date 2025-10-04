@@ -14,15 +14,12 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.util.Consumer
 import org.apache.commons.lang3.StringUtils
-import org.bouncycastle.bcpg.HashUtils
-import org.bouncycastle.jcajce.util.MessageDigestUtils
 import java.awt.Component
 import java.awt.Desktop
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
-import java.util.regex.Pattern
 
 class MiseErrorReportSubmitter : ErrorReportSubmitter() {
     override fun getReportActionText(): String = "Report to Author"
