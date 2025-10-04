@@ -23,14 +23,6 @@ object MiseCommandLineHelper {
     ): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
         val commandLineArgs = mutableListOf("ls", "--current", "--json")
 
-        val miseVersion = MiseCommandLine.getMiseVersion()
-
-        // https://github.com/jdx/mise/commit/6e7e4074989bda47e40900cb651b694c72d39f4d
-        val supportsOfflineFlag = miseVersion >= MiseVersion(2024, 11, 4)
-        if (supportsOfflineFlag) {
-            commandLineArgs.add("--offline")
-        }
-
         val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
         return miseCommandLine
             .runCommandLine<Map<String, List<MiseDevTool>>>(commandLineArgs)

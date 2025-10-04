@@ -4,6 +4,23 @@
 
 ## [Unreleased]
 
+## [5.7.1] - 2025-10-03
+
+### Fixed
+
+- pnpm package manager setup is not working correctly
+
+## [5.7.0] - 2025-09-25
+
+### Added
+
+- mise env support for VCS
+
+### Fixed
+
+- Remove `--offline` flag for `mise ls` command
+- Threading violation when running Task with Sidebar
+
 ## [5.6.1] - 2025-09-15
 
 ### Added
@@ -408,7 +425,9 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.6.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.7.1...HEAD
+[5.7.1]: https://github.com/134130/intellij-mise/compare/v5.7.0...v5.7.1
+[5.7.0]: https://github.com/134130/intellij-mise/compare/v5.6.1...v5.7.0
 [5.6.1]: https://github.com/134130/intellij-mise/compare/v5.6.0...v5.6.1
 [5.6.0]: https://github.com/134130/intellij-mise/compare/v5.5.0...v5.6.0
 [5.5.0]: https://github.com/134130/intellij-mise/compare/v5.4.0...v5.5.0
