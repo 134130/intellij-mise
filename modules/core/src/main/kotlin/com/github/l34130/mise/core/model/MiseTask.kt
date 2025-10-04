@@ -54,7 +54,7 @@ fun MiseTask.psiLocation(project: Project): PsiLocation<*>? =
             val psiFile = runReadAction { this.file.findPsiFile(project) } ?: return null
             PsiLocation(psiFile)
         }
-        is MiseTomlTableTask -> PsiLocation(this.keySegment)
+        is MiseTomlTableTask -> PsiLocation(project, this.keySegment)
         is MiseUnknownTask -> {
             val source = this.source
             val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return null
