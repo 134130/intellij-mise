@@ -12,7 +12,6 @@ import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.VcsEnvCustomizer
 import com.intellij.platform.ide.progress.withBackgroundProgress
-import com.intellij.util.progress.sleepCancellable
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 
