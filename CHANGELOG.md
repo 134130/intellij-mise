@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+## [5.8.0] - 2025-10-26
+
+### Added
+
+- Make VCS integration toggleable
+
+### Fixed
+
+- vcs: handle InterruptedException gracefully
+
 ## [5.7.2] - 2025-10-04
 
 ### Fixed
@@ -433,7 +443,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.7.2...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.8.0...HEAD
+[5.8.0]: https://github.com/134130/intellij-mise/compare/v5.7.2...v5.8.0
 [5.7.2]: https://github.com/134130/intellij-mise/compare/v5.7.1...v5.7.2
 [5.7.1]: https://github.com/134130/intellij-mise/compare/v5.7.0...v5.7.1
 [5.7.0]: https://github.com/134130/intellij-mise/compare/v5.6.1...v5.7.0
