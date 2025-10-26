@@ -24,7 +24,7 @@ class MiseVcsEnvCustomizer : VcsEnvCustomizer() {
         if (project == null) return
 
         val miseProjectSettings = project.service<MiseProjectSettings>().state
-        if (!miseProjectSettings.useMiseDirEnv) return
+        if (!miseProjectSettings.useMiseDirEnv || !miseProjectSettings.useMiseVcsIntegration) return
 
         val miseEnvsResult =
             runBlocking {

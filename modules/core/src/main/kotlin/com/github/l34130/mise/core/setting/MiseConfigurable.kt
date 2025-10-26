@@ -26,6 +26,7 @@ class MiseConfigurable(
         )
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
     private val myMiseConfigEnvironmentTf = JBTextField()
+    private val myMiseVcsCb = JBCheckBox("Enable VCS Integration")
 
     override fun getDisplayName(): String = "Mise Settings"
 
@@ -36,6 +37,7 @@ class MiseConfigurable(
         myMiseExecutableTf.setTextAndAddToHistory(applicationSettings.state.executablePath)
         myMiseDirEnvCb.isSelected = projectSettings.state.useMiseDirEnv
         myMiseConfigEnvironmentTf.text = projectSettings.state.miseConfigEnvironment
+        myMiseVcsCb.isSelected = projectSettings.state.useMiseVcsIntegration
 
         return panel {
             group("Application Settings", indent = false) {
@@ -72,6 +74,11 @@ class MiseConfigurable(
                                         """.trimIndent(),
                                     )
                             }.enabledIf(myMiseDirEnvCb.selected)
+                            row {
+                                cell(myMiseVcsCb)
+                                    .resizableColumn()
+                                    .comment("Enable mise environment variables and tools for VCS operations")
+                            }.enabledIf(myMiseDirEnvCb.selected)
                         }
                     }
                 }
@@ -84,7 +91,8 @@ class MiseConfigurable(
         val projectSettings = project.service<MiseProjectSettings>()
         return myMiseExecutableTf.text != applicationSettings.state.executablePath ||
             myMiseDirEnvCb.isSelected != projectSettings.state.useMiseDirEnv ||
-            myMiseConfigEnvironmentTf.text != projectSettings.state.miseConfigEnvironment
+            myMiseConfigEnvironmentTf.text != projectSettings.state.miseConfigEnvironment ||
+            myMiseVcsCb.isSelected != projectSettings.state.useMiseVcsIntegration
     }
 
     override fun apply() {
@@ -94,6 +102,7 @@ class MiseConfigurable(
             applicationSettings.state.executablePath = myMiseExecutableTf.text
             projectSettings.state.useMiseDirEnv = myMiseDirEnvCb.isSelected
             projectSettings.state.miseConfigEnvironment = myMiseConfigEnvironmentTf.text
+            projectSettings.state.useMiseVcsIntegration = myMiseVcsCb.isSelected
         }
     }
 
