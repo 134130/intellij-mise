@@ -1,8 +1,8 @@
 package com.github.l34130.mise.database
 
 data class MiseDatabaseAuthConfig(
-    var usernameKey: String = "mise.username",
-    var passwordKey: String = "mise.password",
+    var usernameKey: String = "",
+    var passwordKey: String = "",
 ) {
     companion object {
         const val PROP_USERNAME_KEY = "username"
