@@ -1,2 +1,6 @@
 [tools]
 pnpm = "latest"
+
+[env]
+DB_USERNAME = "root"
+DB_PASSWORD = "your_password"

@@ -33,6 +33,7 @@ dependencies {
         create(IntelliJPlatformType.IntellijIdeaCommunity, providers.gradleProperty("platformVersion"), false)
 
         pluginComposedModule(implementation(project(":mise-products-clion")))
+        pluginComposedModule(implementation(project(":mise-products-database")))
         pluginComposedModule(implementation(project(":mise-products-diagram")))
         pluginComposedModule(implementation(project(":mise-products-goland")))
         pluginComposedModule(implementation(project(":mise-products-gradle")))

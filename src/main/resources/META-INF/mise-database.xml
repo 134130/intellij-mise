@@ -1,0 +1,6 @@
+<idea-plugin require-restart="false">
+    <extensions defaultExtensionNs="com.intellij.database">
+        <!--suppress PluginXmlValidity -->
+        <connectionInterceptor implementation="com.github.l34130.mise.database.MiseDatabaseAuthProvider"/>
+    </extensions>
+</idea-plugin>

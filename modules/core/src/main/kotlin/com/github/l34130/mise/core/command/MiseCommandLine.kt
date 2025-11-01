@@ -1,6 +1,7 @@
 package com.github.l34130.mise.core.command
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.l34130.mise.core.setting.MiseApplicationSettings
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -9,6 +10,10 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.util.application
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 internal class MiseCommandLine(
     private val workDir: String? = null,
@@ -20,6 +25,11 @@ internal class MiseCommandLine(
         return runCommandLine(params, typeReference)
     }
 
+    suspend inline fun <reified T> runCommandLineAsync(params: List<String>): Result<T> {
+        val typeReference = object : TypeReference<T>() {}
+        return runCommandLineAsync(params, typeReference)
+    }
+
     @RequiresBackgroundThread
     fun <T> runCommandLine(
         params: List<String>,
@@ -28,9 +38,21 @@ internal class MiseCommandLine(
         val rawResult = runRawCommandLine(params)
         return rawResult.fold(
             onSuccess = { output -> Result.success(MiseCommandLineOutputParser.parse(output, typeReference)) },
-            onFailure = { return Result.failure(it) },
+            onFailure = { Result.failure(it) },
         )
     }
+
+    suspend fun <T> runCommandLineAsync(
+        params: List<String>,
+        typeReference: TypeReference<T>,
+    ): Result<T> =
+        withContext(Dispatchers.IO) {
+            val rawResult = runRawCommandLine(params)
+            rawResult.fold(
+                onSuccess = { output -> Result.success(MiseCommandLineOutputParser.parse(output, typeReference)) },
+                onFailure = { Result.failure(it) },
+            )
+        }
 
     @RequiresBackgroundThread
     fun runRawCommandLine(params: List<String>): Result<String> {
@@ -100,8 +122,17 @@ internal class MiseCommandLine(
     }
 
     companion object {
+        private val commandCache =
+            Caffeine
+                .newBuilder()
+                .expireAfterWrite(5.seconds.toJavaDuration())
+                .build<String, Any>()
+
         @RequiresBackgroundThread
         fun getMiseVersion(): MiseVersion {
+            val cached: MiseVersion? = commandCache.getIfPresent("version") as? MiseVersion
+            if (cached != null) return cached
+
             val miseCommandLine = MiseCommandLine()
             val miseExecutable = application.service<MiseApplicationSettings>().state.executablePath
             val versionString = miseCommandLine.runCommandLineInternal(listOf(miseExecutable, "version"))
@@ -116,6 +147,7 @@ internal class MiseCommandLine(
                     },
                 )
 
+            commandCache.put("version", miseVersion)
             return miseVersion
         }
 
