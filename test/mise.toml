@@ -1,2 +1,7 @@
+[env]
+MISE_RUST = "rust"
+
 [tools]
 pnpm = "latest"
+cargo = "latest"
+rust = "latest"

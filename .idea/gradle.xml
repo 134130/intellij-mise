@@ -18,6 +18,7 @@
             <option value="$PROJECT_DIR$/modules/products/pycharm" />
             <option value="$PROJECT_DIR$/modules/products/rider" />
             <option value="$PROJECT_DIR$/modules/products/ruby" />
+            <option value="$PROJECT_DIR$/modules/products/rust" />
             <option value="$PROJECT_DIR$/modules/products/sh" />
           </set>
         </option>
