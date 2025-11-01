@@ -181,7 +181,7 @@ val runIdePlatformTypes =
 //        IntelliJPlatformType.PyCharmCommunity,
 //        IntelliJPlatformType.PyCharmProfessional,
 //        IntelliJPlatformType.Rider,
-//        IntelliJPlatformType.RustRover
+        IntelliJPlatformType.RustRover,
     )
 
 val IntelliJPlatformPluginsExtension.pluginRepository by lazy {
@@ -196,7 +196,6 @@ runIdePlatformTypes.forEach { platformType ->
 
         plugins {
             compatiblePlugin("org.toml.lang")
-            compatiblePlugin("org.jetbrains.plugins.go")
         }
     }
 }
