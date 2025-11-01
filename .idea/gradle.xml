@@ -10,6 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/modules/core" />
             <option value="$PROJECT_DIR$/modules/products/clion" />
+            <option value="$PROJECT_DIR$/modules/products/database" />
             <option value="$PROJECT_DIR$/modules/products/diagram" />
             <option value="$PROJECT_DIR$/modules/products/goland" />
             <option value="$PROJECT_DIR$/modules/products/gradle" />

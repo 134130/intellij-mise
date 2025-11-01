@@ -15,6 +15,16 @@ object MiseCommandLineHelper {
         return miseCommandLine.runCommandLine(commandLineArgs)
     }
 
+    suspend fun getEnvVarsAsync(
+        workDir: String?,
+        configEnvironment: String?,
+    ): Result<Map<String, String>> {
+        val commandLineArgs = mutableListOf("env", "--json")
+
+        val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
+        return miseCommandLine.runCommandLineAsync(commandLineArgs)
+    }
+
     // mise ls
     @RequiresBackgroundThread
     fun getDevTools(

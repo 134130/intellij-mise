@@ -19,6 +19,7 @@ dependencyResolutionManagement {
 include(
     "modules/core",
     "modules/products/clion",
+    "modules/products/database",
     "modules/products/diagram",
     "modules/products/goland",
     "modules/products/gradle",
