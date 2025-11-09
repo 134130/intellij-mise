@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [5.10.0] - 2025-11-09
+
+### Fixed
+
+- PyCharm does not support test configuration envs
+
 ## [5.9.1] - 2025-11-01
 
 ### Fixed
@@ -455,7 +461,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.9.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.10.0...HEAD
+[5.10.0]: https://github.com/134130/intellij-mise/compare/v5.9.1...v5.10.0
 [5.9.1]: https://github.com/134130/intellij-mise/compare/v5.9.0...v5.9.1
 [5.9.0]: https://github.com/134130/intellij-mise/compare/v5.8.0...v5.9.0
 [5.8.0]: https://github.com/134130/intellij-mise/compare/v5.7.2...v5.8.0
