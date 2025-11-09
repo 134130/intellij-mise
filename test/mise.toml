@@ -1,6 +1,12 @@
 [tools]
 pnpm = "latest"
+python = "latest"
+uv = "latest"
 
 [env]
+MISE_PYTHON_TEST = "true"
 DB_USERNAME = "root"
 DB_PASSWORD = "your_password"
+
+[settings.python]
+uv_venv_auto = true
