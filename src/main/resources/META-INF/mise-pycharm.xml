@@ -1,12 +1,9 @@
 <idea-plugin require-restart="false">
     <extensions defaultExtensionNs="Pythonid">
         <runConfigurationExtension implementation="com.github.l34130.mise.pycharm.run.MisePythonRunConfigurationExtension"/>
-<!--        <pythonCommandLineTargetEnvironmentProvider implementation="com.github.l34130.mise.python.run.PythonCommandLineTargetEnvironmentProvider"/>-->
+        <!--suppress PluginXmlValidity -->
+        <pythonCommandLineTargetEnvironmentProvider implementation="com.github.l34130.mise.pycharm.run.MisePythonCommandLineTargetEnvironmentProvider"/>
     </extensions>
-
-    <projectListeners>
-        <listener class="com.github.l34130.mise.pycharm.run.MisePythonExecutionListener" topic="com.intellij.execution.ExecutionListener"/>
-    </projectListeners>
 
     <actions>
         <action id="com.github.l34130.mise.pycharm.sdk.MisePythonSdkSetup"
