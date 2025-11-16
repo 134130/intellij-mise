@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [5.11.0] - 2025-11-16
+
+### Added
+
+- Support environment variable injection for Nx plugin
+
 ## [5.10.0] - 2025-11-09
 
 ### Fixed
@@ -461,7 +467,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.10.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.11.0...HEAD
+[5.11.0]: https://github.com/134130/intellij-mise/compare/v5.10.0...v5.11.0
 [5.10.0]: https://github.com/134130/intellij-mise/compare/v5.9.1...v5.10.0
 [5.9.1]: https://github.com/134130/intellij-mise/compare/v5.9.0...v5.9.1
 [5.9.0]: https://github.com/134130/intellij-mise/compare/v5.8.0...v5.9.0
