@@ -13,6 +13,8 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.debug
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectLocator
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.util.application
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +53,12 @@ object MiseHelper {
         workDir: String?,
         configEnvironment: String?,
     ): Map<String, String> {
-        val project = project ?: ProjectUtil.getActiveProject() ?: ProjectUtil.getOpenProjects().firstOrNull()
+        val project =
+            project ?: workDir?.let { workDir ->
+                LocalFileSystem.getInstance().findFileByPath(workDir)?.let { vf ->
+                    ProjectLocator.getInstance().guessProjectForFile(vf)
+                }
+            } ?: ProjectUtil.getActiveProject() ?: ProjectUtil.getOpenProjects().firstOrNull()
         val projectState = project?.service<MiseProjectSettings>()?.state
         val configEnvironment = configEnvironment ?: projectState?.miseConfigEnvironment
 
