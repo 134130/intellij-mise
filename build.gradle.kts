@@ -188,7 +188,7 @@ runIdePlatformTypes.forEach { platformType ->
 
         plugins {
             compatiblePlugin("org.toml.lang")
-            compatiblePlugin("dev.nx.console")
+//            compatiblePlugin("dev.nx.console")
 //            compatiblePlugin("org.jetbrains.plugins.go")
         }
     }
