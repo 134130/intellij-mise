@@ -52,6 +52,10 @@
 - **Ruby**
 - _Submit issue if you need others_
 
+### External Plugins Integration
+
+- [**Nx Console**](https://plugins.jetbrains.com/plugin/21060-nx-console)
+
 <!-- Plugin description end -->
 
 ## Screenshots
