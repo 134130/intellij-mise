@@ -1,0 +1,7 @@
+{
+  "targets": {
+    "env": {
+      "command": "echo $MISE_KOTLIN"
+    }
+  }
+}

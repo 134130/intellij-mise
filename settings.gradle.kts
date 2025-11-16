@@ -25,6 +25,7 @@ include(
     "modules/products/gradle",
     "modules/products/idea",
     "modules/products/nodejs",
+    "modules/products/nx",
     "modules/products/pycharm",
     "modules/products/rider",
     "modules/products/ruby",
