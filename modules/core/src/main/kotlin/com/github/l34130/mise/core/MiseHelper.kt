@@ -59,20 +59,31 @@ object MiseHelper {
                     ProjectLocator.getInstance().guessProjectForFile(vf)
                 }
             } ?: ProjectUtil.getActiveProject() ?: ProjectUtil.getOpenProjects().firstOrNull()
-        val projectState = project?.service<MiseProjectSettings>()?.state
-        val configEnvironment = configEnvironment ?: projectState?.miseConfigEnvironment
+
+        if (project == null) {
+            logger.warn("No project found to load Mise environment variables")
+            return mapOf()
+        }
+
+        val projectState = project.service<MiseProjectSettings>().state
+
+        val useMiseDirEnv = projectState.useMiseDirEnv
+        if (!useMiseDirEnv) {
+            logger.debug { "Mise environment variables loading is disabled in project settings" }
+            return mapOf()
+        }
+
+        val configEnvironment = configEnvironment ?: projectState.miseConfigEnvironment
 
         val result =
             if (application.isDispatchThread) {
                 logger.debug { "dispatch thread detected, loading env vars on current thread" }
-                if (project == null) throw IllegalStateException("Cannot load Mise environment variables on EDT without a project")
                 runWithModalProgressBlocking(project, "Loading Mise Environment Variables") {
                     MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
                 }
             } else if (!application.isReadAccessAllowed) {
                 logger.debug { "no read lock detected, loading env vars on dispatch thread" }
                 var result: Result<Map<String, String>>? = null
-                if (project == null) throw IllegalStateException("Cannot load Mise environment variables on EDT without a project")
                 application.invokeAndWait {
                     logger.debug { "loading env vars on invokeAndWait" }
                     runWithModalProgressBlocking(project, "Loading Mise Environment Variables") {
@@ -92,11 +103,7 @@ object MiseHelper {
                 onSuccess = { envVars -> envVars },
                 onFailure = {
                     if (it !is MiseCommandLineNotFoundException) {
-                        if (project == null) {
-                            logger.error("Failed to load environment variables, and no project to notify", it)
-                        } else {
-                            MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
-                        }
+                        MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
                     }
                     mapOf()
                 },
