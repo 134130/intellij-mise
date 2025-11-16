@@ -1,4 +1,5 @@
 [tools]
+"npm:nx" = "latest"
 pnpm = "latest"
 python = "latest"
 uv = "latest"

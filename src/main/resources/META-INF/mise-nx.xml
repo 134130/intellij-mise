@@ -1,0 +1,6 @@
+<idea-plugin require-restart="false">
+    <extensions defaultExtensionNs="com.intellij">
+        <!--suppress PluginXmlValidity -->
+        <commandLineEnvCustomizer implementation="com.github.l34130.mise.nx.run.MiseNxCommandLineEnvCustomizer"/>
+    </extensions>
+</idea-plugin>

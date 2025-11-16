@@ -7,10 +7,14 @@ import com.github.l34130.mise.core.run.ConfigEnvironmentStrategy
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.debug
 import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectLocator
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.util.application
 import kotlinx.coroutines.Dispatchers
@@ -41,15 +45,34 @@ object MiseHelper {
                 else -> return emptyMap()
             }
 
+        return getMiseEnvVarsOrNotify(project, workDir, configEnvironment)
+    }
+
+    fun getMiseEnvVarsOrNotify(
+        project: Project?,
+        workDir: String?,
+        configEnvironment: String?,
+    ): Map<String, String> {
+        val project =
+            project ?: workDir?.let { workDir ->
+                LocalFileSystem.getInstance().findFileByPath(workDir)?.let { vf ->
+                    ProjectLocator.getInstance().guessProjectForFile(vf)
+                }
+            } ?: ProjectUtil.getActiveProject() ?: ProjectUtil.getOpenProjects().firstOrNull()
+        val projectState = project?.service<MiseProjectSettings>()?.state
+        val configEnvironment = configEnvironment ?: projectState?.miseConfigEnvironment
+
         val result =
             if (application.isDispatchThread) {
                 logger.debug { "dispatch thread detected, loading env vars on current thread" }
+                if (project == null) throw IllegalStateException("Cannot load Mise environment variables on EDT without a project")
                 runWithModalProgressBlocking(project, "Loading Mise Environment Variables") {
                     MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
                 }
             } else if (!application.isReadAccessAllowed) {
                 logger.debug { "no read lock detected, loading env vars on dispatch thread" }
                 var result: Result<Map<String, String>>? = null
+                if (project == null) throw IllegalStateException("Cannot load Mise environment variables on EDT without a project")
                 application.invokeAndWait {
                     logger.debug { "loading env vars on invokeAndWait" }
                     runWithModalProgressBlocking(project, "Loading Mise Environment Variables") {
@@ -69,7 +92,11 @@ object MiseHelper {
                 onSuccess = { envVars -> envVars },
                 onFailure = {
                     if (it !is MiseCommandLineNotFoundException) {
-                        MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
+                        if (project == null) {
+                            logger.error("Failed to load environment variables, and no project to notify", it)
+                        } else {
+                            MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
+                        }
                     }
                     mapOf()
                 },

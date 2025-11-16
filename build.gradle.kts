@@ -39,6 +39,7 @@ dependencies {
         pluginComposedModule(implementation(project(":mise-products-gradle")))
         pluginComposedModule(implementation(project(":mise-products-idea")))
         pluginComposedModule(implementation(project(":mise-products-nodejs")))
+        pluginComposedModule(implementation(project(":mise-products-nx")))
         pluginComposedModule(implementation(project(":mise-products-pycharm")))
         pluginComposedModule(implementation(project(":mise-products-rider")))
         pluginComposedModule(implementation(project(":mise-products-ruby")))
@@ -187,6 +188,7 @@ runIdePlatformTypes.forEach { platformType ->
 
         plugins {
             compatiblePlugin("org.toml.lang")
+//            compatiblePlugin("dev.nx.console")
 //            compatiblePlugin("org.jetbrains.plugins.go")
         }
     }
