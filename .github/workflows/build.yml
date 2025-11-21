@@ -45,7 +45,7 @@ jobs:
 
       # Check out the current repository
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Validate wrapper
       - name: Gradle Wrapper Validation
@@ -118,7 +118,7 @@ jobs:
 
       # Check out the current repository
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Set up Java environment for the next steps
       - name: Setup Java
@@ -171,7 +171,7 @@ jobs:
 
       # Check out the current repository
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Set up Java environment for the next steps
       - name: Setup Java
@@ -203,7 +203,7 @@ jobs:
 #
 #      # Check out the current repository
 #      - name: Fetch Sources
-#        uses: actions/checkout@v5
+#        uses: actions/checkout@v6
 #
 #      # Set up Java environment for the next steps
 #      - name: Setup Java
