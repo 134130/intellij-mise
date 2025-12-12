@@ -5,9 +5,11 @@ import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.Sdk
@@ -82,21 +84,36 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
         }
 
         val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
-        return ProjectJdkImpl(
-            this.uvSdkName(),
-            PythonSdkType.getInstance(),
-            // Find the Python executable using the 'which python' command
+
+        // Get Python path from 'which python' command (returns Unix path in WSL)
+        val pythonUnixPath =
             MiseCommandLineHelper
                 .executeCommand(project.basePath, configEnvironment, listOf("which", "python"))
-                .getOrElse { throw IllegalStateException("Failed to find Python executable: ${it.message}") },
-            // Get the Python version using the 'python --version' command
+                .getOrElse { throw IllegalStateException("Failed to find Python executable: ${it.message}") }
+                .trim()
+
+        // Convert to Windows UNC path if in WSL mode using the shared utility
+        val pythonPath = WslPathUtils.convertUnixPathForWsl(pythonUnixPath)
+
+        // Get Python version
+        val pythonVersion =
             MiseCommandLineHelper
                 .executeCommand(project.basePath, configEnvironment, listOf("python", "--version"))
                 .getOrElse { throw IllegalStateException("Failed to get Python version: ${it.message}") }
                 .replace("Python ", "")
-                .trim(),
+                .trim()
+
+        return ProjectJdkImpl(
+            this.uvSdkName(),
+            PythonSdkType.getInstance(),
+            pythonPath,
+            pythonVersion,
         )
     }
 
     private fun MiseDevTool.uvSdkName() = "uv (python)"
+
+    companion object {
+        private val logger = logger<MisePythonSdkSetup>()
+    }
 }

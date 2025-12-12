@@ -1,16 +1,17 @@
 package com.github.l34130.mise.nodejs.deno
 
+import com.github.l34130.mise.core.ShimUtils
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.deno.DenoConfigurable
 import com.intellij.deno.DenoSettings
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.io.FileUtil
-import kotlin.io.path.Path
 import kotlin.reflect.KClass
 
 class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
@@ -58,9 +59,12 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
     @Suppress("UNCHECKED_CAST")
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = DenoConfigurable::class as KClass<out T>
 
-    private fun MiseDevTool.asDenoPath() =
-        Path(FileUtil.expandUserHome(this.shimsInstallPath()), "bin", "deno")
-            .toAbsolutePath()
-            .normalize()
-            .toString()
+    private fun MiseDevTool.asDenoPath(): String {
+        val basePath = WslPathUtils.convertToolPathForWsl(this)
+        return ShimUtils.findExecutable(basePath, "deno").path
+    }
+
+    companion object {
+        private val logger = logger<MiseProjectDenoSetup>()
+    }
 }

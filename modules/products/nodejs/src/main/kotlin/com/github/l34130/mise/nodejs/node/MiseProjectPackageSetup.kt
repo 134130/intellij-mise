@@ -4,6 +4,7 @@ import com.github.l34130.mise.core.ShimUtils
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.javascript.nodejs.npm.NpmManager
 import com.intellij.javascript.nodejs.npm.NpmUtil
 import com.intellij.javascript.nodejs.settings.NodeSettingsConfigurable
@@ -11,6 +12,7 @@ import com.intellij.javascript.nodejs.util.NodePackage
 import com.intellij.javascript.nodejs.util.NodePackageRef
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -90,11 +92,16 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
 
     private fun MiseDevTool.asPackage(project: Project): NodePackage {
         val devToolName = getDevToolName(project).value
-        val path = ShimUtils.findExecutable(this.installPath, devToolName).path
+        val basePath = WslPathUtils.convertToolPathForWsl(this)
+        val path = ShimUtils.findExecutable(basePath, devToolName).path
         val nodePackage = NpmUtil.DESCRIPTOR.createPackage(path)
         check(nodePackage.isValid(project, null)) {
-            "Failed to create NodePackage for $devToolName at path: ${this.installPath} (resolved to $path)"
+            "Failed to create NodePackage for $devToolName at path: ${this.shimsInstallPath()} (resolved to $path)"
         }
         return nodePackage
+    }
+
+    companion object {
+        private val logger = logger<MiseProjectPackageSetup>()
     }
 }

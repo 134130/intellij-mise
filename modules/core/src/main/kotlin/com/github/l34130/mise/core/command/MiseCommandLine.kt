@@ -3,11 +3,14 @@ package com.github.l34130.mise.core.command
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.l34130.mise.core.setting.MiseApplicationSettings
+import com.github.l34130.mise.core.wsl.WslCommandHelper
+import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.application
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +61,8 @@ internal class MiseCommandLine(
     fun runRawCommandLine(params: List<String>): Result<String> {
         val miseVersion = getMiseVersion()
 
-        val executablePath = application.service<MiseApplicationSettings>().state.executablePath
+        val settings = application.service<MiseApplicationSettings>()
+        val executablePath = settings.state.executablePath
         val commandLineArgs = executablePath.split(' ').toMutableList()
 
         if (!configEnvironment.isNullOrBlank()) {
@@ -72,15 +76,59 @@ internal class MiseCommandLine(
         }
 
         commandLineArgs.addAll(params)
-        return runCommandLineInternal(commandLineArgs)
+
+        // Use IntelliJ WSL API when in WSL mode or when the executable/workDir indicate WSL
+        val isWslContext =
+            SystemInfo.isWindows &&
+                (settings.state.isWslMode ||
+                    WslPathUtils.detectWslMode(executablePath) ||
+                    (workDir != null && WslPathUtils.detectWslMode(workDir)))
+
+        if (isWslContext) {
+            val distribution =
+                WslCommandHelper.resolveDistribution(settings.state)
+                    ?: WslCommandHelper.resolveDistributionFromPath(workDir)
+
+            if (distribution != null) {
+                logger.info("WSL detected for command. distro=${distribution.msId} workDir=$workDir exePath=$executablePath params=$params")
+                val linuxExe =
+                    if (settings.state.isWslMode || WslPathUtils.detectWslMode(executablePath)) WslCommandHelper.linuxExecutableFromConfig(executablePath)
+                    else "mise"
+                val linuxWorkDir = WslCommandHelper.toLinuxWorkDir(distribution, workDir)
+
+                val linuxCommand = mutableListOf<String>()
+                linuxCommand.add(linuxExe)
+                linuxCommand.addAll(params)
+
+                return try {
+                    logger.info("WSL command: distro=${distribution.msId} workDir=$workDir linuxWorkDir=$linuxWorkDir exe=$linuxExe args=$params")
+                    val cmd = WslCommandHelper.buildWslCommandLine(distribution, linuxCommand, linuxWorkDir)
+                    runCommandLineInternal(cmd)
+                } catch (e: ExecutionException) {
+                    Result.failure(e)
+                }
+            }
+        }
+
+        return runCommandLineInternal(commandLineArgs, workDir)
     }
 
     @RequiresBackgroundThread
-    private fun runCommandLineInternal(commandLineArgs: List<String>): Result<String> {
+    private fun runCommandLineInternal(
+        commandLineArgs: List<String>,
+        workDir: String? = this.workDir,
+    ): Result<String> {
         val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workDir)
+        return runCommandLineInternal(generalCommandLine)
+    }
+
+    @RequiresBackgroundThread
+    private fun runCommandLineInternal(
+        generalCommandLine: GeneralCommandLine,
+    ): Result<String> {
         val processOutput =
             try {
-                logger.debug("Running command: $commandLineArgs")
+                logger.debug("Running command: ${generalCommandLine.commandLineString}")
                 ExecUtil.execAndGetOutput(generalCommandLine, 3000)
             } catch (e: ExecutionException) {
                 logger.info("Failed to execute command. (command=$generalCommandLine)", e)

@@ -3,12 +3,14 @@ package com.github.l34130.mise.nodejs.node
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreter
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterManager
 import com.intellij.javascript.nodejs.interpreter.local.NodeJsLocalInterpreter
 import com.intellij.javascript.nodejs.settings.NodeSettingsConfigurable
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
@@ -62,15 +64,26 @@ class MiseProjectInterpreterSetup : AbstractProjectSdkSetup() {
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = NodeSettingsConfigurable::class as KClass<out T>
 
     private fun MiseDevTool.asNodeJsLocalInterpreter(): NodeJsLocalInterpreter {
+        val basePath = WslPathUtils.convertToolPathForWsl(this)
+
         val interpreterPath =
             if (SystemInfo.isWindows) {
-                Path(FileUtil.expandUserHome(this.shimsInstallPath()), "node.exe")
+                // For WSL UNC paths, maintain Unix structure (no .exe)
+                if (basePath.startsWith("\\\\")) {
+                    Path(FileUtil.expandUserHome(basePath), "bin", "node")
+                } else {
+                    Path(FileUtil.expandUserHome(basePath), "node.exe")
+                }
             } else {
-                Path(FileUtil.expandUserHome(this.shimsInstallPath()), "bin", "node")
+                Path(FileUtil.expandUserHome(basePath), "bin", "node")
             }.toAbsolutePath()
                 .normalize()
                 .toString()
 
         return NodeJsLocalInterpreter(interpreterPath)
+    }
+
+    companion object {
+        private val logger = logger<MiseProjectInterpreterSetup>()
     }
 }
