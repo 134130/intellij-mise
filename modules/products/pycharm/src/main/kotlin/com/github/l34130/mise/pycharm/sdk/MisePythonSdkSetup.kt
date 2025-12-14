@@ -35,7 +35,7 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
         if (currentSdk == null || !currentSdk.homePath.equals(newSdk.homePath)) {
             return SdkStatus.NeedsUpdate(
                 currentSdkVersion = currentSdk?.versionString,
-                requestedInstallPath = newSdk.homePath ?: tool.installPath,
+                requestedInstallPath = newSdk.homePath ?: tool.shimsInstallPath(),
             )
         }
 
@@ -52,8 +52,8 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
             ProjectRootManager.getInstance(project).projectSdk = newSdk
             ApplySdkResult(
                 sdkName = newSdk.name,
-                sdkVersion = newSdk.versionString ?: tool.version,
-                sdkPath = newSdk.homePath ?: tool.installPath,
+                sdkVersion = newSdk.versionString ?: tool.shimsVersion(),
+                sdkPath = newSdk.homePath ?: tool.shimsInstallPath(),
             )
         }
     }

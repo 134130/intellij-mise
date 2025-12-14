@@ -25,7 +25,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
         if (currentSdk == null || currentSdk.name != newSdk.name || currentSdk.homePath != newSdk.homePath) {
             return SdkStatus.NeedsUpdate(
                 currentSdkVersion = currentSdk?.versionString,
-                requestedInstallPath = newSdk.homePath ?: tool.installPath,
+                requestedInstallPath = newSdk.homePath ?: tool.shimsInstallPath(),
             )
         }
 
@@ -52,14 +52,14 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
             ProjectRootManager.getInstance(project).projectSdk = sdk
             ApplySdkResult(
                 sdkName = sdk.name,
-                sdkVersion = sdk.versionString ?: tool.version,
-                sdkPath = sdk.homePath ?: tool.installPath,
+                sdkVersion = sdk.versionString ?: tool.shimsVersion(),
+                sdkPath = sdk.homePath ?: tool.shimsInstallPath(),
             )
         }
 
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null
 
-    private fun MiseDevTool.asJavaSdk(): Sdk = JavaSdk.getInstance().createJdk(this.jdkName(), this.installPath, false)
+    private fun MiseDevTool.asJavaSdk(): Sdk = JavaSdk.getInstance().createJdk(this.jdkName(), this.shimsInstallPath(), false)
 
-    private fun MiseDevTool.jdkName(): String = "${this.requestedVersion ?: this.version} (mise)"
+    private fun MiseDevTool.jdkName(): String = "${this.shimsVersion()} (mise)"
 }

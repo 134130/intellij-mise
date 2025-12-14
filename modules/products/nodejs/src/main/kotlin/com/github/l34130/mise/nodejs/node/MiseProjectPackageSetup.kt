@@ -61,7 +61,7 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
             packageManager.packageRef = NodePackageRef.create(newPackage)
             ApplySdkResult(
                 sdkName = newPackage.name,
-                sdkVersion = newPackage.version?.parsedVersion ?: tool.version,
+                sdkVersion = newPackage.version?.parsedVersion ?: tool.shimsVersion(),
                 sdkPath = newPackage.presentablePath,
             )
         }

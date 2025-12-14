@@ -30,7 +30,7 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
         if (currentSdk == null || currentSdk.name != newSdk.name && currentSdk.homePath != newSdk.homePath) {
             return SdkStatus.NeedsUpdate(
                 currentSdkVersion = currentSdk?.versionString,
-                requestedInstallPath = newSdk.homePath ?: tool.installPath,
+                requestedInstallPath = newSdk.homePath ?: tool.shimsInstallPath(),
             )
         }
 
@@ -55,8 +55,8 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
             ProjectRootManager.getInstance(project).projectSdk = sdk
             ApplySdkResult(
                 sdkName = sdk.name,
-                sdkVersion = sdk.versionString ?: tool.version,
-                sdkPath = sdk.homePath ?: tool.installPath,
+                sdkVersion = sdk.versionString ?: tool.shimsVersion(),
+                sdkPath = sdk.homePath ?: tool.shimsInstallPath(),
             )
         }
 
@@ -66,9 +66,9 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
 
     private fun MiseDevTool.asRubySdk(): Sdk =
         ProjectJdkImpl(
-            "mise: ${this.version}",
+            "mise: ${this.shimsVersion()}",
             RubySdkType.getInstance(),
-            this.installPath,
-            this.version,
+            this.shimsInstallPath(),
+            this.shimsVersion(),
         )
 }

@@ -60,7 +60,7 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
             sdkService.setSdk(sdk, true)
             ApplySdkResult(
                 sdkName = sdk.name,
-                sdkVersion = sdk.version ?: tool.version,
+                sdkVersion = sdk.version ?: tool.shimsVersion(),
                 sdkPath = sdk.homeUrl,
             )
         }
@@ -70,10 +70,10 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = GoSdkConfigurable::class as KClass<out T>
 
     private fun MiseDevTool.asGoSdk(): GoSdk {
-        var sdk = GoSdk.fromHomePath(this.installPath)
+        var sdk = GoSdk.fromHomePath(this.shimsInstallPath())
         if (sdk == GoSdk.NULL) {
             // Go 1.25+
-            sdk = GoSdk.fromHomePath(this.installPath + File.separator + "go")
+            sdk = GoSdk.fromHomePath(this.shimsInstallPath() + File.separator + "go")
         }
         return sdk
     }

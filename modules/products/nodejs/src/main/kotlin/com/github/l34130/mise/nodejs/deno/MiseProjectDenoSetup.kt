@@ -49,7 +49,7 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
             settings.setDenoPath(newDenoPath)
             ApplySdkResult(
                 sdkName = "deno",
-                sdkVersion = tool.version,
+                sdkVersion = tool.shimsVersion(),
                 sdkPath = newDenoPath,
             )
         }
@@ -59,7 +59,7 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = DenoConfigurable::class as KClass<out T>
 
     private fun MiseDevTool.asDenoPath() =
-        Path(FileUtil.expandUserHome(this.installPath), "bin", "deno")
+        Path(FileUtil.expandUserHome(this.shimsInstallPath()), "bin", "deno")
             .toAbsolutePath()
             .normalize()
             .toString()
