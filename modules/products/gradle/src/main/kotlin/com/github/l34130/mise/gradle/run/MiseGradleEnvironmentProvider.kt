@@ -49,7 +49,7 @@ class MiseGradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
             val miseEnvVars =
                 MiseHelper.getMiseEnvVarsOrNotify(
                     configuration = runProfile,
-                    workingDirectory = { runProfile.projectPathOnTarget },
+                    workingDirectory = runProfile.projectPathOnTarget,
                 )
 
             val settings = (environment.runProfile as GradleRunConfiguration).settings

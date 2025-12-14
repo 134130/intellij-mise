@@ -16,16 +16,22 @@ class MisePythonCommandLineTargetEnvironmentProvider : PythonCommandLineTargetEn
         pythonExecution: PythonExecution,
         runParams: PythonRunParams,
     ) {
-        if (runParams is AbstractPythonRunConfiguration<*>) {
-            val envs =
+        val envs =
+            if (runParams is AbstractPythonRunConfiguration<*>) {
                 MiseHelper.getMiseEnvVarsOrNotify(
                     configuration = runParams,
-                    workingDirectory = { runParams.workingDirectory },
+                    workingDirectory = runParams.workingDirectory,
                 )
-
-            for ((key, value) in runParams.envs + envs) {
-                pythonExecution.addEnvironmentVariable(key, value)
+            } else {
+                // For python script or python console which do not have RunConfiguration
+                MiseHelper.getMiseEnvVarsOrNotify(
+                    project = project,
+                    workingDirectory = runParams.workingDirectory,
+                )
             }
+
+        for ((key, value) in runParams.envs + envs) {
+            pythonExecution.addEnvironmentVariable(key, value)
         }
     }
 }

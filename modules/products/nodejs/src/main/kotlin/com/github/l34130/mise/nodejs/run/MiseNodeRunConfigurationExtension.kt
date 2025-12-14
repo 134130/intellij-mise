@@ -44,12 +44,11 @@ class MiseNodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension(
         val envVars =
             MiseHelper.getMiseEnvVarsOrNotify(
                 configuration = configuration,
-                workingDirectory = {
+                workingDirectory =
                     when (configuration) {
                         is NodeJsRunConfiguration -> configuration.workingDirectory
                         else -> null
-                    }
-                },
+                    },
             )
 
         return object : NodeRunConfigurationLaunchSession() {
