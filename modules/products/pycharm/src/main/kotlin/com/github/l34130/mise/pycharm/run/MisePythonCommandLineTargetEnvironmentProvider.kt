@@ -20,7 +20,7 @@ class MisePythonCommandLineTargetEnvironmentProvider : PythonCommandLineTargetEn
             if (runParams is AbstractPythonRunConfiguration<*>) {
                 MiseHelper.getMiseEnvVarsOrNotify(
                     configuration = runParams,
-                    workingDirectory = { runParams.workingDirectory },
+                    workingDirectory = runParams.workingDirectory,
                 )
             } else {
                 // For python script or python console which do not have RunConfiguration

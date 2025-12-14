@@ -19,12 +19,11 @@ import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.util.application
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import java.util.function.Supplier
 
 object MiseHelper {
     fun getMiseEnvVarsOrNotify(
         configuration: RunConfigurationBase<*>,
-        workingDirectory: Supplier<String?>,
+        workingDirectory: String?,
     ): Map<String, String> {
         val project = configuration.project
         val projectState = project.service<MiseProjectSettings>().state
@@ -38,7 +37,7 @@ object MiseHelper {
             when {
                 isRunConfigDisabled -> return emptyMap()
                 useOverrideSettings -> {
-                    val workDir = workingDirectory.get()?.takeIf { it.isNotBlank() } ?: project.basePath
+                    val workDir = workingDirectory?.takeIf { it.isNotBlank() } ?: project.basePath
                     workDir to runConfigState.miseConfigEnvironment
                 }
                 useProjectSettings -> project.basePath to projectState.miseConfigEnvironment

@@ -48,7 +48,7 @@ class MisePythonRunConfigurationExtension : PythonRunConfigurationExtension() {
         val envVars =
             MiseHelper.getMiseEnvVarsOrNotify(
                 configuration = runConfiguration,
-                workingDirectory = { runConfiguration.workingDirectory },
+                workingDirectory = runConfiguration.workingDirectory,
             )
 
         cmdLine.withEnvironment(envVars)
