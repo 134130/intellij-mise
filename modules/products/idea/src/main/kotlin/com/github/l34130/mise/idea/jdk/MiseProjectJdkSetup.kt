@@ -52,7 +52,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
             ProjectRootManager.getInstance(project).projectSdk = sdk
             ApplySdkResult(
                 sdkName = sdk.name,
-                sdkVersion = sdk.versionString ?: tool.version,
+                sdkVersion = sdk.versionString ?: tool.shimsVersion(),
                 sdkPath = sdk.homePath ?: tool.shimsInstallPath(),
             )
         }
@@ -61,5 +61,5 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
 
     private fun MiseDevTool.asJavaSdk(): Sdk = JavaSdk.getInstance().createJdk(this.jdkName(), this.shimsInstallPath(), false)
 
-    private fun MiseDevTool.jdkName(): String = "${this.requestedVersion ?: this.shimsVersion()} (mise)"
+    private fun MiseDevTool.jdkName(): String = "${this.shimsVersion()} (mise)"
 }

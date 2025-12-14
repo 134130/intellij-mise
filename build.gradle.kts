@@ -171,7 +171,7 @@ val runIdePlatformTypes =
 //        IntelliJPlatformType.IntellijIdeaCommunity,
         IntelliJPlatformType.IntellijIdeaUltimate,
 //        IntelliJPlatformType.WebStorm,
-//        IntelliJPlatformType.PyCharmCommunity,
+        IntelliJPlatformType.PyCharmCommunity,
 //        IntelliJPlatformType.PyCharmProfessional,
 //        IntelliJPlatformType.Rider,
     )

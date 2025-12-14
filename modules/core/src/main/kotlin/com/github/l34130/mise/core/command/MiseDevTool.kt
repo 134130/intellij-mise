@@ -15,10 +15,13 @@ data class MiseDevTool(
             installPath
         } else {
             // replace the version part of the install path with the requested version
-            if (installPath.endsWith(version)) {
-                installPath.dropLast(version.length) + requestedVersion
+            val sanitizedPath = installPath.removeSuffix("/")
+            if (sanitizedPath.endsWith(version)) {
+                sanitizedPath.dropLast(version.length) + requestedVersion
             } else {
-                installPath
+                // Silently returning the original path is a bug.
+                // Throw an exception if the path format is unexpected to avoid silent misconfiguration.
+                throw IllegalStateException("Could not determine version from install path: $installPath")
             }
         }
 }
