@@ -1,0 +1,10 @@
+# Environment-specific tasks for stage-prod environment
+[tasks]
+"stage-task" = { run = 'echo "Stage-prod environment task"', description = "Task only in stage-prod environment" }
+
+[tasks.stage-deploy]
+run = '''
+#!/usr/bin/env bash
+echo "Deploying to stage-prod"
+'''
+description = "Stage-prod deployment task"
