@@ -17,10 +17,10 @@ class MiseTomlTaskRunConfigurationProducerTest : FileTestBase() {
             run = "echo foo"
         """.trimIndent()
 
-        val tomlFile = inlineFile(tomlText, "mise.toml") as TomlFile
+        inlineFile(tomlText, "mise.toml") as TomlFile
         val element = findElementInEditor<PsiElement>()
         
-        val context = ConfigurationContext.createEmptyContextForLocation(element.navigationElement.containingFile.viewProvider.getPsi(element.language), myFixture.project)
+        val context = createConfigurationContext(element)
         val producer = MiseTomlTaskRunConfigurationProducer()
         
         val configurationFromContext = producer.findOrCreateConfigurationFromContext(context)
@@ -36,14 +36,20 @@ class MiseTomlTaskRunConfigurationProducerTest : FileTestBase() {
             //^
         """.trimIndent()
 
-        val tomlFile = inlineFile(tomlText, "mise.toml") as TomlFile
+        inlineFile(tomlText, "mise.toml") as TomlFile
         val element = findElementInEditor<PsiElement>()
         
-        val context = ConfigurationContext.createEmptyContextForLocation(element.navigationElement.containingFile.viewProvider.getPsi(element.language), myFixture.project)
+        val context = createConfigurationContext(element)
         val producer = MiseTomlTaskRunConfigurationProducer()
         
         val configurationFromContext = producer.findOrCreateConfigurationFromContext(context)
         assertNotNull("Configuration should be created from context", configurationFromContext)
         assertEquals("Run bar", configurationFromContext?.configurationSettings?.name)
+    }
+    
+    private fun createConfigurationContext(element: PsiElement): ConfigurationContext {
+        val psiFile = element.navigationElement.containingFile
+        val location = psiFile.viewProvider.getPsi(element.language)
+        return ConfigurationContext.createEmptyContextForLocation(location, myFixture.project)
     }
 }

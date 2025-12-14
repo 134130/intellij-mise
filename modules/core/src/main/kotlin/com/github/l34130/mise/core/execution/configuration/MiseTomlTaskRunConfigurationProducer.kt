@@ -41,7 +41,7 @@ internal class MiseTomlTaskRunConfigurationProducer : LazyRunConfigurationProduc
         // If not available, try to resolve from the PSI element at the caret position
         var psiElement = context.psiLocation ?: return null
         
-        // Try current element and its children to find a task
+        // Try current element and related elements to find a task
         // This handles cases where the caret is on different parts of the task definition
         val elementsToCheck = mutableListOf(psiElement)
         psiElement.parent?.let { elementsToCheck.add(it) }
