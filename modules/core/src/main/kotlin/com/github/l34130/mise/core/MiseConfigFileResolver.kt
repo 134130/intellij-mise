@@ -23,6 +23,13 @@ class MiseConfigFileResolver(
         val cacheKey = "${baseDirVf.path}:${configEnvironment.orEmpty()}"
         if (!refresh) cache[cacheKey]?.let { return it }
 
+        // Parse environments outside readAction for efficiency
+        val environments = if (!configEnvironment.isNullOrBlank()) {
+            configEnvironment.split(',').map { it.trim() }
+        } else {
+            emptyList()
+        }
+
         val result =
             readAction {
                 buildList {
@@ -37,13 +44,10 @@ class MiseConfigFileResolver(
                     
                     // Add environment-specific config files if configEnvironment is specified
                     // These are loaded after base configs but before local configs
-                    if (!configEnvironment.isNullOrBlank()) {
-                        val environments = configEnvironment.split(',').map { it.trim() }
-                        for (env in environments) {
-                            addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise.$env.toml")?.takeIf { it.isFile })
-                            addIfNotNull(baseDirVf.findFileOrDirectory(".mise.$env.toml")?.takeIf { it.isFile })
-                            addIfNotNull(baseDirVf.findFileOrDirectory("mise.$env.toml")?.takeIf { it.isFile })
-                        }
+                    for (env in environments) {
+                        addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise.$env.toml")?.takeIf { it.isFile })
+                        addIfNotNull(baseDirVf.findFileOrDirectory(".mise.$env.toml")?.takeIf { it.isFile })
+                        addIfNotNull(baseDirVf.findFileOrDirectory("mise.$env.toml")?.takeIf { it.isFile })
                     }
                     
                     addIfNotNull(baseDirVf.findFileOrDirectory("mise.local.toml")?.takeIf { it.isFile })
