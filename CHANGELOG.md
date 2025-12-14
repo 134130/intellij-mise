@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [5.12.0] - 2025-12-14
+
+### Added
+
+- pycharm: support mise env vars in Python Console by @tomasd
+
+### Fixes
+
+- Fix Jackson deserialization failure for MiseDevTool with missing optional fields by @Copilot
+- Use shimsVersion for SDK integration by @134130
+
 ## [5.11.0] - 2025-11-16
 
 ### Added
@@ -467,7 +478,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.11.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.12.0...HEAD
+[5.12.0]: https://github.com/134130/intellij-mise/compare/v5.11.0...v5.12.0
 [5.11.0]: https://github.com/134130/intellij-mise/compare/v5.10.0...v5.11.0
 [5.10.0]: https://github.com/134130/intellij-mise/compare/v5.9.1...v5.10.0
 [5.9.1]: https://github.com/134130/intellij-mise/compare/v5.9.0...v5.9.1
