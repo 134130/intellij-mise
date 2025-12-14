@@ -100,7 +100,7 @@ abstract class AbstractProjectSdkSetup :
 
             if (!tool.installed) {
                 miseNotificationService.warn(
-                    "$devToolName@${tool.version} is not installed",
+                    "$devToolName@${tool.shimsVersion()} is not installed",
                     "Run `mise install` command to install the tool",
                 ) {
                     NotificationAction.createSimple("Run `mise install`") {
@@ -128,7 +128,7 @@ abstract class AbstractProjectSdkSetup :
                         val applyAction = {
                             applySdkConfiguration(tool, project)
                             miseNotificationService.info(
-                                "${devToolName.canonicalName()} is configured to '${devToolName.value}@${tool.version}'",
+                                "${devToolName.canonicalName()} is configured to '${devToolName.value}@${tool.shimsVersion()}'",
                                 FileUtil.getLocationRelativeToUserHome(status.requestedInstallPath),
                             )
                         }
@@ -136,7 +136,7 @@ abstract class AbstractProjectSdkSetup :
                         if (isUserInteraction) {
                             applyAction()
                         } else {
-                            miseNotificationService.info(title, "Can configure as '${devToolName.value}@${tool.version}'") {
+                            miseNotificationService.info(title, "Can configure as '${devToolName.value}@${tool.shimsVersion()}'") {
                                 NotificationAction.createSimpleExpiring("Apply", applyAction)
                             }
                         }
@@ -146,13 +146,13 @@ abstract class AbstractProjectSdkSetup :
 
                         miseNotificationService.info(
                             "${devToolName.canonicalName()} is up to date",
-                            "Currently using ${devToolName.value}@${tool.version}",
+                            "Currently using ${devToolName.value}@${tool.shimsVersion()}",
                         )
                     }
                 }
             } catch (e: Throwable) {
                 miseNotificationService.error(
-                    "Failed to set ${devToolName.canonicalName()} to ${devToolName.value}@${tool.version}",
+                    "Failed to set ${devToolName.canonicalName()} to ${devToolName.value}@${tool.shimsVersion()}",
                     e.message ?: e.javaClass.simpleName,
                 )
             }

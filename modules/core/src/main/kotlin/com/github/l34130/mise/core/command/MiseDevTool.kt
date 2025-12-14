@@ -8,6 +8,17 @@ data class MiseDevTool(
     val active: Boolean,
     val source: MiseSource?,
 ) {
-    override fun toString(): String =
-        "MiseDevTool(version='$version', requestedVersion=$requestedVersion, installPath='$installPath', installed=$installed, active=$active, source=$source)"
+    fun shimsVersion(): String = requestedVersion ?: version
+
+    fun shimsInstallPath(): String =
+        if (requestedVersion == null) {
+            installPath
+        } else {
+            // replace the version part of the install path with the requested version
+            if (installPath.endsWith(version)) {
+                installPath.dropLast(version.length) + requestedVersion
+            } else {
+                installPath
+            }
+        }
 }

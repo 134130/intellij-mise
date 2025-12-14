@@ -52,7 +52,7 @@ class MiseProjectInterpreterSetup : AbstractProjectSdkSetup() {
             nodeJsInterpreterManager.setInterpreterRef(newInterpreter.toRef())
             ApplySdkResult(
                 sdkName = newInterpreter.presentableName,
-                sdkVersion = newInterpreter.cachedVersion?.get()?.parsedVersion ?: tool.version,
+                sdkVersion = newInterpreter.cachedVersion?.get()?.parsedVersion ?: tool.shimsVersion(),
                 sdkPath = newInterpreter.interpreterSystemDependentPath,
             )
         }
@@ -64,9 +64,9 @@ class MiseProjectInterpreterSetup : AbstractProjectSdkSetup() {
     private fun MiseDevTool.asNodeJsLocalInterpreter(): NodeJsLocalInterpreter {
         val interpreterPath =
             if (SystemInfo.isWindows) {
-                Path(FileUtil.expandUserHome(this.installPath), "node.exe")
+                Path(FileUtil.expandUserHome(this.shimsInstallPath()), "node.exe")
             } else {
-                Path(FileUtil.expandUserHome(this.installPath), "bin", "node")
+                Path(FileUtil.expandUserHome(this.shimsInstallPath()), "bin", "node")
             }.toAbsolutePath()
                 .normalize()
                 .toString()
