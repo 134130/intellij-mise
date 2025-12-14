@@ -48,8 +48,6 @@ class MiseTomlTaskRunConfigurationProducerTest : FileTestBase() {
     }
     
     private fun createConfigurationContext(element: PsiElement): ConfigurationContext {
-        val psiFile = element.navigationElement.containingFile
-        val location = psiFile.viewProvider.getPsi(element.language)
-        return ConfigurationContext.createEmptyContextForLocation(location, myFixture.project)
+        return ConfigurationContext.createEmptyContextForLocation(element, myFixture.project)
     }
 }
