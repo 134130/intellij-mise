@@ -24,7 +24,10 @@ class MisePythonCommandLineTargetEnvironmentProvider : PythonCommandLineTargetEn
                 )
             } else {
                 // For python script or python console which do not have RunConfiguration
-                MiseHelper.getMiseEnvVarsOrNotify(project = project)
+                MiseHelper.getMiseEnvVarsOrNotify(
+                    project = project,
+                    workingDirectory = runParams.workingDirectory,
+                )
             }
 
         for ((key, value) in runParams.envs + envs) {

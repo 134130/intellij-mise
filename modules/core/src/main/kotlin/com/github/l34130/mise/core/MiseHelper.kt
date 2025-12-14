@@ -50,11 +50,11 @@ object MiseHelper {
 
     fun getMiseEnvVarsOrNotify(
         project: Project?,
-        workDir: String? = null,
+        workingDirectory: String? = null,
         configEnvironment: String? = null,
     ): Map<String, String> {
         val project =
-            project ?: workDir?.let { workDir ->
+            project ?: workingDirectory?.let { workDir ->
                 LocalFileSystem.getInstance().findFileByPath(workDir)?.let { vf ->
                     ProjectLocator.getInstance().guessProjectForFile(vf)
                 }
@@ -79,7 +79,7 @@ object MiseHelper {
             if (application.isDispatchThread) {
                 logger.debug { "dispatch thread detected, loading env vars on current thread" }
                 runWithModalProgressBlocking(project, "Loading Mise Environment Variables") {
-                    MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
+                    MiseCommandLineHelper.getEnvVars(workingDirectory, configEnvironment)
                 }
             } else if (!application.isReadAccessAllowed) {
                 logger.debug { "no read lock detected, loading env vars on dispatch thread" }
@@ -87,14 +87,14 @@ object MiseHelper {
                 application.invokeAndWait {
                     logger.debug { "loading env vars on invokeAndWait" }
                     runWithModalProgressBlocking(project, "Loading Mise Environment Variables") {
-                        result = MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
+                        result = MiseCommandLineHelper.getEnvVars(workingDirectory, configEnvironment)
                     }
                 }
                 result ?: throw ProcessCanceledException()
             } else {
                 logger.debug { "read access allowed, executing on background thread" }
                 runBlocking(Dispatchers.IO) {
-                    MiseCommandLineHelper.getEnvVars(workDir, configEnvironment)
+                    MiseCommandLineHelper.getEnvVars(workingDirectory, configEnvironment)
                 }
             }
 
