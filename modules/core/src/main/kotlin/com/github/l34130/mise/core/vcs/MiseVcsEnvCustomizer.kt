@@ -1,7 +1,6 @@
 package com.github.l34130.mise.core.vcs
 
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
-import com.github.l34130.mise.core.notification.MiseNotificationService
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.setting.MiseConfigurable
 import com.github.l34130.mise.core.setting.MiseProjectSettings
@@ -41,14 +40,10 @@ class MiseVcsEnvCustomizer : VcsEnvCustomizer() {
                 onSuccess = { envs.putAll(it) },
                 onFailure = {
                     logger.warn("Failed to get Mise env vars", it)
-                    MiseNotificationService.getInstance(project).warn(
+                    MiseNotificationServiceUtils.notifyException(
                         title = "Failed to get Mise env vars",
-                        htmlText =
-                            """
-                            Failed to get Mise env vars for VCS operations.<br/>
-                            ${it.message}<br/>
-                            Please check your Mise configuration.<br/>
-                            """.trimIndent(),
+                        throwable = it,
+                        project = project,
                     )
                 },
             )

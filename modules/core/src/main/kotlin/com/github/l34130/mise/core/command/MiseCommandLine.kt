@@ -31,25 +31,37 @@ internal class MiseCommandLine(
     }
 
     @RequiresBackgroundThread
-    fun <T> runCommandLine(
+    inline fun <reified T> runCommandLine(
         params: List<String>,
         typeReference: TypeReference<T>,
     ): Result<T> {
         val rawResult = runRawCommandLine(params)
         return rawResult.fold(
-            onSuccess = { output -> Result.success(MiseCommandLineOutputParser.parse(output, typeReference)) },
+            onSuccess = { output ->
+                if (T::class == Unit::class) {
+                    Result.success(Unit as T)
+                } else {
+                    Result.success(MiseCommandLineOutputParser.parse(output, typeReference))
+                }
+            },
             onFailure = { Result.failure(it) },
         )
     }
 
-    suspend fun <T> runCommandLineAsync(
+    suspend inline fun <reified T> runCommandLineAsync(
         params: List<String>,
         typeReference: TypeReference<T>,
     ): Result<T> =
         withContext(Dispatchers.IO) {
             val rawResult = runRawCommandLine(params)
             rawResult.fold(
-                onSuccess = { output -> Result.success(MiseCommandLineOutputParser.parse(output, typeReference)) },
+                onSuccess = { output ->
+                    if (T::class == Unit::class) {
+                        Result.success(Unit as T)
+                    } else {
+                        Result.success(MiseCommandLineOutputParser.parse(output, typeReference))
+                    }
+                },
                 onFailure = { Result.failure(it) },
             )
         }
