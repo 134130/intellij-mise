@@ -64,7 +64,9 @@ class MiseProjectService(
                 }
             } ?: return
 
-        val miseTasks = project.service<MiseTaskResolver>().getMiseTasks(baseDir, true)
+        val settings = project.service<com.github.l34130.mise.core.setting.MiseProjectSettings>()
+        val configEnvironment = settings.state.miseConfigEnvironment
+        val miseTasks = project.service<MiseTaskResolver>().getMiseTasks(baseDir, true, configEnvironment)
         tasks.addAll(miseTasks)
     }
 }

@@ -30,20 +30,23 @@ class MiseTaskResolver(
     suspend fun getMiseTasks(
         baseDir: String,
         refresh: Boolean = false,
+        configEnvironment: String? = null,
     ): List<MiseTask> {
         val baseDirVf: VirtualFile =
             readAction { VirtualFileManager.getInstance().findFileByUrl("file://$baseDir") } ?: return emptyList()
-        return getMiseTasks(baseDirVf, refresh)
+        return getMiseTasks(baseDirVf, refresh, configEnvironment)
     }
 
     suspend fun getMiseTasks(
         baseDirVf: VirtualFile,
         refresh: Boolean = false,
+        configEnvironment: String? = null,
     ): List<MiseTask> {
-        if (!refresh) cache[baseDirVf.path]?.let { return it }
+        val cacheKey = "${baseDirVf.path}:${configEnvironment.orEmpty()}"
+        if (!refresh) cache[cacheKey]?.let { return it }
 
         val result = mutableListOf<MiseTask>()
-        val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, refresh)
+        val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, refresh, configEnvironment)
 
         // Resolve tasks from the config file
         readAction {
@@ -77,7 +80,7 @@ class MiseTaskResolver(
         }
 
         // Resolve tasks from the task directories (Shell Script)
-        val fileTaskDirectories = resolveFileTaskDirectories(project, baseDirVf)
+        val fileTaskDirectories = resolveFileTaskDirectories(project, baseDirVf, configEnvironment)
         for (fileTaskDir in fileTaskDirectories) {
             for (file in fileTaskDir.leafChildren()) {
                 val isExecutable =
@@ -90,6 +93,7 @@ class MiseTaskResolver(
             }
         }
 
+        cache[cacheKey] = result
         return result
     }
 
@@ -106,6 +110,7 @@ class MiseTaskResolver(
         private suspend fun resolveFileTaskDirectories(
             project: Project,
             baseDirVf: VirtualFile,
+            configEnvironment: String? = null,
         ): List<VirtualFile> {
             val result = mutableListOf<VirtualFile>()
 
@@ -120,7 +125,7 @@ class MiseTaskResolver(
             }
 
             // Resolve task directories defined in the config file
-            val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, false)
+            val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, false, configEnvironment)
             readAction {
                 for (configVf in configVfs) {
                     val psiFile = configVf.findPsiFile(project) as? TomlFile ?: continue
