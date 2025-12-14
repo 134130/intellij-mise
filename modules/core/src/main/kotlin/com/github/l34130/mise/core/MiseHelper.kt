@@ -50,8 +50,8 @@ object MiseHelper {
 
     fun getMiseEnvVarsOrNotify(
         project: Project?,
-        workDir: String?,
-        configEnvironment: String?,
+        workDir: String? = null,
+        configEnvironment: String? = null,
     ): Map<String, String> {
         val project =
             project ?: workDir?.let { workDir ->
@@ -62,7 +62,7 @@ object MiseHelper {
 
         if (project == null) {
             logger.warn("No project found to load Mise environment variables")
-            return mapOf()
+            return emptyMap()
         }
 
         val projectState = project.service<MiseProjectSettings>().state
@@ -70,7 +70,7 @@ object MiseHelper {
         val useMiseDirEnv = projectState.useMiseDirEnv
         if (!useMiseDirEnv) {
             logger.debug { "Mise environment variables loading is disabled in project settings" }
-            return mapOf()
+            return emptyMap()
         }
 
         val configEnvironment = configEnvironment ?: projectState.miseConfigEnvironment
