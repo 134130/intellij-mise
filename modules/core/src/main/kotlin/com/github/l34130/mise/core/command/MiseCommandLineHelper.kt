@@ -39,7 +39,7 @@ object MiseCommandLineHelper {
                 MiseEnvExtended(
                     value = env.value,
                     source = env.source,
-                    tool = env.source,
+                    tool = env.tool,
                     redacted = redactedEnvKeys.contains(key),
                 )
             }
