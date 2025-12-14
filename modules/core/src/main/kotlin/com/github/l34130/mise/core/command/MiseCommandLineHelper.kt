@@ -15,6 +15,38 @@ object MiseCommandLineHelper {
         return miseCommandLine.runCommandLine(commandLineArgs)
     }
 
+    // mise env
+    @RequiresBackgroundThread
+    fun getEnvVarsExtended(
+        workDir: String?,
+        configEnvironment: String?,
+    ): Result<Map<String, MiseEnvExtended>> {
+        val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
+
+        val envs =
+            miseCommandLine
+                .runCommandLine<Map<String, MiseEnv>>(listOf("env", "--json-extended"))
+                .getOrElse { return Result.failure(it) }
+
+        val redactedEnvKeys =
+            miseCommandLine
+                .runCommandLine<Map<String, String>>(listOf("env", "--json", "--redacted"))
+                .getOrElse { emptyMap() }
+                .keys
+
+        val extendedEnvs =
+            envs.mapValues { (key, env) ->
+                MiseEnvExtended(
+                    value = env.value,
+                    source = env.source,
+                    tool = env.tool,
+                    redacted = redactedEnvKeys.contains(key),
+                )
+            }
+
+        return Result.success(extendedEnvs)
+    }
+
     suspend fun getEnvVarsAsync(
         workDir: String?,
         configEnvironment: String?,

@@ -1,3 +1,5 @@
+redactions = ["*_PASSWORD"]
+
 [tools]
 "npm:nx" = "latest"
 pnpm = "latest"
@@ -6,6 +8,8 @@ uv = "latest"
 
 [env]
 MISE_PYTHON_TEST = "true"
+MISE_REDACTED_TEST = { value = "secret", redact = true }
+MISE_PASSWORD = "p@ssw0rd"
 DB_USERNAME = "root"
 DB_PASSWORD = "your_password"
 
