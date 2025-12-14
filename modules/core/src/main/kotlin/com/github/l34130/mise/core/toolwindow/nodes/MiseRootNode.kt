@@ -92,7 +92,7 @@ class MiseRootNode(
     private fun getEnvironmentNodes(settings: MiseProjectSettings): Collection<MiseEnvironmentNode> {
         val envs =
             MiseCommandLineHelper
-                .getEnvVars(
+                .getEnvVarsExtended(
                     workDir = project.basePath,
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow()
@@ -101,7 +101,12 @@ class MiseRootNode(
             MiseEnvironmentNode(
                 project = project,
                 key = key,
-                value = value,
+                value =
+                    if (value.redacted) {
+                        "[redacted]"
+                    } else {
+                        value.value
+                    },
             )
         }
     }
