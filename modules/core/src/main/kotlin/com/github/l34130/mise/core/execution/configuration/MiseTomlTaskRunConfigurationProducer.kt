@@ -39,13 +39,21 @@ internal class MiseTomlTaskRunConfigurationProducer : LazyRunConfigurationProduc
         context.dataContext.getData(MiseTask.DATA_KEY)?.let { return it }
 
         // If not available, try to resolve from the PSI element at the caret position
-        val psiElement = context.psiLocation ?: return null
+        var psiElement = context.psiLocation ?: return null
         
-        // Try to resolve from chained table format: [tasks.foo]
-        MiseTomlTableTask.resolveFromTaskChainedTable(psiElement)?.let { return it }
+        // Try current element and its children to find a task
+        // This handles cases where the caret is on different parts of the task definition
+        val elementsToCheck = mutableListOf(psiElement)
+        psiElement.parent?.let { elementsToCheck.add(it) }
+        psiElement.firstChild?.let { elementsToCheck.add(it) }
         
-        // Try to resolve from inline table format: [tasks] foo = { ... }
-        MiseTomlTableTask.resolveFromInlineTableInTaskTable(psiElement)?.let { return it }
+        for (element in elementsToCheck) {
+            // Try to resolve from chained table format: [tasks.foo]
+            MiseTomlTableTask.resolveFromTaskChainedTable(element)?.let { return it }
+            
+            // Try to resolve from inline table format: [tasks] foo = { ... }
+            MiseTomlTableTask.resolveFromInlineTableInTaskTable(element)?.let { return it }
+        }
         
         return null
     }
