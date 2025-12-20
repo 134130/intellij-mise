@@ -11,6 +11,12 @@ object ShimUtils {
         executableName: String,
     ): VirtualFile {
         val fs = LocalFileSystem.getInstance()
+
+        // Refresh file system for UNC paths (WSL)
+        if (basePath.startsWith("\\\\")) {
+            fs.refreshAndFindFileByPath(basePath)
+        }
+
         val baseFile =
             fs.findFileByPath(basePath)
                 ?: throw IllegalStateException("Base path not found: $basePath")
@@ -19,19 +25,23 @@ object ShimUtils {
 
         val potentialRelativePaths =
             sequence {
-                if (SystemInfo.isWindows) {
+                // For UNC/WSL paths, use Unix structure (no .exe extensions)
+                if (basePath.startsWith("\\\\")) {
+                    yield("bin/$executableName")
+                    yield(executableName)
+                } else if (SystemInfo.isWindows) {
                     yield("bin/$executableName.exe")
                     yield("bin/$executableName.cmd")
                     yield("bin/$executableName.bat")
-                }
-                yield("bin/$executableName")
-
-                if (SystemInfo.isWindows) {
+                    yield("bin/$executableName")
                     yield("$executableName.exe")
                     yield("$executableName.cmd")
                     yield("$executableName.bat")
+                    yield(executableName)
+                } else {
+                    yield("bin/$executableName")
+                    yield(executableName)
                 }
-                yield(executableName)
             }
 
         return potentialRelativePaths

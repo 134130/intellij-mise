@@ -3,7 +3,9 @@ package com.github.l34130.mise.idea.jdk
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
@@ -59,7 +61,14 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
 
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null
 
-    private fun MiseDevTool.asJavaSdk(): Sdk = JavaSdk.getInstance().createJdk(this.jdkName(), this.shimsInstallPath(), false)
+    private fun MiseDevTool.asJavaSdk(): Sdk {
+        val sdkPath = WslPathUtils.convertToolPathForWsl(this)
+        return JavaSdk.getInstance().createJdk(this.jdkName(), sdkPath, false)
+    }
 
     private fun MiseDevTool.jdkName(): String = "${this.shimsVersion()} (mise)"
+
+    companion object {
+        private val logger = logger<MiseProjectJdkSetup>()
+    }
 }

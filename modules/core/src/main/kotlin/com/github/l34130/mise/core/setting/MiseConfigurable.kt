@@ -48,9 +48,18 @@ class MiseConfigurable(
                         .comment(
                             """
                             Specify the path to the mise executable.</br>
-                            Not installed? Visit the <a href='https://mise.jdx.dev/installing-mise.html'>mise installation</a>
+                            Not installed? Visit the <a href='https://mise.jdx.dev/installing-mise.html'>mise installation</a></br>
+                            For WSL: <code>wsl.exe -d DistroName mise</code> or <code>\\wsl.localhost\DistroName\usr\bin\mise</code></br>
                             """.trimIndent(),
                         )
+                }
+
+                // Show WSL status if detected
+                if (applicationSettings.state.isWslMode) {
+                    row("WSL Mode:") {
+                        label("Enabled (${applicationSettings.state.wslDistribution ?: "default"})")
+                            .comment("Unix paths will be converted to UNC paths automatically.")
+                    }
                 }
             }
 
@@ -99,7 +108,14 @@ class MiseConfigurable(
         if (isModified) {
             val applicationSettings = application.service<MiseApplicationSettings>()
             val projectSettings = project.service<MiseProjectSettings>()
+
+            // Update executable path and recalculate WSL settings if path changed
+            val pathChanged = myMiseExecutableTf.text != applicationSettings.state.executablePath
             applicationSettings.state.executablePath = myMiseExecutableTf.text
+            if (pathChanged) {
+                applicationSettings.loadState(applicationSettings.state)
+            }
+
             projectSettings.state.useMiseDirEnv = myMiseDirEnvCb.isSelected
             projectSettings.state.miseConfigEnvironment = myMiseConfigEnvironmentTf.text
             projectSettings.state.useMiseVcsIntegration = myMiseVcsCb.isSelected
