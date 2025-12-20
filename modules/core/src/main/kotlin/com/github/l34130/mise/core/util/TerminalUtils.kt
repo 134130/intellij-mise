@@ -4,6 +4,7 @@ import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.wm.ToolWindowManager
 import org.jetbrains.plugins.terminal.ShellTerminalWidget
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
@@ -17,7 +18,7 @@ object TerminalUtils {
     ) {
         val shellWidget =
             project.service<TerminalToolWindowManager>().createShellWidget(
-                ProjectUtil.getBaseDir(),
+                project.guessProjectDir()?.path ?: ProjectUtil.getBaseDir(),
                 tabName ?: "Mise",
                 true,
                 true,

@@ -1,5 +1,7 @@
 package com.github.l34130.mise.core.notification
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.l34130.mise.core.command.MiseCommandLineException
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseCommandLineNotTrustedConfigFileException
@@ -7,8 +9,16 @@ import com.intellij.notification.NotificationAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
 import org.jetbrains.concurrency.runAsync
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 object MiseNotificationServiceUtils {
+    private val debounceMap: Cache<String, Any> =
+        Caffeine
+            .newBuilder()
+            .expireAfterWrite(5.seconds.toJavaDuration())
+            .build()
+
     fun notifyException(
         title: String,
         throwable: Throwable,
@@ -20,14 +30,19 @@ object MiseNotificationServiceUtils {
             is MiseCommandLineException -> {
                 when (throwable) {
                     is MiseCommandLineNotTrustedConfigFileException -> {
+                        if (debounceMap.getIfPresent(MiseCommandLineNotTrustedConfigFileException::class.simpleName!!) != null) {
+                            // Debounce duplicate notifications
+                            return
+                        }
+
                         notificationService.warn(
-                            title,
+                            "Config file is not trusted.",
                             """
-                            Config file <code>${throwable.configFilePath}</code> is not trusted.
+                            Trust the file <code>${FileUtil.getLocationRelativeToUserHome(throwable.configFilePath)}</code>
                             """.trimIndent(),
                         ) {
                             NotificationAction.createSimple(
-                                "Trust the config file",
+                                "`mise trust`",
                             ) {
                                 val absolutePath = FileUtil.expandUserHome(throwable.configFilePath)
 
@@ -47,10 +62,15 @@ object MiseNotificationServiceUtils {
                         }
                     }
 
-                    else -> notificationService.warn(title, throwable.message)
+                    else -> {
+                        notificationService.warn(title, throwable.message)
+                    }
                 }
             }
-            else -> notificationService.error(title, throwable.message ?: throwable.javaClass.simpleName)
+
+            else -> {
+                notificationService.error(title, throwable.message ?: throwable.javaClass.simpleName)
+            }
         }
     }
 }

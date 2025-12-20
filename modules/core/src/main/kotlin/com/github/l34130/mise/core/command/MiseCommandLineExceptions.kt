@@ -8,7 +8,10 @@ sealed class MiseCommandLineException(
     throwable: Throwable? = null,
 ) : RuntimeException(throwable) {
     companion object {
-        fun parseFromStderr(generalCommandLine: GeneralCommandLine, stderr: String): MiseCommandLineException? =
+        fun parseFromStderr(
+            generalCommandLine: GeneralCommandLine,
+            stderr: String,
+        ): MiseCommandLineException? =
             MiseCommandLineNotTrustedConfigFileException.parseFromStderr(generalCommandLine, stderr)
                 ?: MiseCommandLineErrorParsingConfigFileException.parseFromStderr(generalCommandLine, stderr)
     }
@@ -24,15 +27,15 @@ class MiseCommandLineNotTrustedConfigFileException(
     generalCommandLine: GeneralCommandLine,
     val configFilePath: String,
 ) : MiseCommandLineException(
-    generalCommandLine = generalCommandLine,
-    message = "Config file $configFilePath is not trusted. Trust it with `mise trust`.",
-) {
+        generalCommandLine = generalCommandLine,
+        message = "Config file $configFilePath is not trusted. Trust it with `mise trust`.",
+    ) {
     companion object {
-        private val stderrRegex = Regex("Config file (.+) is not trusted.")
+        private val stderrRegex = Regex("Config files? (?:in )?(.+) (?:is|are) not trusted.")
 
         fun parseFromStderr(
             generalCommandLine: GeneralCommandLine,
-            stderr: String
+            stderr: String,
         ): MiseCommandLineNotTrustedConfigFileException? {
             val result = stderrRegex.find(stderr) ?: return null
 
@@ -50,15 +53,15 @@ class MiseCommandLineErrorParsingConfigFileException(
     generalCommandLine: GeneralCommandLine,
     val configFilePath: String,
 ) : MiseCommandLineException(
-    generalCommandLine = generalCommandLine,
-    message = "error parsing config file: $configFilePath"
-) {
+        generalCommandLine = generalCommandLine,
+        message = "error parsing config file: $configFilePath",
+    ) {
     companion object {
         private val stderrRegex = Regex("error parsing config file: (.+)")
 
         fun parseFromStderr(
             generalCommandLine: GeneralCommandLine,
-            stderr: String
+            stderr: String,
         ): MiseCommandLineErrorParsingConfigFileException? {
             val result = stderrRegex.find(stderr) ?: return null
 
