@@ -41,14 +41,22 @@ class MiseNodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension(
         configuration: AbstractNodeTargetRunProfile,
         environment: ExecutionEnvironment,
     ): NodeRunConfigurationLaunchSession? {
+        val workingDir =
+            when (configuration) {
+                is NodeJsRunConfiguration -> configuration.workingDirectory
+                else -> null
+            }
+
+        // Run mise install if needed
+        MiseHelper.runMiseInstallIfNeeded(
+            configuration = configuration,
+            workingDirectory = workingDir,
+        )
+
         val envVars =
             MiseHelper.getMiseEnvVarsOrNotify(
                 configuration = configuration,
-                workingDirectory =
-                    when (configuration) {
-                        is NodeJsRunConfiguration -> configuration.workingDirectory
-                        else -> null
-                    },
+                workingDirectory = workingDir,
             )
 
         return object : NodeRunConfigurationLaunchSession() {
