@@ -45,6 +45,9 @@ class MiseRubyMineRunConfigurationExtension : RubyRunConfigurationExtension() {
         cmdLine: GeneralCommandLine,
         runnerId: String,
     ) {
+        // Run mise install if needed
+        MiseHelper.runMiseInstallIfNeeded(configuration, configuration.getWorkingDirectory())
+
         MiseHelper
             .getMiseEnvVarsOrNotify(configuration, configuration.getWorkingDirectory())
             .forEach { (k, v) -> cmdLine.withEnvironment(k, v) }
