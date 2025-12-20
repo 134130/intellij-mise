@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+## [5.13.0] - 2025-12-20
+
+### Added
+
+- Add environment variable value redaction for tool window by @134130
+- Add WSL support for Windows users (#342) by @sassdavid
+- Support environment-specific config files in task discovery by @Copilot
+- Enable Ctrl-Shift-R keyboard shortcut for running tasks from editor by @Copilot
+
+### Fixes
+
+- Debounce the `mise trust` notification by @134130
+
 ## [5.12.0] - 2025-12-14
 
 ### Added
@@ -478,7 +491,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.12.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.13.0...HEAD
+[5.13.0]: https://github.com/134130/intellij-mise/compare/v5.12.0...v5.13.0
 [5.12.0]: https://github.com/134130/intellij-mise/compare/v5.11.0...v5.12.0
 [5.11.0]: https://github.com/134130/intellij-mise/compare/v5.10.0...v5.11.0
 [5.10.0]: https://github.com/134130/intellij-mise/compare/v5.9.1...v5.10.0
