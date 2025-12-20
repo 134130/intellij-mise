@@ -29,13 +29,13 @@ object MiseHelper {
         val projectState = project.service<MiseProjectSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
-        val isRunConfigDisabled = runConfigState?.useMiseDirEnv == false
+        val isMiseDisabledForRunConfig = runConfigState?.useMiseDirEnv == false
         val useOverrideSettings = runConfigState?.configEnvironmentStrategy == ConfigEnvironmentStrategy.OVERRIDE_PROJECT_SETTINGS
         val useProjectSettings = projectState.useMiseDirEnv
 
         // Check if we should run mise install
         val shouldRunInstall = when {
-            isRunConfigDisabled -> false
+            isMiseDisabledForRunConfig -> false
             runConfigState?.runMiseInstallBeforeRun == true -> true
             runConfigState?.runMiseInstallBeforeRun == null && projectState.runMiseInstallBeforeRun -> true
             else -> false
@@ -70,13 +70,13 @@ object MiseHelper {
         val projectState = project.service<MiseProjectSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
-        val isRunConfigDisabled = runConfigState?.useMiseDirEnv == false
+        val isMiseDisabledForRunConfig = runConfigState?.useMiseDirEnv == false
         val useOverrideSettings = runConfigState?.configEnvironmentStrategy == ConfigEnvironmentStrategy.OVERRIDE_PROJECT_SETTINGS
         val useProjectSettings = projectState.useMiseDirEnv
 
         val (workDir, configEnvironment) =
             when {
-                isRunConfigDisabled -> return emptyMap()
+                isMiseDisabledForRunConfig -> return emptyMap()
                 useOverrideSettings -> {
                     val workDir = workingDirectory?.takeIf { it.isNotBlank() } ?: project.basePath
                     workDir to runConfigState.miseConfigEnvironment
@@ -166,13 +166,16 @@ object MiseHelper {
             } else if (!application.isReadAccessAllowed) {
                 logger.debug { "no read lock detected, running mise install on dispatch thread" }
                 var result: Result<String>? = null
+                // Using invokeAndWait inside a background thread could potentially cause deadlocks.
+                // However, this is the pattern used elsewhere in the codebase for running progress dialogs.
                 application.invokeAndWait {
                     logger.debug { "running mise install on invokeAndWait" }
                     runWithModalProgressBlocking(project, "Running 'mise install --yes'") {
                         result = MiseCommandLineHelper.install(workingDirectory, configEnvironment)
                     }
                 }
-                result ?: throw ProcessCanceledException()
+                // If result is null, it means the progress was cancelled or an unexpected error occurred
+                result ?: Result.failure(ProcessCanceledException("Progress was cancelled"))
             } else {
                 logger.debug { "read access allowed, executing on background thread" }
                 runBlocking(Dispatchers.IO) {

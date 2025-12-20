@@ -94,6 +94,7 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>> : Settings
                 configEnvironmentStrategy = myConfigEnvironmentStrategy.get(),
                 useMiseDirEnv = myMiseDirEnvCb.isSelected,
                 miseConfigEnvironment = myMiseConfigEnvironmentTf.text,
+                // Tri-state: true = override to run install, null = use project setting
                 runMiseInstallBeforeRun = if (myRunMiseInstallCb.isSelected) true else null,
             ),
         )
