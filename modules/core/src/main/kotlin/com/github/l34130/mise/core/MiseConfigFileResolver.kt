@@ -18,8 +18,17 @@ class MiseConfigFileResolver(
     suspend fun resolveConfigFiles(
         baseDirVf: VirtualFile,
         refresh: Boolean = false,
+        configEnvironment: String? = null,
     ): List<VirtualFile> {
-        if (!refresh) cache[baseDirVf.path]?.let { return it }
+        val cacheKey = "${baseDirVf.path}:${configEnvironment.orEmpty()}"
+        if (!refresh) cache[cacheKey]?.let { return it }
+
+        // Parse environments outside readAction for efficiency
+        val environments = if (!configEnvironment.isNullOrBlank()) {
+            configEnvironment.split(',').map { it.trim() }
+        } else {
+            emptyList()
+        }
 
         val result =
             readAction {
@@ -32,6 +41,15 @@ class MiseConfigFileResolver(
                     baseDirVf.findFileOrDirectory(".config/mise/conf.d")?.takeIf { it.isDirectory }?.let { dir ->
                         addAll(dir.children.filter { it.name.endsWith(".toml") && it.isFile })
                     }
+                    
+                    // Add environment-specific config files if configEnvironment is specified
+                    // These are loaded after base configs but before local configs
+                    for (env in environments) {
+                        addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise.$env.toml")?.takeIf { it.isFile })
+                        addIfNotNull(baseDirVf.findFileOrDirectory(".mise.$env.toml")?.takeIf { it.isFile })
+                        addIfNotNull(baseDirVf.findFileOrDirectory("mise.$env.toml")?.takeIf { it.isFile })
+                    }
+                    
                     addIfNotNull(baseDirVf.findFileOrDirectory("mise.local.toml")?.takeIf { it.isFile })
                     addIfNotNull(baseDirVf.findFileOrDirectory("mise.toml")?.takeIf { it.isFile })
                     addIfNotNull(baseDirVf.findFileOrDirectory(".mise.local.toml")?.takeIf { it.isFile })
@@ -39,7 +57,7 @@ class MiseConfigFileResolver(
                 }
             }
 
-        cache[baseDirVf.path] = result
+        cache[cacheKey] = result
         return result
     }
 }

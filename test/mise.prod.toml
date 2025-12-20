@@ -1,0 +1,5 @@
+[env]
+MISE_DEPLOY_KEY = 'deploy-key'
+
+[tasks.deploy]
+run = 'echo "prod environment task"'

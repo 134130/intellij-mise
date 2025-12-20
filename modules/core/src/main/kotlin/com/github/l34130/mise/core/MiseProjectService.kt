@@ -1,6 +1,7 @@
 package com.github.l34130.mise.core
 
 import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.readAction
@@ -64,7 +65,9 @@ class MiseProjectService(
                 }
             } ?: return
 
-        val miseTasks = project.service<MiseTaskResolver>().getMiseTasks(baseDir, true)
+        val settings = project.service<MiseProjectSettings>()
+        val configEnvironment = settings.state.miseConfigEnvironment
+        val miseTasks = project.service<MiseTaskResolver>().getMiseTasks(baseDir, true, configEnvironment)
         tasks.addAll(miseTasks)
     }
 }
