@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add option to run `mise install --yes` before run configurations
+
 ## [5.12.0] - 2025-12-14
 
 ### Added
