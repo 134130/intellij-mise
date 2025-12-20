@@ -129,4 +129,16 @@ object MiseCommandLineHelper {
         val miseCommandLine = MiseCommandLine(null, null)
         return miseCommandLine.runCommandLine(commandLineArgs)
     }
+
+    // mise install
+    @RequiresBackgroundThread
+    fun install(
+        workDir: String?,
+        configEnvironment: String?,
+    ): Result<String> {
+        val commandLineArgs = mutableListOf("install", "--yes")
+
+        val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
+        return miseCommandLine.runRawCommandLine(commandLineArgs)
+    }
 }

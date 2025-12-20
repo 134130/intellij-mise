@@ -34,6 +34,7 @@ class MiseProjectSettings(
                 it.useMiseDirEnv = myState.useMiseDirEnv
                 it.miseConfigEnvironment = myState.miseConfigEnvironment
                 it.useMiseVcsIntegration = myState.useMiseVcsIntegration
+                it.runMiseInstallBeforeRun = myState.runMiseInstallBeforeRun
             }
 
         val applicationSettings = application.service<MiseApplicationSettings>()
@@ -60,12 +61,14 @@ class MiseProjectSettings(
         var useMiseDirEnv: Boolean = true
         var miseConfigEnvironment: String = ""
         var useMiseVcsIntegration: Boolean = true
+        var runMiseInstallBeforeRun: Boolean = false
 
         public override fun clone(): MyState =
             MyState().also {
                 it.useMiseDirEnv = useMiseDirEnv
                 it.miseConfigEnvironment = miseConfigEnvironment
                 it.useMiseVcsIntegration = useMiseVcsIntegration
+                it.runMiseInstallBeforeRun = runMiseInstallBeforeRun
             }
     }
 }
