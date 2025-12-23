@@ -40,7 +40,10 @@ object MiseHelper {
                     val workDir = workingDirectory?.takeIf { it.isNotBlank() } ?: project.basePath
                     workDir to runConfigState.miseConfigEnvironment
                 }
-                useProjectSettings -> project.basePath to projectState.miseConfigEnvironment
+                useProjectSettings -> {
+                    val workDir = workingDirectory?.takeIf { it.isNotBlank() } ?: project.basePath
+                    workDir to projectState.miseConfigEnvironment
+                }
                 else -> return emptyMap()
             }
 
