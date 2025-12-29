@@ -6,6 +6,7 @@ import com.github.l34130.mise.core.model.MiseTomlFile
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -58,7 +59,7 @@ class MiseTaskResolver(
         val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, refresh, configEnvironment)
 
         // Resolve tasks from the config file
-        readAction {
+        smartReadAction(project) {
             for (configVf in configVfs) {
                 val psiFile = configVf.findPsiFile(project) as? TomlFile ?: continue
                 val tomlTableTasks: List<MiseTomlTableTask> = MiseTomlTableTask.resolveAllFromTomlFile(psiFile)
@@ -67,7 +68,7 @@ class MiseTaskResolver(
         }
 
         // Resolve tasks from the task config files
-        readAction {
+        smartReadAction(project) {
             for (configVf in configVfs) {
                 val configPsiFile = configVf.findPsiFile(project) as? TomlFile ?: continue
                 val taskIncludes = MiseTomlFile.TaskConfig.resolveOrNull(configPsiFile)?.includes ?: continue
@@ -126,7 +127,7 @@ class MiseTaskResolver(
             val result = mutableListOf<VirtualFile>()
 
             // Resolve default task directories
-            readAction {
+            smartReadAction(project) {
                 for (dir in DEFAULT_TASK_DIRECTORIES) {
                     val vf = baseDirVf.resolveFromRootOrRelative(dir) ?: continue
                     if (vf.isDirectory) {
@@ -137,7 +138,7 @@ class MiseTaskResolver(
 
             // Resolve task directories defined in the config file
             val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, false, configEnvironment)
-            readAction {
+            smartReadAction(project) {
                 for (configVf in configVfs) {
                     val psiFile = configVf.findPsiFile(project) as? TomlFile ?: continue
                     val taskTomlOrDirs = MiseTomlFile.TaskConfig.resolveOrNull(psiFile)?.includes ?: emptyList()
