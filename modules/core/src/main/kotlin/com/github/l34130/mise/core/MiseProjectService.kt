@@ -30,14 +30,11 @@ class MiseProjectService(
 
     init {
         project.messageBus.connect(this).let {
-            it.subscribe(
-                MiseTomlFileVfsListener.MISE_TOML_CHANGED,
-                Runnable {
-                    cs.launch(Dispatchers.IO) {
-                        refresh()
-                    }
-                },
-            )
+            it.subscribe(MiseTomlFileVfsListener.MISE_TOML_CHANGED) {
+                cs.launch(Dispatchers.IO) {
+                    refresh()
+                }
+            }
             MiseTomlFileVfsListener.startListening(project, this, it)
         }
     }

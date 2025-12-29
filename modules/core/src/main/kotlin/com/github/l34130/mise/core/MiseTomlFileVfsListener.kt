@@ -14,7 +14,6 @@ import com.intellij.psi.PsiTreeAnyChangeAbstractAdapter
 import com.intellij.util.Alarm
 import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.messages.Topic
-import kotlinx.coroutines.Runnable
 import java.util.concurrent.ConcurrentHashMap
 
 class MiseTomlFileVfsListener private constructor(
@@ -29,7 +28,7 @@ class MiseTomlFileVfsListener private constructor(
         },
     ) {
     companion object {
-        val MISE_TOML_CHANGED = Topic.create("MISE_TOML_CHANGED", Runnable::class.java)
+        val MISE_TOML_CHANGED = Topic.create("MISE_TOML_CHANGED", Function0::class.java)
 
         fun startListening(
             project: Project,
@@ -61,7 +60,7 @@ class MiseTomlFileVfsListener private constructor(
             Runnable {
                 if (project.isDisposed) return@Runnable
                 val scope = HashSet(dirtyTomlFiles)
-                project.messageBus.syncPublisher(MISE_TOML_CHANGED).run()
+                project.messageBus.syncPublisher(MISE_TOML_CHANGED).invoke()
                 dirtyTomlFiles.removeAll(scope)
 
 //                val analyzer = DaemonCodeAnalyzer.getInstance(project)

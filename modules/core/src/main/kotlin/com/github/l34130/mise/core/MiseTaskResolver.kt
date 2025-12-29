@@ -4,6 +4,7 @@ import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.model.MiseTomlFile
 import com.github.l34130.mise.core.model.MiseTomlTableTask
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -24,8 +25,16 @@ import kotlin.io.path.isExecutable
 @Service(Service.Level.PROJECT)
 class MiseTaskResolver(
     val project: Project,
-) {
+) : Disposable {
     private val cache = ConcurrentHashMap<String, List<MiseTask>>()
+
+    init {
+        project.messageBus.connect(this).let {
+            it.subscribe(MiseTomlFileVfsListener.MISE_TOML_CHANGED) {
+                cache.clear()
+            }
+        }
+    }
 
     suspend fun getMiseTasks(
         baseDir: String,
@@ -96,6 +105,8 @@ class MiseTaskResolver(
         cache[cacheKey] = result
         return result
     }
+
+    override fun dispose() {}
 
     companion object {
         private val DEFAULT_TASK_DIRECTORIES =
