@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.lang.completion
 
-import com.github.l34130.mise.core.MiseProjectService
+import com.github.l34130.mise.core.MiseTaskResolver
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
@@ -12,14 +12,12 @@ import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.PrioritizedLookupElement
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
-import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.util.Iconable
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.ProcessingContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.toml.lang.psi.TomlArray
 import org.toml.lang.psi.TomlFile
@@ -92,41 +90,42 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
         }
         if (currentTaskSegment == null) return
 
-        runBlocking(Dispatchers.IO) {
-            smartReadAction(project) {
-                for (task in project.service<MiseProjectService>().getTasks()) {
-                    if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
-                    if (task.name == currentTaskSegment.name) continue
+        runBlocking {
+            val resolver = project.service<MiseTaskResolver>()
+            val tasks = resolver.getMiseTasks(originalFile.parent)
 
-                    val psiElement =
-                        when (task) {
-                            is MiseShellScriptTask -> task.file.findPsiFile(project)!!
-                            is MiseTomlTableTask -> task.keySegment
-                            is MiseUnknownTask -> {
-                                result.addElement(
-                                    LookupElementBuilder.create(task.name)
-                                        .withInsertHandler(StringLiteralInsertionHandler())
-                                        .withTypeText(presentablePath(project, task.source)),
-                                )
-                                continue
-                            }
+            for (task in tasks) {
+                if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
+                if (task.name == currentTaskSegment.name) continue
+
+                val psiElement =
+                    when (task) {
+                        is MiseShellScriptTask -> task.file.findPsiFile(project)!!
+                        is MiseTomlTableTask -> task.keySegment
+                        is MiseUnknownTask -> {
+                            result.addElement(
+                                LookupElementBuilder.create(task.name)
+                                    .withInsertHandler(StringLiteralInsertionHandler())
+                                    .withTypeText(presentablePath(project, task.source)),
+                            )
+                            continue
                         }
+                    }
 
-                    val path =
-                        when {
-                            task is MiseTomlTableTask && task.keySegment.containingFile.virtualFile == originalFile -> "current file"
-                            else -> presentablePath(project, psiElement.containingFile.viewProvider.virtualFile.path)
-                        }
+                val path =
+                    when {
+                        task is MiseTomlTableTask && task.keySegment.containingFile.virtualFile == originalFile -> "current file"
+                        else -> presentablePath(project, psiElement.containingFile.viewProvider.virtualFile.path)
+                    }
 
-                    result.addElement(
-                        LookupElementBuilder
-                            .createWithSmartPointer(task.name, psiElement)
-                            .withInsertHandler(StringLiteralInsertionHandler())
-                            .withIcon(psiElement.getIcon(Iconable.ICON_FLAG_VISIBILITY))
-                            .withTypeText(path)
-                            .withPriority(-path.length - 100.0),
-                    )
-                }
+                result.addElement(
+                    LookupElementBuilder
+                        .createWithSmartPointer(task.name, psiElement)
+                        .withInsertHandler(StringLiteralInsertionHandler())
+                        .withIcon(psiElement.getIcon(Iconable.ICON_FLAG_VISIBILITY))
+                        .withTypeText(path)
+                        .withPriority(-path.length - 100.0),
+                )
             }
         }
     }
