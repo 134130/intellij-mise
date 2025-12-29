@@ -6,8 +6,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ZipperUpdater
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileContentsChangedAdapter
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.impl.BulkVirtualFileListenerAdapter
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiTreeAnyChangeAbstractAdapter
 import com.intellij.util.Alarm
+import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.messages.Topic
 import java.util.concurrent.ConcurrentHashMap
 
@@ -27,7 +32,19 @@ class MiseTomlFileVfsListener(
     companion object {
         val MISE_TOML_CHANGED = Topic.create("MISE_TOML_CHANGED", Function0::class.java)
 
-        fun startListening(project: Project, disposable: Disposable) {
+        fun startListening(project: Project, disposable: Disposable, connection: MessageBusConnection) {
+            val updater = MiseLocalIndexUpdater(project, disposable)
+            connection.subscribe(VirtualFileManager.VFS_CHANGES, MiseTomlFileVfsListener(updater))
+            PsiManager.getInstance(project).addPsiTreeChangeListener(
+                object : PsiTreeAnyChangeAbstractAdapter() {
+                    override fun onChange(file: PsiFile?) {
+                        if (file != null) {
+                            updater.onFileChange(file.viewProvider.virtualFile)
+                        }
+                    }
+                },
+                disposable,
+            )
             MiseLocalIndexUpdater(project, disposable)
         }
     }
