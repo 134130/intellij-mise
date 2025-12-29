@@ -7,7 +7,6 @@ import com.github.l34130.mise.core.notification.MiseNotificationService
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.ide.impl.ProjectUtil
-import com.intellij.notification.NotificationAction
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.Service
@@ -35,6 +34,8 @@ class MiseProjectService(
 ) : Disposable {
     var isInitialized: AtomicBoolean = AtomicBoolean(false)
         private set
+    
+    private val isCheckingInstall: AtomicBoolean = AtomicBoolean(false)
 
     private val tasks: MutableSet<MiseTask> = ConcurrentHashMap.newKeySet<MiseTask>()
 
@@ -59,8 +60,10 @@ class MiseProjectService(
 
         loadTasks()
         
-        // Check and run mise install if configured
-        checkAndRunMiseInstall()
+        // Check and run mise install if configured (non-blocking)
+        cs.launch(Dispatchers.IO) {
+            checkAndRunMiseInstall()
+        }
 
         isInitialized.set(true)
     }
@@ -84,15 +87,21 @@ class MiseProjectService(
         tasks.addAll(miseTasks)
     }
     
-    private fun checkAndRunMiseInstall() {
-        val settings = project.service<MiseProjectSettings>()
-        
-        // Only run if the setting is enabled
-        if (!settings.state.runMiseInstallBeforeRun) {
+    private suspend fun checkAndRunMiseInstall() {
+        // Prevent concurrent checks
+        if (!isCheckingInstall.compareAndSet(false, true)) {
+            logger.debug { "Install check already in progress, skipping" }
             return
         }
         
-        application.executeOnPooledThread {
+        try {
+            val settings = project.service<MiseProjectSettings>()
+            
+            // Only run if the setting is enabled
+            if (!settings.state.runMiseInstallBeforeRun) {
+                return
+            }
+            
             val configEnvironment = settings.state.miseConfigEnvironment
             val workDir = project.basePath
             
@@ -141,6 +150,8 @@ class MiseProjectService(
                     }
                 }
             )
+        } finally {
+            isCheckingInstall.set(false)
         }
     }
     
