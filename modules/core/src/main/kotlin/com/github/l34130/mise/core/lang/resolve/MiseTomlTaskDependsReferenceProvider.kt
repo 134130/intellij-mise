@@ -1,10 +1,11 @@
 package com.github.l34130.mise.core.lang.resolve
 
-import com.github.l34130.mise.core.MiseProjectService
+import com.github.l34130.mise.core.MiseTaskResolver
 import com.github.l34130.mise.core.lang.psi.stringValue
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
+import com.github.l34130.mise.core.util.baseDirectory
 import com.intellij.openapi.components.service
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
@@ -14,6 +15,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
 import com.intellij.psi.ResolveResult
 import com.intellij.util.ProcessingContext
+import kotlinx.coroutines.runBlocking
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlLiteral
 
@@ -49,7 +51,7 @@ class MiseTomlTaskDependsReferenceProvider : PsiReferenceProvider() {
             val isWildcard = value.endsWith(":*")
 
             val project = element.project
-            val tasks = project.service<MiseProjectService>().getTasks()
+            val tasks = runBlocking { project.service<MiseTaskResolver>().getMiseTasks(element.project.baseDirectory()) }
 
             val result =
                 if (isWildcard) {

@@ -4,6 +4,7 @@ import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.model.MiseTomlFile
 import com.github.l34130.mise.core.model.MiseTomlTableTask
+import com.github.l34130.mise.core.util.baseDirectory
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.smartReadAction
@@ -36,6 +37,11 @@ class MiseTaskResolver(
             }
         }
     }
+
+    suspend fun getMiseTasks(
+        refresh: Boolean = false,
+        configEnvironment: String? = null,
+    ): List<MiseTask> = getMiseTasks(project.baseDirectory(), refresh, configEnvironment)
 
     suspend fun getMiseTasks(
         baseDir: String,
