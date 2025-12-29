@@ -19,6 +19,7 @@ import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.util.application
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KClass
@@ -171,9 +172,13 @@ abstract class AbstractProjectSdkSetup :
         configEnvironment: String?,
     ): Boolean {
         val basePath = project.basePath ?: return false
-        val baseDir = com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(basePath)
+        val baseDir = LocalFileSystem.getInstance().findFileByPath(basePath)
             ?: return false
         
+        // Using runBlocking here is acceptable because:
+        // 1. We're already on a background thread (via executeOnPooledThread)
+        // 2. The operation is fast (just file existence checks with caching)
+        // 3. We need to call a suspend function from a non-suspend context
         return runBlocking {
             val configFiles = project.service<MiseConfigFileResolver>()
                 .resolveConfigFiles(baseDir, refresh = false, configEnvironment = configEnvironment)
