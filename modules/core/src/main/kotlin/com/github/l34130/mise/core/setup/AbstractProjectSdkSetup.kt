@@ -61,7 +61,8 @@ abstract class AbstractProjectSdkSetup :
             val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
             
             // Skip automatic SDK configuration if the project doesn't have mise config files
-            if (!isUserInteraction && !hasMiseConfigFiles(project, configEnvironment)) {
+            // or if the specific tool is not configured in mise
+            if (!isUserInteraction && !hasToolConfigured(project, configEnvironment, devToolName)) {
                 return@executeOnPooledThread
             }
             val toolsResult =
@@ -167,23 +168,43 @@ abstract class AbstractProjectSdkSetup :
         }
     }
 
-    private fun hasMiseConfigFiles(
+    private fun hasToolConfigured(
         project: Project,
         configEnvironment: String?,
+        devToolName: MiseDevToolName,
     ): Boolean {
         val basePath = project.basePath ?: return false
         val baseDir = LocalFileSystem.getInstance().findFileByPath(basePath)
             ?: return false
         
-        // Using runBlocking here is acceptable because:
-        // 1. We're already on a background thread (via executeOnPooledThread)
-        // 2. The operation is fast (just file existence checks with caching)
-        // 3. We need to call a suspend function from a non-suspend context
-        return runBlocking {
+        // First check if any mise config files exist
+        val hasConfigFiles = runBlocking {
             val configFiles = project.service<MiseConfigFileResolver>()
                 .resolveConfigFiles(baseDir, refresh = false, configEnvironment = configEnvironment)
             configFiles.isNotEmpty()
         }
+        
+        if (!hasConfigFiles) {
+            return false
+        }
+        
+        // Then check if the specific tool is configured in mise
+        // Using runBlocking here is acceptable because:
+        // 1. We're already on a background thread (via executeOnPooledThread)
+        // 2. The operation is fast (just checking if tool is configured)
+        // 3. We need to call a suspend function from a non-suspend context
+        val toolsResult = MiseCommandLineHelper.getDevTools(
+            workDir = basePath,
+            configEnvironment = configEnvironment
+        )
+        
+        return toolsResult.fold(
+            onSuccess = { tools -> 
+                val configuredTools = tools[devToolName]
+                !configuredTools.isNullOrEmpty()
+            },
+            onFailure = { false }
+        )
     }
 
     protected sealed interface SdkStatus {
