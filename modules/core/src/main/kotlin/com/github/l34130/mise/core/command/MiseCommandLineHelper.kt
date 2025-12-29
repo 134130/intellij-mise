@@ -63,7 +63,7 @@ object MiseCommandLineHelper {
         workDir: String?,
         configEnvironment: String?,
     ): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
-        val commandLineArgs = mutableListOf("ls", "--current", "--json")
+        val commandLineArgs = mutableListOf("ls", "--local", "--json")
 
         val miseCommandLine = MiseCommandLine(workDir, configEnvironment)
         return miseCommandLine
