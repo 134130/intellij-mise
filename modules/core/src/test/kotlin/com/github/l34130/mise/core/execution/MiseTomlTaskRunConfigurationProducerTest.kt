@@ -3,6 +3,7 @@ package com.github.l34130.mise.core.execution
 
 import com.github.l34130.mise.core.FileTestBase
 import com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationProducer
+import com.intellij.execution.PsiLocation
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.psi.PsiElement
 import org.intellij.lang.annotations.Language
@@ -48,6 +49,6 @@ class MiseTomlTaskRunConfigurationProducerTest : FileTestBase() {
     }
     
     private fun createConfigurationContext(element: PsiElement): ConfigurationContext {
-        return ConfigurationContext.createEmptyContextForLocation(element, myFixture.project)
+        return ConfigurationContext.createEmptyContextForLocation(PsiLocation.fromPsiElement(myFixture.project, element))
     }
 }
