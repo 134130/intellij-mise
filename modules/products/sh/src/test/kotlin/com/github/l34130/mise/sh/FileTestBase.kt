@@ -1,16 +1,13 @@
 package com.github.l34130.mise.sh
 
-import com.github.l34130.mise.core.MiseProjectService
 import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.lang.LanguageCommenters
 import com.intellij.lang.injection.InjectedLanguageManager
-import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Document
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import kotlinx.coroutines.runBlocking
 import kotlin.math.min
 
 abstract class FileTestBase : BasePlatformTestCase() {
@@ -19,10 +16,7 @@ abstract class FileTestBase : BasePlatformTestCase() {
         fileName: String,
     ): PsiFile {
         val file = myFixture.configureByText(fileName, text.trimIndent())
-        runBlocking {
-            project.service<MiseProjectService>().refresh()
-            file.virtualFile.refresh(false, false)
-        }
+        file.virtualFile.refresh(false, false)
         return file
     }
 

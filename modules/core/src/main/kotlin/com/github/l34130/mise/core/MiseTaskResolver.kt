@@ -35,6 +35,7 @@ class MiseTaskResolver(
             it.subscribe(MiseTomlFileVfsListener.MISE_TOML_CHANGED) {
                 cache.clear()
             }
+            MiseTomlFileVfsListener.startListening(project, this)
         }
     }
 
