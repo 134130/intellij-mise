@@ -60,20 +60,8 @@ abstract class AbstractProjectSdkSetup :
             val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
             
             // Skip automatic SDK configuration if the project doesn't have mise config files
-            if (!isUserInteraction) {
-                val basePath = project.basePath ?: return@executeOnPooledThread
-                val baseDir = com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(basePath)
-                    ?: return@executeOnPooledThread
-                
-                val hasMiseConfig = runBlocking {
-                    val configFiles = project.service<MiseConfigFileResolver>()
-                        .resolveConfigFiles(baseDir, refresh = false, configEnvironment = configEnvironment)
-                    configFiles.isNotEmpty()
-                }
-                
-                if (!hasMiseConfig) {
-                    return@executeOnPooledThread
-                }
+            if (!isUserInteraction && !hasMiseConfigFiles(project, configEnvironment)) {
+                return@executeOnPooledThread
             }
             val toolsResult =
                 MiseCommandLineHelper.getDevTools(workDir = project.basePath, configEnvironment = configEnvironment)
@@ -175,6 +163,21 @@ abstract class AbstractProjectSdkSetup :
                     e.message ?: e.javaClass.simpleName,
                 )
             }
+        }
+    }
+
+    private fun hasMiseConfigFiles(
+        project: Project,
+        configEnvironment: String?,
+    ): Boolean {
+        val basePath = project.basePath ?: return false
+        val baseDir = com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(basePath)
+            ?: return false
+        
+        return runBlocking {
+            val configFiles = project.service<MiseConfigFileResolver>()
+                .resolveConfigFiles(baseDir, refresh = false, configEnvironment = configEnvironment)
+            configFiles.isNotEmpty()
         }
     }
 
