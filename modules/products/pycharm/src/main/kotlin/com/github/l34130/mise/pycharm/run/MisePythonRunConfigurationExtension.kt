@@ -45,12 +45,6 @@ class MisePythonRunConfigurationExtension : PythonRunConfigurationExtension() {
         cmdLine: GeneralCommandLine,
         runnerId: String,
     ) {
-        // Run mise install if needed
-        MiseHelper.runMiseInstallIfNeeded(
-            configuration = runConfiguration,
-            workingDirectory = runConfiguration.workingDirectory,
-        )
-
         val envVars =
             MiseHelper.getMiseEnvVarsOrNotify(
                 configuration = runConfiguration,

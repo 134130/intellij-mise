@@ -44,9 +44,6 @@ class MiseIdeaRunConfigurationExtension : RunConfigurationExtension() {
         params: JavaParameters,
         runnerSettings: RunnerSettings?,
     ) {
-        // Run mise install if needed
-        MiseHelper.runMiseInstallIfNeeded(configuration, params.getWorkingDirectory())
-
         val envVars = MiseHelper.getMiseEnvVarsOrNotify(configuration, params.getWorkingDirectory())
         params.env = params.env + envVars
 

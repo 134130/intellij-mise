@@ -23,7 +23,6 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>> : Settings
         AtomicProperty(ConfigEnvironmentStrategy.USE_PROJECT_SETTINGS)
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise:")
     private val myMiseConfigEnvironmentTf = JBTextField()
-    private val myRunMiseInstallCb = JBCheckBox("Run 'mise install --yes' before run")
 
     private lateinit var p: DialogPanel
 
@@ -74,11 +73,6 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>> : Settings
                                 myConfigEnvironmentStrategy.get() == ConfigEnvironmentStrategy.OVERRIDE_PROJECT_SETTINGS
                         },
                     )
-
-                    row {
-                        cell(myRunMiseInstallCb)
-                            .comment("Automatically run 'mise install --yes' before executing this run configuration")
-                    }
                 }.enabledIf(myMiseDirEnvCb.selected)
             }
         return p
@@ -94,8 +88,6 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>> : Settings
                 configEnvironmentStrategy = myConfigEnvironmentStrategy.get(),
                 useMiseDirEnv = myMiseDirEnvCb.isSelected,
                 miseConfigEnvironment = myMiseConfigEnvironmentTf.text,
-                // Tri-state: true = override to run install, null = use project setting
-                runMiseInstallBeforeRun = if (myRunMiseInstallCb.isSelected) true else null,
             ),
         )
     }
@@ -107,7 +99,6 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>> : Settings
         myConfigEnvironmentStrategy.set(runConfigurationState.configEnvironmentStrategy)
         myMiseDirEnvCb.isSelected = runConfigurationState.useMiseDirEnv
         myMiseConfigEnvironmentTf.text = runConfigurationState.miseConfigEnvironment
-        myRunMiseInstallCb.isSelected = runConfigurationState.runMiseInstallBeforeRun == true
 
         p.reset() // Call the registered callbacks to update the UI
     }
@@ -126,14 +117,12 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>> : Settings
                 } ?: MiseRunConfigurationState().configEnvironmentStrategy
             val miseDirEnvCb = element.getAttributeValue("myMiseDirEnvCb")?.toBoolean() ?: false
             val miseConfigEnvironment = element.getAttributeValue("myMiseConfigEnvironmentTf") ?: ""
-            val runMiseInstallBeforeRun = element.getAttributeValue("myRunMiseInstallCb")?.toBooleanStrictOrNull()
 
             val state =
                 MiseRunConfigurationState(
                     configEnvironmentStrategy = configEnvironmentStrategy,
                     useMiseDirEnv = miseDirEnvCb,
                     miseConfigEnvironment = miseConfigEnvironment,
-                    runMiseInstallBeforeRun = runMiseInstallBeforeRun,
                 )
 
             runConfiguration.putCopyableUserData(USER_DATA_KEY, state)
@@ -148,9 +137,6 @@ class MiseRunConfigurationSettingsEditor<T : RunConfigurationBase<*>> : Settings
             element.setAttribute("myConfigEnvironmentStrategy", userData.configEnvironmentStrategy.value)
             element.setAttribute("myMiseDirEnvCb", userData.useMiseDirEnv.toString())
             element.setAttribute("myMiseConfigEnvironmentTf", userData.miseConfigEnvironment)
-            userData.runMiseInstallBeforeRun?.let {
-                element.setAttribute("myRunMiseInstallCb", it.toString())
-            }
         }
 
         fun getMiseRunConfigurationState(configuration: RunConfigurationBase<*>): MiseRunConfigurationState? =

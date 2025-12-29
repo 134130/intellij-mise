@@ -27,7 +27,7 @@ class MiseConfigurable(
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
     private val myMiseConfigEnvironmentTf = JBTextField()
     private val myMiseVcsCb = JBCheckBox("Enable VCS Integration")
-    private val myRunMiseInstallCb = JBCheckBox("Run 'mise install --yes' before run configurations")
+    private val myRunMiseInstallCb = JBCheckBox("Automatically check and run 'mise install --yes' on project startup and config changes")
 
     override fun getDisplayName(): String = "Mise Settings"
 
@@ -93,7 +93,7 @@ class MiseConfigurable(
                             row {
                                 cell(myRunMiseInstallCb)
                                     .resizableColumn()
-                                    .comment("Automatically run 'mise install --yes' before executing run configurations to ensure all tools are installed")
+                                    .comment("Checks if tools are installed when the project starts or config files are updated. Runs 'mise install --yes' if any tools are missing.")
                             }.enabledIf(myMiseDirEnvCb.selected)
                         }
                     }
