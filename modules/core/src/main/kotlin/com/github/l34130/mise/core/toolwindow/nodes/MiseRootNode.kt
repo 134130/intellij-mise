@@ -120,7 +120,7 @@ class MiseRootNode(
                 tasks = mutableListOf(),
             )
 
-        val projectTasks: List<MiseTask> = runBlocking { taskResolver.getMiseTasks(projectBaseDir, false, configEnvironment) }.sortedBy { it.name }
+        val projectTasks: List<MiseTask> = runBlocking { taskResolver.getMiseTasks(false, configEnvironment) }.sortedBy { it.name }
         for (task in projectTasks) {
             val taskNode =
                 MiseTaskNode(
@@ -167,7 +167,7 @@ class MiseRootNode(
 
                     currentParent.children += dirNode
 
-                    val taskInfos: List<MiseTask> = runBlocking { taskResolver.getMiseTasks(dirNode.directoryPath, false, configEnvironment) }.sortedBy { it.name }
+                    val taskInfos: List<MiseTask> = runBlocking { taskResolver.getMiseTasks(false, configEnvironment) }.sortedBy { it.name }
                     for (taskInfo in taskInfos) {
                         val taskNode =
                             MiseTaskNode(

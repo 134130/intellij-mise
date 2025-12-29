@@ -92,7 +92,7 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
 
         runBlocking {
             val resolver = project.service<MiseTaskResolver>()
-            val tasks = resolver.getMiseTasks(originalFile.parent)
+            val tasks = resolver.getMiseTasks()
 
             for (task in tasks) {
                 if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue

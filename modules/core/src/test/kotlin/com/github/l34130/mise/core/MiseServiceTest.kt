@@ -22,7 +22,7 @@ class MiseServiceTest : BasePlatformTestCase() {
         val service = project.service<MiseTaskResolver>()
 
         val vf: VirtualFile = VirtualFileManager.getInstance().findFileByUrl("temp:///src") ?: error("Base directory not found")
-        val tasks = runBlocking { service.getMiseTasks(vf) }
+        val tasks = runBlocking { service.getMiseTasks() }
 
         listOf<TestResult>(
             TestResult("default-inline-table-task", "mise.toml", MiseTomlTableTask::class),

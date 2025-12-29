@@ -4,7 +4,6 @@ import com.github.l34130.mise.core.MiseTaskResolver
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
-import com.github.l34130.mise.core.util.baseDirectory
 import com.github.l34130.mise.core.util.presentablePath
 import com.intellij.lang.documentation.AbstractDocumentationProvider
 import com.intellij.lang.documentation.DocumentationMarkup
@@ -28,7 +27,7 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
                 is PsiFile -> {
                     if (element.language.id != "Shell Script") return null
                     val service = element.project.service<MiseTaskResolver>()
-                    val tasks = runBlocking { service.getMiseTasks(element.project.baseDirectory()) }
+                    val tasks = runBlocking { service.getMiseTasks() }
                     tasks.firstOrNull { it is MiseShellScriptTask && it.file == element.virtualFile } as MiseShellScriptTask?
                 }
                 is TomlKeySegment ->

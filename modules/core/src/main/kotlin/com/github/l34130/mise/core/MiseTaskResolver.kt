@@ -4,6 +4,7 @@ import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.model.MiseTomlFile
 import com.github.l34130.mise.core.model.MiseTomlTableTask
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.baseDirectory
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.readAction
@@ -42,24 +43,15 @@ class MiseTaskResolver(
     suspend fun getMiseTasks(
         refresh: Boolean = false,
         configEnvironment: String? = null,
-    ): List<MiseTask> = getMiseTasks(project.baseDirectory(), refresh, configEnvironment)
-
-    suspend fun getMiseTasks(
-        baseDir: String,
-        refresh: Boolean = false,
-        configEnvironment: String? = null,
     ): List<MiseTask> {
         val baseDirVf: VirtualFile =
-            readAction { VirtualFileManager.getInstance().findFileByUrl("file://$baseDir") } ?: return emptyList()
-        return getMiseTasks(baseDirVf, refresh, configEnvironment)
-    }
+            readAction {
+                VirtualFileManager.getInstance().findFileByUrl("file://${project.baseDirectory()}")
+            } ?: return emptyList()
 
-    suspend fun getMiseTasks(
-        baseDirVf: VirtualFile,
-        refresh: Boolean = false,
-        configEnvironment: String? = null,
-    ): List<MiseTask> {
-        val cacheKey = "${baseDirVf.path}:${configEnvironment.orEmpty()}"
+        val configEnvironment = configEnvironment ?: project.service<MiseProjectSettings>().state.miseConfigEnvironment
+
+        val cacheKey = configEnvironment
         if (!refresh) cache[cacheKey]?.let { return it }
 
         val result = mutableListOf<MiseTask>()
