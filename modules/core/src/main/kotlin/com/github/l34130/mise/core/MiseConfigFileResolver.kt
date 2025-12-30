@@ -3,6 +3,7 @@ package com.github.l34130.mise.core
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findFileOrDirectory
