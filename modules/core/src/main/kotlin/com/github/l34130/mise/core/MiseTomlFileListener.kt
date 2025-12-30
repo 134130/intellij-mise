@@ -21,13 +21,16 @@ class MiseTomlFileListener(
     }
 
     override fun dispose() {
-        // Cleanup is handled automatically by the connection disposal
+        // The MessageBusConnection created with connect(this) is automatically
+        // disposed when this service is disposed, cleaning up all subscriptions
     }
 
     companion object {
         /**
          * Topic for broadcasting MISE TOML file changes.
          * Services can subscribe to this topic to be notified of changes.
+         * The topic uses Function0 (a function with no parameters) to maintain
+         * consistency with the existing codebase.
          */
         val MISE_TOML_CHANGED = Topic.create("MISE_TOML_CHANGED", Function0::class.java)
     }
