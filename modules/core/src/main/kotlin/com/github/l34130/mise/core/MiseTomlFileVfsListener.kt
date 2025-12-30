@@ -13,7 +13,6 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeAnyChangeAbstractAdapter
 import com.intellij.util.Alarm
 import com.intellij.util.messages.MessageBusConnection
-import com.intellij.util.messages.Topic
 import java.util.concurrent.ConcurrentHashMap
 
 class MiseTomlFileVfsListener(
@@ -30,8 +29,6 @@ class MiseTomlFileVfsListener(
     }
 ) {
     companion object {
-        val MISE_TOML_CHANGED = Topic.create("MISE_TOML_CHANGED", Function0::class.java)
-
         fun startListening(project: Project, disposable: Disposable, connection: MessageBusConnection) {
             val updater = MiseLocalIndexUpdater(project, disposable)
             connection.subscribe(VirtualFileManager.VFS_CHANGES, MiseTomlFileVfsListener(updater))
@@ -45,7 +42,6 @@ class MiseTomlFileVfsListener(
                 },
                 disposable,
             )
-            MiseLocalIndexUpdater(project, disposable)
         }
     }
 
@@ -59,7 +55,7 @@ class MiseTomlFileVfsListener(
             Runnable {
                 if (project.isDisposed) return@Runnable
                 val scope = HashSet(dirtyTomlFiles)
-                project.messageBus.syncPublisher(MISE_TOML_CHANGED).invoke()
+                project.messageBus.syncPublisher(MiseTomlFileListener.MISE_TOML_CHANGED).invoke()
                 dirtyTomlFiles.removeAll(scope)
             }
 
