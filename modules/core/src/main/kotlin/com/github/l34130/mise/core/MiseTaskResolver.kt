@@ -32,11 +32,12 @@ class MiseTaskResolver(
     private val cache = ConcurrentHashMap<String, List<MiseTask>>()
 
     init {
-        project.messageBus.connect(this).let {
-            it.subscribe(MiseTomlFileVfsListener.MISE_TOML_CHANGED) {
-                cache.clear()
-            }
-            MiseTomlFileVfsListener.startListening(project, this, it)
+        // Ensure the VFS listener service is initialized
+        project.service<MiseTomlFileListener>()
+        
+        // Subscribe to cache invalidation events
+        project.messageBus.connect(this).subscribe(MiseTomlFileListener.MISE_TOML_CHANGED) {
+            cache.clear()
         }
     }
 

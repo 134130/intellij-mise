@@ -3,6 +3,7 @@ package com.github.l34130.mise.core
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findFileOrDirectory
@@ -17,11 +18,12 @@ class MiseConfigFileResolver(
     private val cache = ConcurrentHashMap<String, List<VirtualFile>>()
 
     init {
-        project.messageBus.connect(this).let {
-            it.subscribe(MiseTomlFileVfsListener.MISE_TOML_CHANGED) {
-                cache.clear()
-            }
-            MiseTomlFileVfsListener.startListening(project, this, it)
+        // Ensure the VFS listener service is initialized
+        project.service<MiseTomlFileListener>()
+        
+        // Subscribe to cache invalidation events
+        project.messageBus.connect(this).subscribe(MiseTomlFileListener.MISE_TOML_CHANGED) {
+            cache.clear()
         }
     }
 
