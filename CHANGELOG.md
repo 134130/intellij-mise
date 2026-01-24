@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [5.14.0] - 2026-01-24
+
+### Refactored
+
+- Refactor Mise PSI caching logic to improve performance
+
+### Fixed
+
+- Skip automatic SDK configuration for Projects which are not using mise.toml files
+- False positive warning SDK is not configured correctly for mise tools
+
 ## [5.13.0] - 2025-12-20
 
 ### Added
@@ -491,7 +502,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.13.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.14.0...HEAD
+[5.14.0]: https://github.com/134130/intellij-mise/compare/v5.13.0...v5.14.0
 [5.13.0]: https://github.com/134130/intellij-mise/compare/v5.12.0...v5.13.0
 [5.12.0]: https://github.com/134130/intellij-mise/compare/v5.11.0...v5.12.0
 [5.11.0]: https://github.com/134130/intellij-mise/compare/v5.10.0...v5.11.0
