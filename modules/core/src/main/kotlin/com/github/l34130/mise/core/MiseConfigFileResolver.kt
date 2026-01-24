@@ -1,7 +1,9 @@
 package com.github.l34130.mise.core
 
-import com.intellij.openapi.application.readAction
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findFileOrDirectory
@@ -12,8 +14,18 @@ import fleet.multiplatform.shims.ConcurrentHashMap
 @Service(Service.Level.PROJECT)
 class MiseConfigFileResolver(
     val project: Project,
-) {
+) : Disposable {
     private val cache = ConcurrentHashMap<String, List<VirtualFile>>()
+
+    init {
+        // Ensure the VFS listener service is initialized
+        project.service<MiseTomlFileListener>()
+        
+        // Subscribe to cache invalidation events
+        project.messageBus.connect(this).subscribe(MiseTomlFileListener.MISE_TOML_CHANGED) {
+            cache.clear()
+        }
+    }
 
     suspend fun resolveConfigFiles(
         baseDirVf: VirtualFile,
@@ -31,7 +43,7 @@ class MiseConfigFileResolver(
         }
 
         val result =
-            readAction {
+            smartReadAction(project) {
                 buildList {
                     addIfNotNull(baseDirVf.findFileOrDirectory("mise/config.toml")?.takeIf { it.isFile })
                     addIfNotNull(baseDirVf.findFileOrDirectory(".mise/config.toml")?.takeIf { it.isFile })
@@ -60,4 +72,6 @@ class MiseConfigFileResolver(
         cache[cacheKey] = result
         return result
     }
+
+    override fun dispose() { }
 }

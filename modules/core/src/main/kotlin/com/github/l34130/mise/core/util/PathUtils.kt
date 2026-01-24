@@ -13,7 +13,6 @@ import com.intellij.util.PathUtil
 import com.intellij.util.application
 import java.io.File
 
-@Deprecated("Use [com.intellij.ide.impl.ProjectUtil.getBaseDir] instead", ReplaceWith("com.intellij.ide.impl.ProjectUtil.getBaseDir()"))
 fun Project.baseDirectory(): String {
     if (application.isUnitTestMode) {
         return getBaseDirectories().first().path

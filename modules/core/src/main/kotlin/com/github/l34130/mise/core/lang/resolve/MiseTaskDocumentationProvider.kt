@@ -1,6 +1,6 @@
 package com.github.l34130.mise.core.lang.resolve
 
-import com.github.l34130.mise.core.MiseProjectService
+import com.github.l34130.mise.core.MiseTaskResolver
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
@@ -11,6 +11,7 @@ import com.intellij.openapi.components.service
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.containers.nullize
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.annotations.Nls
 import org.toml.lang.psi.TomlKeySegment
 
@@ -25,9 +26,9 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
             when (element) {
                 is PsiFile -> {
                     if (element.language.id != "Shell Script") return null
-                    val service = element.project.service<MiseProjectService>()
-                    val tasks = service.getTasks()
-                    tasks.firstOrNull { it is MiseShellScriptTask && it.file == element.virtualFile } as MiseShellScriptTask
+                    val service = element.project.service<MiseTaskResolver>()
+                    val tasks = runBlocking { service.getMiseTasks() }
+                    tasks.firstOrNull { it is MiseShellScriptTask && it.file == element.virtualFile } as MiseShellScriptTask?
                 }
                 is TomlKeySegment ->
                     MiseTomlTableTask.resolveFromTaskChainedTable(element)

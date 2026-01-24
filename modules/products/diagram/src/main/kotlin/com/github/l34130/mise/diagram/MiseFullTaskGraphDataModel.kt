@@ -1,6 +1,6 @@
 package com.github.l34130.mise.diagram
 
-import com.github.l34130.mise.core.MiseProjectService
+import com.github.l34130.mise.core.MiseTaskResolver
 import com.intellij.diagram.DiagramDataModel
 import com.intellij.diagram.DiagramEdge
 import com.intellij.diagram.DiagramNode
@@ -8,16 +8,19 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ModificationTracker
 import com.intellij.psi.PsiManager
+import kotlinx.coroutines.runBlocking
 
 class MiseFullTaskGraphDataModel(
     project: Project,
     provider: MiseTaskGraphProvider,
 ) : DiagramDataModel<MiseTaskGraphable>(project, provider) {
     private val nodes: List<MiseTaskGraphNode> =
-        project
-            .service<MiseProjectService>()
-            .getTasks()
-            .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) }
+        runBlocking {
+            project
+                .service<MiseTaskResolver>()
+                .getMiseTasks()
+                .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) }
+        }
 
     override fun getModificationTracker(): ModificationTracker = PsiManager.getInstance(project).modificationTracker
 

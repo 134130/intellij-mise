@@ -1,6 +1,5 @@
 package com.github.l34130.mise.core.toolwindow.nodes
 
-import com.github.l34130.mise.core.MiseProjectService
 import com.github.l34130.mise.core.MiseTaskResolver
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseDevTool
@@ -15,8 +14,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.PathUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Paths
@@ -30,13 +27,6 @@ class MiseRootNode(
 
     override fun getChildren(): Collection<AbstractTreeNode<*>> {
         val settings = project.service<MiseProjectSettings>()
-        val service = project.service<MiseProjectService>()
-
-        runBlocking(Dispatchers.IO) {
-            while (!service.isInitialized.get()) {
-                delay(100)
-            }
-        }
 
         return listOf(
             runCatching { getToolNodes(settings) }.fold(
@@ -130,7 +120,7 @@ class MiseRootNode(
                 tasks = mutableListOf(),
             )
 
-        val projectTasks: List<MiseTask> = runBlocking { taskResolver.getMiseTasks(projectBaseDir, false, configEnvironment) }.sortedBy { it.name }
+        val projectTasks: List<MiseTask> = runBlocking { taskResolver.getMiseTasks(false, configEnvironment) }.sortedBy { it.name }
         for (task in projectTasks) {
             val taskNode =
                 MiseTaskNode(
@@ -177,7 +167,7 @@ class MiseRootNode(
 
                     currentParent.children += dirNode
 
-                    val taskInfos: List<MiseTask> = runBlocking { taskResolver.getMiseTasks(dirNode.directoryPath, false, configEnvironment) }.sortedBy { it.name }
+                    val taskInfos: List<MiseTask> = runBlocking { taskResolver.getMiseTasks(false, configEnvironment) }.sortedBy { it.name }
                     for (taskInfo in taskInfos) {
                         val taskNode =
                             MiseTaskNode(

@@ -1,6 +1,6 @@
 package com.github.l34130.mise.diagram
 
-import com.github.l34130.mise.core.MiseProjectService
+import com.github.l34130.mise.core.MiseTaskResolver
 import com.intellij.diagram.DiagramDataModel
 import com.intellij.diagram.DiagramEdge
 import com.intellij.diagram.DiagramNode
@@ -9,6 +9,7 @@ import com.intellij.openapi.graph.GraphLayoutOrientation
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ModificationTracker
 import com.intellij.psi.PsiManager
+import kotlinx.coroutines.runBlocking
 
 class MiseSingleTaskGraphDataModel(
     project: Project,
@@ -65,7 +66,8 @@ class MiseSingleTaskGraphDataModel(
 
     private fun loadNodes(): List<MiseTaskGraphNode> =
         sequence {
-            val tasks = project.service<MiseProjectService>().getTasks()
+            @Suppress("RunBlockingInSuspendFunction")
+            val tasks = runBlocking { project.service<MiseTaskResolver>().getMiseTasks() }
             myTask.task.depends?.let { depends ->
                 yieldAll(
                     tasks

@@ -1,6 +1,6 @@
 package com.github.l34130.mise.diagram
 
-import com.github.l34130.mise.core.MiseProjectService
+import com.github.l34130.mise.core.MiseTaskResolver
 import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.intellij.diagram.DiagramDataModel
 import com.intellij.diagram.DiagramEdge
@@ -9,6 +9,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ModificationTracker
 import com.intellij.psi.PsiManager
+import kotlinx.coroutines.runBlocking
 
 class MiseFileTaskGraphDataModel(
     project: Project,
@@ -19,7 +20,7 @@ class MiseFileTaskGraphDataModel(
         mutableListOf<MiseTaskGraphNode>()
             .apply {
                 val myTasks = MiseTomlTableTask.resolveAllFromTomlFile(tomlFile.tomlFile)
-                val tasks = project.service<MiseProjectService>().getTasks()
+                val tasks = runBlocking { project.service<MiseTaskResolver>().getMiseTasks() }
 
                 for (myTask in myTasks) {
                     myTask.depends?.map { it.first() }?.let { depends ->
