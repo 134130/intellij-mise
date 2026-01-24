@@ -14,6 +14,7 @@ import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import java.io.File
+import java.nio.file.Paths
 import kotlin.reflect.KClass
 
 class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
@@ -38,9 +39,10 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
             )
         }
 
-        if (currentSdk.name != newSdk.name || currentSdk.homeUrl != newSdk.homeUrl) {
+        // Compare paths using canonical/real paths to handle symlinks properly
+        if (!isSamePath(currentSdk.homeUrl, newSdk.homeUrl)) {
             return SdkStatus.NeedsUpdate(
-                currentSdkVersion = newSdk.version ?: newSdk.majorVersion.name,
+                currentSdkVersion = currentSdk.version ?: currentSdk.majorVersion.name,
                 requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
             )
         }
@@ -79,6 +81,40 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
             sdk = GoSdk.fromHomePath(basePath + File.separator + "go")
         }
         return sdk
+    }
+
+    /**
+     * Compares two paths (URLs) to determine if they point to the same location.
+     * This handles symlinks and different path representations.
+     */
+    private fun isSamePath(url1: String, url2: String): Boolean {
+        try {
+            val path1 = VfsUtil.urlToPath(url1)
+            val path2 = VfsUtil.urlToPath(url2)
+            
+            // Direct comparison first
+            if (path1 == path2) {
+                return true
+            }
+            
+            // Try to resolve to canonical/real paths to handle symlinks
+            val file1 = File(path1)
+            val file2 = File(path2)
+            
+            if (file1.exists() && file2.exists()) {
+                // Use toRealPath() which resolves symlinks
+                val realPath1 = Paths.get(path1).toRealPath()
+                val realPath2 = Paths.get(path2).toRealPath()
+                return realPath1 == realPath2
+            }
+            
+            // If files don't exist, fall back to canonical path comparison
+            return file1.canonicalPath == file2.canonicalPath
+        } catch (e: Exception) {
+            logger.warn("Failed to compare paths: $url1 vs $url2", e)
+            // Fall back to simple string comparison if path resolution fails
+            return url1 == url2
+        }
     }
 
     companion object {
