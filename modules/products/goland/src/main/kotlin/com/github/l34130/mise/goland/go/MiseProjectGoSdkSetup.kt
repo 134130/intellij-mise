@@ -12,9 +12,9 @@ import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VfsUtil
 import java.io.File
-import java.nio.file.Paths
 import kotlin.reflect.KClass
 
 class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
@@ -88,31 +88,9 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
      * This handles symlinks and different path representations.
      */
     private fun isSamePath(url1: String, url2: String): Boolean {
-        try {
-            val path1 = VfsUtil.urlToPath(url1)
-            val path2 = VfsUtil.urlToPath(url2)
-            
-            // Direct comparison first
-            if (path1 == path2) {
-                return true
-            }
-            
-            val file1 = Paths.get(path1)
-            val file2 = Paths.get(path2)
-            
-            // Use Files.isSameFile which is specifically designed for this purpose
-            // It handles symlinks and different path representations efficiently
-            if (java.nio.file.Files.exists(file1) && java.nio.file.Files.exists(file2)) {
-                return java.nio.file.Files.isSameFile(file1, file2)
-            }
-            
-            // If files don't exist, compare normalized absolute paths
-            return File(path1).absoluteFile.normalize() == File(path2).absoluteFile.normalize()
-        } catch (e: Exception) {
-            logger.warn("Failed to compare paths: $url1 vs $url2", e)
-            // Fall back to simple string comparison if path resolution fails
-            return url1 == url2
-        }
+        val path1 = VfsUtil.urlToPath(url1)
+        val path2 = VfsUtil.urlToPath(url2)
+        return FileUtil.filesEqual(File(path1), File(path2))
     }
 
     companion object {
