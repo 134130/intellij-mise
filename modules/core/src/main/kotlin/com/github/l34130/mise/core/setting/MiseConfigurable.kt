@@ -27,6 +27,7 @@ class MiseConfigurable(
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
     private val myMiseConfigEnvironmentTf = JBTextField()
     private val myMiseVcsCb = JBCheckBox("Enable VCS Integration")
+    private val myRunMiseInstallCb = JBCheckBox("Automatically check and run 'mise install --yes' on project startup and config changes")
 
     override fun getDisplayName(): String = "Mise Settings"
 
@@ -38,6 +39,7 @@ class MiseConfigurable(
         myMiseDirEnvCb.isSelected = projectSettings.state.useMiseDirEnv
         myMiseConfigEnvironmentTf.text = projectSettings.state.miseConfigEnvironment
         myMiseVcsCb.isSelected = projectSettings.state.useMiseVcsIntegration
+        myRunMiseInstallCb.isSelected = projectSettings.state.runMiseInstallBeforeRun
 
         return panel {
             group("Application Settings", indent = false) {
@@ -88,6 +90,11 @@ class MiseConfigurable(
                                     .resizableColumn()
                                     .comment("Enable mise environment variables and tools for VCS operations")
                             }.enabledIf(myMiseDirEnvCb.selected)
+                            row {
+                                cell(myRunMiseInstallCb)
+                                    .resizableColumn()
+                                    .comment("Checks if tools are installed when the project starts or config files are updated. Runs 'mise install --yes' if any tools are missing.")
+                            }.enabledIf(myMiseDirEnvCb.selected)
                         }
                     }
                 }
@@ -101,7 +108,8 @@ class MiseConfigurable(
         return myMiseExecutableTf.text != applicationSettings.state.executablePath ||
             myMiseDirEnvCb.isSelected != projectSettings.state.useMiseDirEnv ||
             myMiseConfigEnvironmentTf.text != projectSettings.state.miseConfigEnvironment ||
-            myMiseVcsCb.isSelected != projectSettings.state.useMiseVcsIntegration
+            myMiseVcsCb.isSelected != projectSettings.state.useMiseVcsIntegration ||
+            myRunMiseInstallCb.isSelected != projectSettings.state.runMiseInstallBeforeRun
     }
 
     override fun apply() {
@@ -119,6 +127,7 @@ class MiseConfigurable(
             projectSettings.state.useMiseDirEnv = myMiseDirEnvCb.isSelected
             projectSettings.state.miseConfigEnvironment = myMiseConfigEnvironmentTf.text
             projectSettings.state.useMiseVcsIntegration = myMiseVcsCb.isSelected
+            projectSettings.state.runMiseInstallBeforeRun = myRunMiseInstallCb.isSelected
         }
     }
 
