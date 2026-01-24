@@ -12,6 +12,8 @@ import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.ProjectRootManager
+import com.intellij.openapi.util.io.FileUtil
+import java.io.File
 import kotlin.reflect.KClass
 
 class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
@@ -24,14 +26,46 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
         val currentSdk = ProjectRootManager.getInstance(project).projectSdk
         val newSdk = tool.asJavaSdk()
 
-        if (currentSdk == null || currentSdk.name != newSdk.name || currentSdk.homePath != newSdk.homePath) {
+        if (currentSdk == null) {
             return SdkStatus.NeedsUpdate(
-                currentSdkVersion = currentSdk?.versionString,
+                currentSdkVersion = null,
                 requestedInstallPath = newSdk.homePath ?: tool.shimsInstallPath(),
             )
         }
 
-        return SdkStatus.UpToDate
+        if (isSamePath(currentSdk.homePath, newSdk.homePath)) {
+            return SdkStatus.UpToDate
+        }
+
+        val displayVersion =
+            if (currentSdk.sdkType is JavaSdk) {
+                val javaSdk = JavaSdk.getInstance()
+                val canonicalName = currentSdk.homePath?.let { javaSdk.suggestSdkName(null, it) } ?: currentSdk.name
+                val version = sanitizeVersion(javaSdk.getVersionString(currentSdk))
+                if (version != null) {
+                    "$canonicalName ($version)"
+                } else {
+                    canonicalName
+                }
+            } else {
+                currentSdk.name
+            }
+
+        return SdkStatus.NeedsUpdate(
+            currentSdkVersion = displayVersion,
+            requestedInstallPath = newSdk.homePath ?: tool.shimsInstallPath(),
+        )
+    }
+
+    private fun sanitizeVersion(version: String?): String? {
+        if (version == null) return null
+        return version
+            .replace("Oracle OpenJDK", "", ignoreCase = true)
+            .replace("Azul Zulu", "", ignoreCase = true)
+            .replace("java version", "", ignoreCase = true)
+            .replace("\"", "")
+            .replace(Regex("\\s*[-]?\\s*(aarch64|x86_64|x64|amd64)"), "")
+            .trim()
     }
 
     override fun applySdkConfiguration(
@@ -58,6 +92,11 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
                 sdkPath = sdk.homePath ?: tool.shimsInstallPath(),
             )
         }
+
+    private fun isSamePath(path1: String?, path2: String?): Boolean {
+        if (path1 == null || path2 == null) return false
+        return FileUtil.filesEqual(File(path1), File(path2))
+    }
 
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null
 

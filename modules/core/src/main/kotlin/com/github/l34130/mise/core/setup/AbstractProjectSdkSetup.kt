@@ -18,7 +18,6 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
-import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.util.application
 import kotlinx.coroutines.runBlocking
@@ -50,6 +49,7 @@ abstract class AbstractProjectSdkSetup :
 
     abstract fun <T : Configurable> getConfigurableClass(): KClass<out T>?
 
+    @Suppress("ktlint:max-line-length")
     private fun configureSdk(
         project: Project,
         isUserInteraction: Boolean,
@@ -59,7 +59,7 @@ abstract class AbstractProjectSdkSetup :
             val miseNotificationService = project.service<MiseNotificationService>()
 
             val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
-            
+
             // Skip automatic SDK configuration if the project doesn't have mise config files
             // or if the specific tool is not configured in mise
             if (!isUserInteraction && !hasToolConfigured(project, configEnvironment, devToolName)) {
@@ -129,24 +129,40 @@ abstract class AbstractProjectSdkSetup :
                     is SdkStatus.NeedsUpdate -> {
                         val title =
                             if (status.currentSdkVersion == null) {
-                                "${devToolName.canonicalName()} is not configured"
+                                "${devToolName.canonicalName()} Not Configured"
                             } else {
-                                "${devToolName.canonicalName()} is misconfigured as '${devToolName.value}@${status.currentSdkVersion}'"
+                                "${devToolName.canonicalName()} Version Mismatch"
+                            }
+
+                        val description =
+                            if (status.currentSdkVersion == null) {
+                                "Configure as '${devToolName.value}@${tool.version}'"
+                            } else {
+                                buildString {
+                                    append("Project: ${status.currentSdkVersion} <br/>")
+                                    append("Mise: <b>${tool.requestedVersion}</b>")
+                                    if (tool.requestedVersion != tool.version) {
+                                        append(" (${tool.version})")
+                                    }
+                                }
                             }
 
                         val applyAction = {
                             applySdkConfiguration(tool, project)
                             miseNotificationService.info(
-                                "${devToolName.canonicalName()} is configured to '${devToolName.value}@${tool.shimsVersion()}'",
-                                FileUtil.getLocationRelativeToUserHome(status.requestedInstallPath),
+                                "${devToolName.canonicalName()} is configured to ${tool.shimsVersion()}",
+                                ""
                             )
                         }
 
                         if (isUserInteraction) {
                             applyAction()
                         } else {
-                            miseNotificationService.info(title, "Can configure as '${devToolName.value}@${tool.shimsVersion()}'") {
-                                NotificationAction.createSimpleExpiring("Apply", applyAction)
+                            miseNotificationService.info(title, description) {
+                                NotificationAction.createSimpleExpiring(
+                                    "Sync to ${tool.shimsVersion()}",
+                                    applyAction,
+                                )
                             }
                         }
                     }
@@ -176,18 +192,18 @@ abstract class AbstractProjectSdkSetup :
         val basePath = project.basePath ?: return false
         val baseDir = LocalFileSystem.getInstance().findFileByPath(basePath)
             ?: return false
-        
+
         // First check if any mise config files exist
         val hasConfigFiles = runBlocking {
             val configFiles = project.service<MiseConfigFileResolver>()
                 .resolveConfigFiles(baseDir, refresh = false, configEnvironment = configEnvironment)
             configFiles.isNotEmpty()
         }
-        
+
         if (!hasConfigFiles) {
             return false
         }
-        
+
         // Then check if the specific tool is configured in mise
         // Using runBlocking here is acceptable because:
         // 1. We're already on a background thread (via executeOnPooledThread)
@@ -197,9 +213,9 @@ abstract class AbstractProjectSdkSetup :
             workDir = basePath,
             configEnvironment = configEnvironment
         )
-        
+
         return toolsResult.fold(
-            onSuccess = { tools -> 
+            onSuccess = { tools ->
                 val configuredTools = tools[devToolName]
                 !configuredTools.isNullOrEmpty()
             },
