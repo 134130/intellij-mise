@@ -39,15 +39,20 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
             )
         }
 
-        // Compare paths using canonical/real paths to handle symlinks properly
-        if (!isSamePath(currentSdk.homeUrl, newSdk.homeUrl)) {
-            return SdkStatus.NeedsUpdate(
-                currentSdkVersion = currentSdk.version ?: currentSdk.majorVersion.name,
-                requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
-            )
+        // Compare versions
+        if (currentSdk.version == newSdk.version) {
+            return SdkStatus.UpToDate
         }
 
-        return SdkStatus.UpToDate
+        // Compare paths using canonical/real paths to handle symlinks properly
+        if (isSamePath(currentSdk.homeUrl, newSdk.homeUrl)) {
+            return SdkStatus.UpToDate
+        }
+
+        return SdkStatus.NeedsUpdate(
+            currentSdkVersion = currentSdk.version ?: currentSdk.majorVersion.name,
+            requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
+        )
     }
 
     override fun applySdkConfiguration(
