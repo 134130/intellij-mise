@@ -97,19 +97,17 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
                 return true
             }
             
-            // Try to resolve to canonical/real paths to handle symlinks
-            val file1 = File(path1)
-            val file2 = File(path2)
+            val file1 = Paths.get(path1)
+            val file2 = Paths.get(path2)
             
-            if (file1.exists() && file2.exists()) {
-                // Use toRealPath() which resolves symlinks
-                val realPath1 = Paths.get(path1).toRealPath()
-                val realPath2 = Paths.get(path2).toRealPath()
-                return realPath1 == realPath2
+            // Use Files.isSameFile which is specifically designed for this purpose
+            // It handles symlinks and different path representations efficiently
+            if (java.nio.file.Files.exists(file1) && java.nio.file.Files.exists(file2)) {
+                return java.nio.file.Files.isSameFile(file1, file2)
             }
             
-            // If files don't exist, fall back to canonical path comparison
-            return file1.canonicalPath == file2.canonicalPath
+            // If files don't exist, compare normalized absolute paths
+            return File(path1).absoluteFile.normalize() == File(path2).absoluteFile.normalize()
         } catch (e: Exception) {
             logger.warn("Failed to compare paths: $url1 vs $url2", e)
             // Fall back to simple string comparison if path resolution fails
