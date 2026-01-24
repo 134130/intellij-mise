@@ -12,6 +12,7 @@ import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VfsUtil
 import java.io.File
 import kotlin.reflect.KClass
@@ -38,14 +39,20 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
             )
         }
 
-        if (currentSdk.name != newSdk.name || currentSdk.homeUrl != newSdk.homeUrl) {
-            return SdkStatus.NeedsUpdate(
-                currentSdkVersion = newSdk.version ?: newSdk.majorVersion.name,
-                requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
-            )
+        // Compare versions
+        if (currentSdk.version == newSdk.version) {
+            return SdkStatus.UpToDate
         }
 
-        return SdkStatus.UpToDate
+        // Compare paths using canonical/real paths to handle symlinks properly
+        if (isSamePath(currentSdk.homeUrl, newSdk.homeUrl)) {
+            return SdkStatus.UpToDate
+        }
+
+        return SdkStatus.NeedsUpdate(
+            currentSdkVersion = currentSdk.version ?: currentSdk.majorVersion.name,
+            requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
+        )
     }
 
     override fun applySdkConfiguration(
@@ -79,6 +86,16 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
             sdk = GoSdk.fromHomePath(basePath + File.separator + "go")
         }
         return sdk
+    }
+
+    /**
+     * Compares two paths (URLs) to determine if they point to the same location.
+     * This handles symlinks and different path representations.
+     */
+    private fun isSamePath(url1: String, url2: String): Boolean {
+        val path1 = VfsUtil.urlToPath(url1)
+        val path2 = VfsUtil.urlToPath(url2)
+        return FileUtil.filesEqual(File(path1), File(path2))
     }
 
     companion object {

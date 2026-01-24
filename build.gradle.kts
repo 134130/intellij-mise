@@ -30,7 +30,12 @@ dependencies {
     testImplementation(libs.junit)
 
     intellijPlatform {
-        create(IntelliJPlatformType.IntellijIdeaCommunity, providers.gradleProperty("platformVersion"), false)
+        create(
+            type = IntelliJPlatformType.IntellijIdeaCommunity,
+            version = providers.gradleProperty("platformVersion")
+        ) {
+            useInstaller = false
+        }
 
         pluginComposedModule(implementation(project(":mise-products-clion")))
         pluginComposedModule(implementation(project(":mise-products-database")))
@@ -188,8 +193,8 @@ runIdePlatformTypes.forEach { platformType ->
 
         plugins {
             compatiblePlugin("org.toml.lang")
+            compatiblePlugin("org.jetbrains.plugins.go")
 //            compatiblePlugin("dev.nx.console")
-//            compatiblePlugin("org.jetbrains.plugins.go")
         }
     }
 }
