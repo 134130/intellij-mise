@@ -2,16 +2,20 @@ package com.github.l34130.mise.core.wsl
 
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.setting.MiseApplicationSettings
-import com.intellij.execution.wsl.WSLDistribution
+import com.github.l34130.mise.core.util.getUserHomeForProject
+import com.github.l34130.mise.core.util.getWslDistribution
+import com.github.l34130.mise.core.wsl.WslPathUtils.convertUnixPathForWsl
 import com.intellij.execution.wsl.WslDistributionManager
 import com.intellij.execution.wsl.WslPath
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.application
 import java.nio.file.Files
-import java.nio.file.InvalidPathException
+import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.Path
 
 /**
  * Utility object for WSL (Windows Subsystem for Linux) path operations and detection.
@@ -125,7 +129,7 @@ object WslPathUtils {
     /**
      * Converts a Unix path (from WSL) to a Windows UNC path.
      *
-     * Uses IntelliJ's WSLDistribution.getUNCRootPath() to ensure modern \\wsl.localhost\ format.
+     * Uses IntelliJ's WslPath API to ensure modern \\wsl.localhost\ format.
      *
      * Examples:
      * - "/home/user/.mise" → "\\wsl.localhost\Ubuntu\home\user\.mise"
@@ -153,16 +157,12 @@ object WslPathUtils {
             .find { it.msId.equals(distribution, ignoreCase = true) }
             ?: throw IllegalArgumentException(
                 "WSL distribution '$distribution' not found. " +
-                "Available distributions: ${WslDistributionManager.getInstance().installedDistributions.joinToString { it.msId }}"
+                        "Available distributions: ${WslDistributionManager.getInstance().installedDistributions.joinToString { it.msId }}"
             )
 
-        // Use the distribution's UNC root path which respects the system's WSL version
+        // Use the distribution's method which respects the system's WSL version
         // Convert Path to string and remove any trailing separator to avoid double slashes
-        val uncRootStr = wslDistribution.getUNCRootPath().toString()
-        val uncRoot = uncRootStr.trimEnd('\\', '/')
-        val pathWithoutLeadingSlash = unixPath.substring(1)
-        val windowsPath = pathWithoutLeadingSlash.replace('/', '\\')
-        return "$uncRoot\\$windowsPath"
+        return wslDistribution.getWindowsPath(unixPath)
     }
 
     /**
@@ -182,41 +182,11 @@ object WslPathUtils {
         if (uncPath.isBlank()) return null
 
         // Use IntelliJ's WslPath API for parsing
-        val normalizedPath = uncPath.replace('/', '\\')
-        val wslPath = WslPath.parseWindowsUncPath(normalizedPath) ?: return null
+        val wslPath = WslPath.parseWindowsUncPath(uncPath) ?: return null
         return wslPath.linuxPath
     }
 
-    /**
-     * Converts a Windows path to a WSL mount path using the distribution's mount root.
-     *
-     * This method uses IntelliJ's `WSLDistribution.getWslPath()` API which automatically
-     * handles mount root detection and path conversion.
-     *
-     * Examples (with /mnt mount root):
-     * - "C:\Users\project" → "/mnt/c/Users/project"
-     * - "D:\workspace" → "/mnt/d/workspace"
-     *
-     * Examples (with / mount root):
-     * - "C:\Users\project" → "/c/Users/project"
-     *
-     * @param windowsPath The Windows path to convert
-     * @param distribution The WSL distribution instance
-     * @return The converted WSL mount path using the distribution's mount root
-     * @throws IllegalArgumentException if windowsPath is invalid or cannot be converted
-     */
-    fun convertWindowsToWslMountPath(windowsPath: String, distribution: WSLDistribution): String {
-        if (!SystemInfo.isWindows) return windowsPath
-
-        return try {
-            val path = Paths.get(windowsPath)
-            // Use IntelliJ's getWslPath() API - it automatically uses getMntRoot() internally
-            distribution.getWslPath(path)
-                ?: throw IllegalArgumentException("Cannot convert Windows path to WSL path: $windowsPath")
-        } catch (e: InvalidPathException) {
-            throw IllegalArgumentException("Invalid Windows path format: $windowsPath", e)
-        }
-    }
+    fun maybeConvertWindowsUncToUnixPath(maybeUncPath: String): String = convertWindowsUncToUnixPath(maybeUncPath) ?: maybeUncPath
 
     /**
      * Validates that a UNC path exists and is accessible.
@@ -241,28 +211,35 @@ object WslPathUtils {
     /**
      * Converts a Unix path to a Windows UNC path for WSL compatibility.
      *
-     * On non-Windows systems or when WSL mode is disabled, returns the original path unchanged.
-     * On Windows with WSL mode enabled, converts the Unix path to a Windows UNC path.
+     * On non-Windows systems, returns the original path unchanged.
+     * On Windows, attempts to detect WSL context from the executable path and convert accordingly.
      *
      * @param unixPath The Unix path to convert
+     * @param executablePath The executable path to infer distribution from (optional)
      * @return The converted path (Windows UNC path for WSL, original path otherwise)
-     * @throws IllegalStateException if WSL mode is enabled but distribution is not configured,
-     *         or if the converted UNC path is not accessible
+     * @throws IllegalStateException if distribution cannot be detected or path is not accessible
      */
-    fun convertUnixPathForWsl(unixPath: String): String {
+    fun convertUnixPathForWsl(unixPath: String, executablePath: String? = null): String {
         if (!SystemInfo.isWindows) return unixPath
 
-        val settings = application.service<MiseApplicationSettings>()
-        if (!settings.state.isWslMode) return unixPath
+        // Try to detect distribution from executable path
+        val distribution = executablePath?.let { extractDistribution(it) }
+            ?: run {
+                // Fallback: check application settings
+                val settings = application.service<MiseApplicationSettings>()
+                val configuredPath = settings.state.executablePath
+                if (configuredPath.isNotEmpty()) {
+                    extractDistribution(configuredPath)
+                } else {
+                    null
+                }
+            }
 
-        val distribution =
-            settings.state.wslDistribution
-                ?: throw IllegalStateException(
-                    "WSL mode is active but no distribution could be detected. " +
-                    "Please verify your mise executable path in Settings > Tools > Mise Settings. " +
-                    "The path should be either: 'wsl.exe -d <distro> /path/to/mise' or " +
-                    "'\\\\wsl.localhost\\<distro>\\path\\to\\mise'"
-                )
+        if (distribution == null) {
+            // Not in WSL context, return original path
+            logger.debug("Not in WSL context, returning original path: $unixPath")
+            return unixPath
+        }
 
         return try {
             val uncPath = convertWslToWindowsUncPath(unixPath, distribution)
@@ -276,7 +253,7 @@ object WslPathUtils {
             logger.error("Failed to convert WSL path: $unixPath", e)
             throw IllegalStateException(
                 "Cannot access path at $unixPath in WSL. " +
-                    "Ensure WSL is running and distribution '$distribution' is accessible.",
+                        "Ensure WSL is running and distribution '$distribution' is accessible.",
                 e,
             )
         }
@@ -297,84 +274,23 @@ object WslPathUtils {
         return convertUnixPathForWsl(tool.shimsInstallPath())
     }
 
-    /**
-     * Discovers all WSL distributions that have mise installed.
-     *
-     * Process:
-     * 1. Query all installed WSL distributions via IntelliJ's WslDistributionManager
-     * 2. For each distribution, run `which mise` using WSLDistribution.executeOnWsl()
-     * 3. Return list of distributions with mise and its path
-     *
-     * Note: This method performs blocking I/O operations and should be called from a background thread.
-     *
-     * @return List of WSL mise installations (may be empty)
-     */
-    fun discoverWslMise(): List<WslMiseInstallation> {
-        // Only works on Windows where WSL is available
-        if (!SystemInfo.isWindows) {
-            logger.debug("Not on Windows, skipping WSL mise discovery")
-            return emptyList()
+    fun resolveUserHomeAbbreviations(
+        path: String,
+        project: Project
+    ): Path {
+        val homePrefixes = listOf("~/", "~\\", $$"$HOME/", $$"$HOME\\", $$"${HOME}/", $$"${HOME}\\")
+        val matchingPrefix = homePrefixes.firstOrNull { path.startsWith(it) }
+
+        val resolvedHome = if (matchingPrefix != null) {
+            val userHome = Path(project.getUserHomeForProject())
+            userHome.resolve(path.removePrefix(matchingPrefix)).toAbsolutePath()
+        } else {
+            Path(path).toAbsolutePath()
         }
-
-        val installations = mutableListOf<WslMiseInstallation>()
-
-        try {
-            // Use IntelliJ's WslDistributionManager to get installed distributions
-            // This automatically filters out docker-desktop and docker-desktop-data
-            // Note: This is a blocking call and must be called from a background thread
-            val distributions = WslDistributionManager.getInstance().installedDistributions
-
-            if (distributions.isEmpty()) {
-                logger.info("No WSL distributions installed")
-                return emptyList()
-            }
-
-            logger.debug("Found ${distributions.size} WSL distribution(s), checking for mise...")
-
-            // Check each distribution for mise using the WSLDistribution API
-            for (distribution in distributions) {
-                try {
-                    // Execute 'which mise' command with 10 second timeout
-                    // executeOnWsl returns ProcessOutput with stdout, stderr, exitCode
-                    val result = distribution.executeOnWsl(
-                        10000, // 10 second timeout in milliseconds
-                        "which",
-                        "mise"
-                    )
-
-                    if (result.exitCode == 0) {
-                        val misePath = result.stdout.trim()
-                        if (misePath.isNotBlank()) {
-                            installations.add(
-                                WslMiseInstallation(
-                                    distribution = distribution.msId,
-                                    path = misePath
-                                )
-                            )
-                            logger.info("Found mise in WSL distribution '${distribution.msId}': $misePath")
-                        }
-                    } else {
-                        logger.debug("mise not found in distribution '${distribution.msId}' (exit code: ${result.exitCode})")
-                    }
-                } catch (e: Exception) {
-                    logger.debug("Failed to check mise in distribution '${distribution.msId}'", e)
-                }
-            }
-        } catch (e: Exception) {
-            logger.warn("Failed to discover WSL mise installations", e)
+        val distribution = project.getWslDistribution()
+        if (distribution != null && resolvedHome.startsWith("/")) {
+            return Path(distribution.getWindowsPath(resolvedHome.toString()))
         }
-
-        return installations
+        return resolvedHome
     }
 }
-
-/**
- * Represents a mise installation in a WSL distribution.
- *
- * @property distribution The WSL distribution name (e.g., "Ubuntu", "Debian")
- * @property path The Unix path to the mise executable (e.g., "/usr/bin/mise")
- */
-data class WslMiseInstallation(
-    val distribution: String,
-    val path: String,
-)
