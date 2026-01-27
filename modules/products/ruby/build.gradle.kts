@@ -14,7 +14,10 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.IntellijIdeaUltimate, properties("platformVersion"), false)
+        create(
+            IntelliJPlatformType.IntellijIdeaUltimate,
+            properties("platformVersion")
+        ) { useInstaller = false }
 
         plugin("org.jetbrains.plugins.ruby:251.23774.16")
 

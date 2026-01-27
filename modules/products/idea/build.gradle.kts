@@ -14,7 +14,10 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.IntellijIdeaCommunity, properties("platformVersion"), false)
+        create(
+            IntelliJPlatformType.IntellijIdeaCommunity,
+            properties("platformVersion")
+        ) { useInstaller = false }
 
         bundledPlugin("com.intellij.java")
 

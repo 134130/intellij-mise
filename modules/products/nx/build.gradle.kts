@@ -20,7 +20,10 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.IntellijIdeaUltimate, properties("platformVersion"), false)
+        create(
+            IntelliJPlatformType.IntellijIdeaUltimate,
+            properties("platformVersion")
+        ) { useInstaller = false }
 
         compatiblePlugin("dev.nx.console")
 

@@ -13,7 +13,10 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.Rider, properties("platformVersion"), false)
+        create(
+            IntelliJPlatformType.Rider,
+            properties("platformVersion")
+        ) { useInstaller = false }
 
         jetbrainsRuntime()
 

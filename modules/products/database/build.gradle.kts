@@ -14,7 +14,10 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.IntellijIdea, properties("platformVersion"), false)
+        create(
+            IntelliJPlatformType.IntellijIdea,
+            properties("platformVersion")
+        ) { useInstaller = false }
 
         compatiblePlugin("com.intellij.database")
 
