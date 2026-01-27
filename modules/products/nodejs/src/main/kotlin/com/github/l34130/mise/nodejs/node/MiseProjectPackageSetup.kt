@@ -4,6 +4,7 @@ import com.github.l34130.mise.core.ShimUtils
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.javascript.nodejs.npm.NpmManager
 import com.intellij.javascript.nodejs.npm.NpmUtil
@@ -74,7 +75,7 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
 
     private fun inspectPackageManager(project: Project): String {
         val basePath =
-            requireNotNull(project.basePath) {
+            requireNotNull(project.guessMiseProjectPath()) {
                 "Project $project's base path is null"
             }
 

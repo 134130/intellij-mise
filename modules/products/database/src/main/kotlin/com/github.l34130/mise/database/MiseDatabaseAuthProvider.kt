@@ -2,12 +2,12 @@ package com.github.l34130.mise.database
 
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.setting.MiseProjectSettings
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.database.access.DatabaseCredentials
 import com.intellij.database.dataSource.DatabaseAuthProvider
 import com.intellij.database.dataSource.DatabaseConnectionConfig
 import com.intellij.database.dataSource.DatabaseConnectionInterceptor
 import com.intellij.database.dataSource.DatabaseConnectionPoint
-import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.jetbrains.annotations.Nls
@@ -36,14 +36,16 @@ class MiseDatabaseAuthProvider : DatabaseAuthProvider {
                 ?: MiseDatabaseAuthConfig.PROP_PASSWORD_KEY_DEFAULT
 
         val settings = proto.project.service<MiseProjectSettings>().state
-        if (!settings.useMiseDirEnv) return false
+        if (!settings.useMiseDirEnv || !settings.useMiseInDatabaseAuthentication) return false
 
         val envVars =
-            MiseCommandLineHelper
-                .getEnvVarsAsync(
-                    workDir = proto.project.basePath ?: ProjectUtil.getBaseDir(),
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                MiseCommandLineHelper.getEnvVars(
+                    project = proto.project,
+                    workDir = proto.project.guessMiseProjectPath(),
                     configEnvironment = settings.miseConfigEnvironment,
-                ).getOrThrow()
+                )
+            }.getOrThrow()
 
         val username = envVars[usernameKey]
         val password = envVars[passwordKey]
