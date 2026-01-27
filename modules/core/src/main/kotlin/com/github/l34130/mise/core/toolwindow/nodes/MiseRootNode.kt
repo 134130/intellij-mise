@@ -5,8 +5,9 @@ import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.model.MiseTask
+import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.setting.MiseProjectSettings
-import com.intellij.ide.impl.ProjectUtil
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
@@ -20,7 +21,7 @@ import java.nio.file.Paths
 
 class MiseRootNode(
     nodeProject: Project,
-) : AbstractTreeNode<Any>(nodeProject, Object()) {
+) : AbstractTreeNode<Any>(nodeProject, "Mise") {
     override fun update(presentation: PresentationData) {
         presentation.presentableText = "Mise"
     }
@@ -33,6 +34,7 @@ class MiseRootNode(
                 onSuccess = { tools -> MiseToolServiceNode(project, tools) },
                 onFailure = { e ->
                     logger.warn("Failed to get tool nodes", e)
+                    MiseNotificationServiceUtils.notifyException("Failed to get tool nodes", e, project)
                     MiseErrorNode(project, e)
                 },
             ),
@@ -40,6 +42,7 @@ class MiseRootNode(
                 onSuccess = { tasks -> MiseTaskServiceNode(project, tasks) },
                 onFailure = { e ->
                     logger.warn("Failed to get task nodes", e)
+                    MiseNotificationServiceUtils.notifyException("Failed to get task nodes", e, project)
                     MiseErrorNode(project, e)
                 },
             ),
@@ -47,6 +50,7 @@ class MiseRootNode(
                 onSuccess = { envs -> MiseEnvironmentServiceNode(project, envs) },
                 onFailure = { e ->
                     logger.warn("Failed to get settings nodes", e)
+                    MiseNotificationServiceUtils.notifyException("Failed to get environment nodes", e, project)
                     MiseErrorNode(project, e)
                 },
             ),
@@ -57,7 +61,8 @@ class MiseRootNode(
         val toolsByToolNames =
             MiseCommandLineHelper
                 .getDevTools(
-                    workDir = project.basePath,
+                    project = project,
+                    workDir = project.guessMiseProjectPath(),
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow()
 
@@ -83,7 +88,8 @@ class MiseRootNode(
         val envs =
             MiseCommandLineHelper
                 .getEnvVarsExtended(
-                    workDir = project.basePath,
+                    project = project,
+                    workDir = project.guessMiseProjectPath(),
                     configEnvironment = settings.state.miseConfigEnvironment,
                 ).getOrThrow()
 
@@ -104,7 +110,7 @@ class MiseRootNode(
     private fun getTaskNodes(): Collection<AbstractTreeNode<*>> {
         val taskResolver = project.service<MiseTaskResolver>()
         val settings = project.service<MiseProjectSettings>()
-        val projectBaseDir = project.basePath ?: ProjectUtil.getBaseDir()
+        val projectBaseDir = project.guessMiseProjectPath()
         val configEnvironment = settings.state.miseConfigEnvironment
 
         val nodes = mutableListOf<AbstractTreeNode<*>>()
@@ -134,7 +140,9 @@ class MiseRootNode(
         nodes += projectDirNode
 
         // --- Sub Directories ---
-        val trackedConfigs = MiseCommandLineHelper.getTrackedConfigs().getOrElse { emptyList() }
+        val trackedConfigs = MiseCommandLineHelper.getTrackedConfigs(project, configEnvironment)
+            .onFailure { MiseNotificationServiceUtils.notifyException("Failed to get tracked configs", it, project) }
+            .getOrElse { emptyList() }
         val subDirs: List<String> =
             trackedConfigs
                 .filter { it.startsWith(projectBaseDir) }

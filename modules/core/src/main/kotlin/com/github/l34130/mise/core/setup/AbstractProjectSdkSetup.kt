@@ -9,6 +9,7 @@ import com.github.l34130.mise.core.notification.MiseNotificationService
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.TerminalUtils
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.notification.NotificationAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
@@ -66,7 +67,7 @@ abstract class AbstractProjectSdkSetup :
                 return@executeOnPooledThread
             }
             val toolsResult =
-                MiseCommandLineHelper.getDevTools(workDir = project.basePath, configEnvironment = configEnvironment)
+                MiseCommandLineHelper.getDevTools(project = project, workDir = project.guessMiseProjectPath(), configEnvironment = configEnvironment)
             val tools =
                 toolsResult.fold(
                     onSuccess = { tools -> tools[devToolName] },
@@ -189,7 +190,7 @@ abstract class AbstractProjectSdkSetup :
         configEnvironment: String?,
         devToolName: MiseDevToolName,
     ): Boolean {
-        val basePath = project.basePath ?: return false
+        val basePath = project.guessMiseProjectPath()
         val baseDir = LocalFileSystem.getInstance().findFileByPath(basePath)
             ?: return false
 
@@ -210,6 +211,7 @@ abstract class AbstractProjectSdkSetup :
         // 2. The operation is fast (just checking if tool is configured)
         // 3. We need to call a suspend function from a non-suspend context
         val toolsResult = MiseCommandLineHelper.getDevTools(
+            project = project,
             workDir = basePath,
             configEnvironment = configEnvironment
         )

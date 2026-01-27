@@ -1,27 +1,26 @@
 package com.github.l34130.mise.core.setting
 
-import com.github.l34130.mise.core.notification.MiseNotificationService
-import com.intellij.notification.NotificationAction
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
-import com.intellij.openapi.components.service
-import com.intellij.openapi.options.ShowSettingsUtil
-import com.intellij.openapi.project.Project
-import com.intellij.util.application
 
 @Service(Service.Level.PROJECT)
 @State(name = "com.github.l34130.mise.settings.MiseProjectSettings", storages = [Storage("mise.xml")])
-class MiseProjectSettings(
-    private val project: Project,
-) : PersistentStateComponent<MiseProjectSettings.MyState> {
+class MiseProjectSettings() : PersistentStateComponent<MiseProjectSettings.MyState> {
     private var myState = MyState()
 
     override fun getState() = myState
 
     override fun loadState(state: MyState) {
         myState = state.clone()
+
+        // Migration: Move projectExecutableOverridePath to executablePath if override was enabled
+        if (myState.projectExecutableOverrideEnabled && myState.projectExecutableOverridePath.isNotBlank()) {
+            myState.executablePath = myState.projectExecutableOverridePath
+            myState.projectExecutableOverrideEnabled = false
+            myState.projectExecutableOverridePath = ""
+        }
     }
 
     override fun noStateLoaded() {
@@ -34,38 +33,43 @@ class MiseProjectSettings(
                 it.useMiseDirEnv = myState.useMiseDirEnv
                 it.miseConfigEnvironment = myState.miseConfigEnvironment
                 it.useMiseVcsIntegration = myState.useMiseVcsIntegration
+                it.executablePath = myState.executablePath
+                it.useMiseInRunConfigurations = myState.useMiseInRunConfigurations
+                it.useMiseInDatabaseAuthentication = myState.useMiseInDatabaseAuthentication
+                it.useMiseInNxCommands = myState.useMiseInNxCommands
+                it.useMiseInAllCommandLines = myState.useMiseInAllCommandLines
             }
-
-        val applicationSettings = application.service<MiseApplicationSettings>()
-        if (applicationSettings.state.executablePath.isEmpty()) {
-            MiseNotificationService.getInstance(project).warn(
-                title = "Mise Executable Not Found",
-                htmlText =
-                    """
-                    Mise executable not found in PATH.<br/>
-                    Please specify the path to the mise executable in the settings.
-                    """.trimIndent(),
-                actionProvider = {
-                    NotificationAction.createSimple(
-                        "Open settings",
-                    ) {
-                        ShowSettingsUtil.getInstance().showSettingsDialog(project, "Mise Settings")
-                    }
-                },
-            )
-        }
     }
 
     class MyState : Cloneable {
         var useMiseDirEnv: Boolean = true
         var miseConfigEnvironment: String = ""
         var useMiseVcsIntegration: Boolean = true
+        var executablePath: String = ""
+
+        // Granular injection controls
+        var useMiseInRunConfigurations: Boolean = true
+        var useMiseInDatabaseAuthentication: Boolean = true
+        var useMiseInNxCommands: Boolean = true
+        var useMiseInAllCommandLines: Boolean = false  // Conservative default
+
+        // Deprecated fields - kept for backward compatibility during deserialization
+        @Deprecated("Use executablePath instead")
+        var projectExecutableOverrideEnabled: Boolean = false
+
+        @Deprecated("Use executablePath instead")
+        var projectExecutableOverridePath: String = ""
 
         public override fun clone(): MyState =
             MyState().also {
                 it.useMiseDirEnv = useMiseDirEnv
                 it.miseConfigEnvironment = miseConfigEnvironment
                 it.useMiseVcsIntegration = useMiseVcsIntegration
+                it.executablePath = executablePath
+                it.useMiseInRunConfigurations = useMiseInRunConfigurations
+                it.useMiseInDatabaseAuthentication = useMiseInDatabaseAuthentication
+                it.useMiseInNxCommands = useMiseInNxCommands
+                it.useMiseInAllCommandLines = useMiseInAllCommandLines
             }
     }
 }

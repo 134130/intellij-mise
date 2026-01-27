@@ -6,19 +6,12 @@ import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.run.ConfigEnvironmentStrategy
 import com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor
 import com.github.l34130.mise.core.setting.MiseProjectSettings
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.execution.configurations.RunConfigurationBase
-import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.debug
-import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectLocator
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.platform.ide.progress.runWithModalProgressBlocking
-import com.intellij.util.application
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 
 object MiseHelper {
     fun getMiseEnvVarsOrNotify(
@@ -29,84 +22,72 @@ object MiseHelper {
         val projectState = project.service<MiseProjectSettings>().state
         val runConfigState = MiseRunConfigurationSettingsEditor.getMiseRunConfigurationState(configuration)
 
-        val isRunConfigDisabled = runConfigState?.useMiseDirEnv == false
-        val useOverrideSettings = runConfigState?.configEnvironmentStrategy == ConfigEnvironmentStrategy.OVERRIDE_PROJECT_SETTINGS
-        val useProjectSettings = projectState.useMiseDirEnv
+        // Check if disabled at run config level
+        if (runConfigState?.useMiseDirEnv == false) return emptyMap()
 
-        val (workDir, configEnvironment) =
-            when {
-                isRunConfigDisabled -> return emptyMap()
-                useOverrideSettings -> {
-                    val workDir = workingDirectory?.takeIf { it.isNotBlank() } ?: project.basePath
-                    workDir to runConfigState.miseConfigEnvironment
-                }
-                useProjectSettings -> project.basePath to projectState.miseConfigEnvironment
-                else -> return emptyMap()
+        // Check master toggle AND run config setting
+        if (!projectState.useMiseDirEnv || !projectState.useMiseInRunConfigurations) {
+            return emptyMap()
+        }
+
+        val workDir = workingDirectory?.takeIf { it.isNotBlank() }
+            ?: project.guessMiseProjectPath()
+
+        val configEnvironment =
+            if (runConfigState?.configEnvironmentStrategy == ConfigEnvironmentStrategy.OVERRIDE_PROJECT_SETTINGS) {
+                runConfigState.miseConfigEnvironment
+            } else {
+                projectState.miseConfigEnvironment
             }
 
         return getMiseEnvVarsOrNotify(project, workDir, configEnvironment)
     }
 
     fun getMiseEnvVarsOrNotify(
-        project: Project?,
-        workingDirectory: String? = null,
+        project: Project,
+        workingDirectory: String,
         configEnvironment: String? = null,
-    ): Map<String, String> {
-        val project =
-            project ?: workingDirectory?.let { workDir ->
-                LocalFileSystem.getInstance().findFileByPath(workDir)?.let { vf ->
-                    ProjectLocator.getInstance().guessProjectForFile(vf)
-                }
-            } ?: ProjectUtil.getActiveProject() ?: ProjectUtil.getOpenProjects().firstOrNull()
-
-        if (project == null) {
-            logger.warn("No project found to load Mise environment variables")
-            return emptyMap()
-        }
-
+    ): MutableMap<String, String> {
         val projectState = project.service<MiseProjectSettings>().state
 
-        val useMiseDirEnv = projectState.useMiseDirEnv
-        if (!useMiseDirEnv) {
+        // Early return if disabled
+        if (!projectState.useMiseDirEnv) {
             logger.debug { "Mise environment variables loading is disabled in project settings" }
-            return emptyMap()
+            return mutableMapOf()
         }
 
-        val configEnvironment = configEnvironment ?: projectState.miseConfigEnvironment
+        val resolvedConfigEnvironment = configEnvironment ?: projectState.miseConfigEnvironment
 
-        val result =
-            if (application.isDispatchThread) {
-                logger.debug { "dispatch thread detected, loading env vars on current thread" }
-                runWithModalProgressBlocking(project, "Loading Mise Environment Variables") {
-                    MiseCommandLineHelper.getEnvVars(workingDirectory, configEnvironment)
-                }
-            } else if (!application.isReadAccessAllowed) {
-                logger.debug { "no read lock detected, loading env vars on dispatch thread" }
-                var result: Result<Map<String, String>>? = null
-                application.invokeAndWait {
-                    logger.debug { "loading env vars on invokeAndWait" }
-                    runWithModalProgressBlocking(project, "Loading Mise Environment Variables") {
-                        result = MiseCommandLineHelper.getEnvVars(workingDirectory, configEnvironment)
-                    }
-                }
-                result ?: throw ProcessCanceledException()
-            } else {
-                logger.debug { "read access allowed, executing on background thread" }
-                runBlocking(Dispatchers.IO) {
-                    MiseCommandLineHelper.getEnvVars(workingDirectory, configEnvironment)
-                }
-            }
+        // Cache handles fast-path + threading automatically
+        val result = MiseCommandLineHelper.getEnvVars(project, workingDirectory, resolvedConfigEnvironment)
+        return processEnvVarsResult(result, project)
+    }
 
-        return result
-            .fold(
-                onSuccess = { envVars -> envVars },
-                onFailure = {
-                    if (it !is MiseCommandLineNotFoundException) {
-                        MiseNotificationServiceUtils.notifyException("Failed to load environment variables", it, project)
-                    }
-                    mapOf()
-                },
-            )
+    /**
+     * Process a Result<Map<String, String>> into a MutableMap with proper error handling.
+     * Adds injection marker on success, shows notification on failure.
+     */
+    private fun processEnvVarsResult(
+        result: Result<Map<String, String>>,
+        project: Project
+    ): MutableMap<String, String> {
+        return result.fold(
+            onSuccess = { envVars ->
+                val mutableEnvVars = envVars.toMutableMap()
+                MiseCommandLineHelper.environmentHasBeenCustomized(mutableEnvVars)
+                mutableEnvVars
+            },
+            onFailure = { exception ->
+                if (exception !is MiseCommandLineNotFoundException) {
+                    MiseNotificationServiceUtils.notifyException(
+                        "Failed to load environment variables",
+                        exception,
+                        project
+                    )
+                }
+                mutableMapOf()
+            },
+        )
     }
 
     private val logger = Logger.getInstance(MiseHelper::class.java)

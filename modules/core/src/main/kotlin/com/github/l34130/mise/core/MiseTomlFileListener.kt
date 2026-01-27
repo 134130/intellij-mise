@@ -18,6 +18,7 @@ import com.intellij.psi.PsiTreeAnyChangeAbstractAdapter
 import com.intellij.util.Alarm
 import com.intellij.util.messages.MessageBusConnection
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Project-level service that manages the VFS listener for Mise TOML files.
@@ -42,23 +43,23 @@ class MiseTomlFileListener(
     private class FileListener(
         updater: MiseLocalIndexUpdater,
     ) : BulkVirtualFileListenerAdapter(
-        object : VirtualFileContentsChangedAdapter() {
+            object : VirtualFileContentsChangedAdapter() {
             override fun onFileChange(fileOrDirectory: VirtualFile) {
-                updater.onFileChange(fileOrDirectory)
+                updater.onVfsChange(fileOrDirectory)
             }
 
             override fun onBeforeFileChange(fileOrDirectory: VirtualFile) {
-                updater.onFileChange(fileOrDirectory)
+                updater.onVfsChange(fileOrDirectory)
             }
 
             // Called BEFORE property change - file still has OLD value
             override fun beforePropertyChange(event: VirtualFilePropertyEvent) {
-                updater.onFileChange(event.file)
+                updater.onVfsChange(event.file)
             }
 
             // Called AFTER property change - file now has NEW value
             override fun propertyChanged(event: VirtualFilePropertyEvent) {
-                updater.onFileChange(event.file)
+                updater.onVfsChange(event.file)
             }
         }
     ) {
@@ -70,7 +71,7 @@ class MiseTomlFileListener(
                     object : PsiTreeAnyChangeAbstractAdapter() {
                         override fun onChange(file: PsiFile?) {
                             if (file != null) {
-                                updater.onFileChange(file.viewProvider.virtualFile)
+                                updater.onPsiChange(file.viewProvider.virtualFile)
                             }
                         }
                     },
@@ -85,20 +86,41 @@ class MiseTomlFileListener(
         ) {
             private val updater = ZipperUpdater(200, Alarm.ThreadToUse.POOLED_THREAD, disposable)
             private val dirtyTomlFiles: MutableSet<VirtualFile> = ConcurrentHashMap.newKeySet()
+            private val vfsChanged = AtomicBoolean(false)
+            private val psiChanged = AtomicBoolean(false)
             private val runnable =
                 Runnable {
                     if (project.isDisposed) return@Runnable
                     val scope = HashSet(dirtyTomlFiles)
-                    MiseProjectEventListener.broadcast(
-                        project,
-                        MiseProjectEvent(MiseProjectEvent.Kind.TOML_CHANGED, "mise toml changed")
-                    )
+                    val shouldNotifyVfs = vfsChanged.getAndSet(false)
+                    val shouldNotifyPsi = psiChanged.getAndSet(false)
+                    if (shouldNotifyVfs) {
+                        MiseProjectEventListener.broadcast(
+                            project,
+                            MiseProjectEvent(MiseProjectEvent.Kind.TOML_CHANGED, "mise toml changed (vfs)")
+                        )
+                    }
+                    if (shouldNotifyPsi) {
+                        MiseProjectEventListener.broadcast(
+                            project,
+                            MiseProjectEvent(MiseProjectEvent.Kind.TOML_PSI_CHANGED, "mise toml changed (psi)")
+                        )
+                    }
                     dirtyTomlFiles.removeAll(scope)
                 }
 
-            fun onFileChange(file: VirtualFile) {
+            fun onVfsChange(file: VirtualFile) {
                 if (MiseTomlFile.isMiseTomlFile(project, file)) {
                     dirtyTomlFiles.add(file)
+                    vfsChanged.set(true)
+                    updater.queue(runnable)
+                }
+            }
+
+            fun onPsiChange(file: VirtualFile) {
+                if (MiseTomlFile.isMiseTomlFile(project, file)) {
+                    dirtyTomlFiles.add(file)
+                    psiChanged.set(true)
                     updater.queue(runnable)
                 }
             }

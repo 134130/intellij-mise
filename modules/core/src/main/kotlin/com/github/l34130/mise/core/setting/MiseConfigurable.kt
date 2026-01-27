@@ -1,12 +1,20 @@
 package com.github.l34130.mise.core.setting
 
+import com.github.l34130.mise.core.cache.MiseProjectEvent
+import com.github.l34130.mise.core.cache.MiseProjectEventListener
+import com.github.l34130.mise.core.command.MiseExecutableManager
+import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.TextBrowseFolderListener
+import com.intellij.openapi.ui.TextFieldWithBrowseButton
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.components.textFieldWithHistoryWithBrowseButton
+import com.intellij.ui.components.fields.ExtendableTextField
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.columns
@@ -18,48 +26,105 @@ import javax.swing.JComponent
 class MiseConfigurable(
     private val project: Project,
 ) : SearchableConfigurable {
-    private val myMiseExecutableTf =
-        textFieldWithHistoryWithBrowseButton(
-            project = project,
-            fileChooserDescriptor = FileChooserDescriptor(true, false, false, false, false, false).withTitle("Select Mise Executable"),
-            historyProvider = { listOf("/opt/homebrew/bin/mise").distinct() },
-        )
+    // Single executable path field with auto-detection (Git-style)
+    // Use ExtendableTextField which supports emptyText
+    private val myMiseExecutableTf = TextFieldWithBrowseButton(ExtendableTextField())
+
+    // Checkbox to determine if path is saved project-only
+    private val myProjectOnlyCb = JBCheckBox("Set this path only for the current project")
+
+    // Other project settings
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
     private val myMiseConfigEnvironmentTf = JBTextField()
+
+    // Granular injection controls
+    private val myMiseRunConfigsCb = JBCheckBox("Use in run configurations")
     private val myMiseVcsCb = JBCheckBox("Enable VCS Integration")
+    private val myMiseDatabaseCb = JBCheckBox("Use in database authentication")
+    private val myMiseNxCb = JBCheckBox("Use in Nx commands")
+    private val myMiseAllCommandLinesCb = JBCheckBox("Use in all other command line execution")
 
     override fun getDisplayName(): String = "Mise Settings"
 
     override fun createComponent(): JComponent {
         val applicationSettings = application.service<MiseApplicationSettings>()
         val projectSettings = project.service<MiseProjectSettings>()
+        val executableManager = project.service<MiseExecutableManager>()
 
-        myMiseExecutableTf.setTextAndAddToHistory(applicationSettings.state.executablePath)
+        // Determine which setting to load: project or app
+        val projectPath = projectSettings.state.executablePath
+        val appPath = applicationSettings.state.executablePath
+
+        // Load current configuration
+        if (projectPath.isNotBlank()) {
+            // Project-level setting exists
+            myMiseExecutableTf.text = projectPath
+            myProjectOnlyCb.isSelected = true
+        } else if (appPath.isNotBlank()) {
+            // App-level setting exists
+            myMiseExecutableTf.text = appPath
+            myProjectOnlyCb.isSelected = false
+        } else {
+            // No setting - show empty
+            myMiseExecutableTf.text = ""
+            myProjectOnlyCb.isSelected = false
+        }
+
         myMiseDirEnvCb.isSelected = projectSettings.state.useMiseDirEnv
         myMiseConfigEnvironmentTf.text = projectSettings.state.miseConfigEnvironment
+        myMiseRunConfigsCb.isSelected = projectSettings.state.useMiseInRunConfigurations
         myMiseVcsCb.isSelected = projectSettings.state.useMiseVcsIntegration
+        myMiseDatabaseCb.isSelected = projectSettings.state.useMiseInDatabaseAuthentication
+        myMiseNxCb.isSelected = projectSettings.state.useMiseInNxCommands
+        myMiseAllCommandLinesCb.isSelected = projectSettings.state.useMiseInAllCommandLines
+
+        // Set placeholder text for auto-detected path
+        val autoDetectedInfo = executableManager.getAutoDetectedExecutableInfo()
+        val autoDetectedPath = autoDetectedInfo.path
+        val autoDetectedVersion = autoDetectedInfo.version?.toString()
+        val autoDetectedLabel = if (autoDetectedVersion != null) {
+            "Auto-detected: $autoDetectedPath (version: $autoDetectedVersion)"
+        } else {
+            "Auto-detected: $autoDetectedPath"
+        }
+        (myMiseExecutableTf.textField as ExtendableTextField).emptyText.text = autoDetectedLabel
+
+        // Configure file chooser to open at current or auto-detected location
+        val fileChooserDescriptor = FileChooserDescriptor(true, false, false, false, false, false)
+            .withTitle("Select Mise Executable")
+
+        // Set up custom browse listener that opens at the appropriate location
+        val browseListener = object : TextBrowseFolderListener(fileChooserDescriptor, project) {
+            override fun getInitialFile(): VirtualFile? {
+                // If field has value, use it; otherwise use auto-detected
+                val currentPath = myMiseExecutableTf.text.takeIf { it.isNotBlank() } ?: autoDetectedPath
+                return if (currentPath.isNotBlank()) {
+                    val file = LocalFileSystem.getInstance().findFileByPath(currentPath)
+                    file?.parent
+                } else {
+                    null
+                }
+            }
+        }
+        myMiseExecutableTf.addBrowseFolderListener(browseListener)
 
         return panel {
-            group("Application Settings", indent = false) {
-                row("Mise Executable:") {
+            group("Mise Executable", indent = false) {
+                row("Path to Mise executable:") {
                     cell(myMiseExecutableTf)
                         .align(AlignX.FILL)
                         .resizableColumn()
                         .comment(
                             """
-                            Specify the path to the mise executable.</br>
-                            Not installed? Visit the <a href='https://mise.jdx.dev/installing-mise.html'>mise installation</a></br>
-                            For WSL: <code>wsl.exe -d DistroName mise</code> or <code>\\wsl.localhost\DistroName\usr\bin\mise</code></br>
-                            """.trimIndent(),
+                            Leave empty to auto-detect from PATH or common locations (recommended).</br>
+                            For WSL: <code>\\wsl.localhost\DistroName\path\to\mise</code></br>
+                            Not installed? Visit the <a href='https://mise.jdx.dev/installing-mise.html'>mise installation</a>
+                            """.trimIndent()
                         )
                 }
-
-                // Show WSL status if detected
-                if (applicationSettings.state.isWslMode) {
-                    row("WSL Mode:") {
-                        label("Enabled (${applicationSettings.state.wslDistribution ?: "default"})")
-                            .comment("Unix paths will be converted to UNC paths automatically.")
-                    }
+                row {
+                    cell(myProjectOnlyCb)
+                        .comment("When checked, the path is saved for this project only. Otherwise, it applies to all projects.")
                 }
             }
 
@@ -70,7 +135,7 @@ class MiseConfigurable(
                             cell(myMiseDirEnvCb)
                                 .resizableColumn()
                                 .align(AlignX.FILL)
-                                .comment("Load environment variables from mise configuration file(s)")
+                                .comment("Master toggle for all mise environment variable injection")
                         }
                         indent {
                             row("Config Environment:") {
@@ -83,10 +148,38 @@ class MiseConfigurable(
                                         """.trimIndent(),
                                     )
                             }.enabledIf(myMiseDirEnvCb.selected)
+
+                            row {
+                                cell(myMiseRunConfigsCb)
+                                    .resizableColumn()
+                                    .comment("Apply to run/debug configurations (can be overridden per configuration)")
+                            }.enabledIf(myMiseDirEnvCb.selected)
+
                             row {
                                 cell(myMiseVcsCb)
                                     .resizableColumn()
                                     .comment("Enable mise environment variables and tools for VCS operations")
+                            }.enabledIf(myMiseDirEnvCb.selected)
+
+                            row {
+                                cell(myMiseDatabaseCb)
+                                    .resizableColumn()
+                                    .comment("Use mise environment variables for database authentication")
+                            }.enabledIf(myMiseDirEnvCb.selected)
+
+                            // Conditional: Only show if Nx plugin is installed
+                            if (PluginManager.getLoadedPlugins().any { it.pluginId.idString == "dev.nx.console" }) {
+                                row {
+                                    cell(myMiseNxCb)
+                                        .resizableColumn()
+                                        .comment("Inject environment variables when running Nx commands")
+                                }.enabledIf(myMiseDirEnvCb.selected)
+                            }
+
+                            row {
+                                cell(myMiseAllCommandLinesCb)
+                                    .resizableColumn()
+                                    .comment("Inject into all other command line execution (terminal, external tools, etc.)")
                             }.enabledIf(myMiseDirEnvCb.selected)
                         }
                     }
@@ -98,10 +191,28 @@ class MiseConfigurable(
     override fun isModified(): Boolean {
         val applicationSettings = application.service<MiseApplicationSettings>()
         val projectSettings = project.service<MiseProjectSettings>()
-        return myMiseExecutableTf.text != applicationSettings.state.executablePath ||
+
+        // Check if path changed
+        val currentPath = myMiseExecutableTf.text.trim()
+        val projectPath = projectSettings.state.executablePath
+        val appPath = applicationSettings.state.executablePath
+
+        val pathChanged = if (myProjectOnlyCb.isSelected) {
+            // Should be in project settings
+            currentPath != projectPath || appPath.isNotBlank()
+        } else {
+            // Should be in app settings
+            currentPath != appPath || projectPath.isNotBlank()
+        }
+
+        return pathChanged ||
             myMiseDirEnvCb.isSelected != projectSettings.state.useMiseDirEnv ||
             myMiseConfigEnvironmentTf.text != projectSettings.state.miseConfigEnvironment ||
-            myMiseVcsCb.isSelected != projectSettings.state.useMiseVcsIntegration
+            myMiseRunConfigsCb.isSelected != projectSettings.state.useMiseInRunConfigurations ||
+            myMiseVcsCb.isSelected != projectSettings.state.useMiseVcsIntegration ||
+            myMiseDatabaseCb.isSelected != projectSettings.state.useMiseInDatabaseAuthentication ||
+            myMiseNxCb.isSelected != projectSettings.state.useMiseInNxCommands ||
+            myMiseAllCommandLinesCb.isSelected != projectSettings.state.useMiseInAllCommandLines
     }
 
     override fun apply() {
@@ -109,16 +220,33 @@ class MiseConfigurable(
             val applicationSettings = application.service<MiseApplicationSettings>()
             val projectSettings = project.service<MiseProjectSettings>()
 
-            // Update executable path and recalculate WSL settings if path changed
-            val pathChanged = myMiseExecutableTf.text != applicationSettings.state.executablePath
-            applicationSettings.state.executablePath = myMiseExecutableTf.text
-            if (pathChanged) {
-                applicationSettings.loadState(applicationSettings.state)
+            val pathValue = myMiseExecutableTf.text.trim()
+
+            if (myProjectOnlyCb.isSelected) {
+                // Save to project settings only
+                projectSettings.state.executablePath = pathValue
+                // Clear app setting if it was there
+                applicationSettings.state.executablePath = ""
+            } else {
+                // Save to app settings
+                applicationSettings.state.executablePath = pathValue
+                // Clear project setting
+                projectSettings.state.executablePath = ""
             }
 
             projectSettings.state.useMiseDirEnv = myMiseDirEnvCb.isSelected
             projectSettings.state.miseConfigEnvironment = myMiseConfigEnvironmentTf.text
+            projectSettings.state.useMiseInRunConfigurations = myMiseRunConfigsCb.isSelected
             projectSettings.state.useMiseVcsIntegration = myMiseVcsCb.isSelected
+            projectSettings.state.useMiseInDatabaseAuthentication = myMiseDatabaseCb.isSelected
+            projectSettings.state.useMiseInNxCommands = myMiseNxCb.isSelected
+            projectSettings.state.useMiseInAllCommandLines = myMiseAllCommandLinesCb.isSelected
+
+            // Notify listeners that settings have changed
+            MiseProjectEventListener.broadcast(
+                project,
+                MiseProjectEvent(MiseProjectEvent.Kind.SETTINGS_CHANGED, "settings applied")
+            )
         }
     }
 

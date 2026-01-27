@@ -1,20 +1,19 @@
 package com.github.l34130.mise.core.toolwindow
 
+import com.github.l34130.mise.core.MiseTaskResolver
+import com.github.l34130.mise.core.cache.MiseCacheService
+import com.github.l34130.mise.core.cache.MiseProjectEvent
+import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.setting.MiseConfigurable
 import com.intellij.icons.AllIcons
-import com.intellij.ide.ActivityTracker
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.ide.util.treeView.NodeRenderer
 import com.intellij.ide.util.treeView.TreeState
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.ActionPlaces
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.DataProvider
-import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.components.service
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -26,6 +25,7 @@ import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.concurrency.Invoker
+import com.intellij.util.application
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.tree.TreeUtil
 import java.awt.Component
@@ -34,10 +34,9 @@ import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 
 class MiseTreeToolWindow(
-    project: Project,
+    private val project: Project,
     treeStructure: MiseTreeStructure,
 ) : SimpleToolWindowPanel(true, true),
-    DataProvider,
     Disposable {
     private val treeModel =
         StructureTreeModel(treeStructure, null, Invoker.forBackgroundPoolWithoutReadAction(this), this)
@@ -49,9 +48,7 @@ class MiseTreeToolWindow(
         actionGroup.add(
             object : AnAction("Refresh", "Refresh the Tree", AllIcons.Actions.Refresh) {
                 override fun actionPerformed(e: AnActionEvent) {
-                    runInEdt {
-                        redrawContent()
-                    }
+                    invalidateCachesAndRefresh()
                 }
             },
         )
@@ -113,40 +110,43 @@ class MiseTreeToolWindow(
 
         myTree.addMouseListener(
             (
-                object : PopupHandler() {
-                    override fun invokePopup(
-                        comp: Component?,
-                        x: Int,
-                        y: Int,
-                    ) {
-                        val node = getSelectedNodesSameType<AbstractTreeNode<*>>()?.get(0) ?: return
-                        val actionManager = ActionManager.getInstance()
-                        val totalActions = mutableListOf<AnAction>()
-                        val actionPlace = ActionPlaces.TOOLWINDOW_CONTENT
-                        if (node is ActionOnRightClick) {
-                            val actions = node.actions()
-                            totalActions.addAll(actions)
-                        }
+                    object : PopupHandler() {
+                        override fun invokePopup(
+                            comp: Component?,
+                            x: Int,
+                            y: Int,
+                        ) {
+                            val node = getSelectedNodesSameType<AbstractTreeNode<*>>()?.get(0) ?: return
+                            val actionManager = ActionManager.getInstance()
+                            val totalActions = mutableListOf<AnAction>()
+                            val actionPlace = ActionPlaces.TOOLWINDOW_CONTENT
+                            if (node is ActionOnRightClick) {
+                                val actions = node.actions()
+                                totalActions.addAll(actions)
+                            }
 
-                        val actionGroup = DefaultActionGroup(totalActions)
-                        if (actionGroup.childrenCount > 0) {
-                            val popupMenu = actionManager.createActionPopupMenu(actionPlace, actionGroup)
-                            popupMenu.setTargetComponent(this@MiseTreeToolWindow)
-                            popupMenu.component.show(comp, x, y)
+                            val actionGroup = DefaultActionGroup(totalActions)
+                            if (actionGroup.childrenCount > 0) {
+                                val popupMenu = actionManager.createActionPopupMenu(actionPlace, actionGroup)
+                                popupMenu.setTargetComponent(this@MiseTreeToolWindow)
+                                popupMenu.component.show(comp, x, y)
+                            }
                         }
                     }
-                }
-            ),
+                    ),
         )
 
-        fun redraw() {
-            // redraw toolbars
-            ActivityTracker.getInstance().inc()
-            runInEdt { redrawContent() }
+        // Subscribe to cache invalidation events for automatic refresh
+        MiseProjectEventListener.subscribe(project, this) { event ->
+            when (event.kind) {
+                MiseProjectEvent.Kind.SETTINGS_CHANGED,
+                MiseProjectEvent.Kind.EXECUTABLE_CHANGED,
+                MiseProjectEvent.Kind.TOML_CHANGED -> {
+                    scheduleRefresh()
+                }
+                else -> Unit
+            }
         }
-
-        // subscribe something and redraw
-        // ApplicationManager.getApplication().messageBus.connect(this).subscribe()
 
         redrawContent()
 
@@ -179,6 +179,27 @@ class MiseTreeToolWindow(
             ?.filterIsInstance<T>()
             ?.toList()
             .orEmpty()
+
+    /**
+     * Invalidate all caches and refresh the tree.
+     * This ensures the reload button actually fetches fresh data.
+     */
+    private fun invalidateCachesAndRefresh() {
+        // Invalidate MiseTaskResolver cache (used by tool window)
+        project.service<MiseTaskResolver>().invalidateCache()
+        project.service<MiseCacheService>().invalidateAllCommands()
+        // Redraw the tree
+        runInEdt { redrawContent() }
+    }
+
+    private fun scheduleRefresh() {
+        if (project.isDisposed) return
+        application.invokeLater {
+            if (!project.isDisposed) {
+                redrawContent()
+            }
+        }
+    }
 
     fun redrawContent() {
         setContent(
