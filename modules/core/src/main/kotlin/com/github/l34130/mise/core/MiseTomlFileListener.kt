@@ -1,5 +1,7 @@
 package com.github.l34130.mise.core
 
+import com.github.l34130.mise.core.cache.MiseProjectEvent
+import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.model.MiseTomlFile
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
@@ -8,13 +10,13 @@ import com.intellij.openapi.util.ZipperUpdater
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileContentsChangedAdapter
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.VirtualFilePropertyEvent
 import com.intellij.openapi.vfs.impl.BulkVirtualFileListenerAdapter
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeAnyChangeAbstractAdapter
 import com.intellij.util.Alarm
 import com.intellij.util.messages.MessageBusConnection
-import com.intellij.util.messages.Topic
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -24,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 @Service(Service.Level.PROJECT)
 class MiseTomlFileListener(
-    private val project: Project,
+    project: Project,
 ) : Disposable {
     init {
         // Register the VFS listener once for the entire project
@@ -37,16 +39,6 @@ class MiseTomlFileListener(
         // disposed when this service is disposed, cleaning up all subscriptions
     }
 
-    companion object {
-        /**
-         * Topic for broadcasting MISE TOML file changes.
-         * Services can subscribe to this topic to be notified of changes.
-         * The topic uses Function0 (a function with no parameters) to maintain
-         * consistency with the existing codebase.
-         */
-        val MISE_TOML_CHANGED = Topic.create("MISE_TOML_CHANGED", Function0::class.java)
-    }
-
     private class FileListener(
         updater: MiseLocalIndexUpdater,
     ) : BulkVirtualFileListenerAdapter(
@@ -57,6 +49,16 @@ class MiseTomlFileListener(
 
             override fun onBeforeFileChange(fileOrDirectory: VirtualFile) {
                 updater.onFileChange(fileOrDirectory)
+            }
+
+            // Called BEFORE property change - file still has OLD value
+            override fun beforePropertyChange(event: VirtualFilePropertyEvent) {
+                updater.onFileChange(event.file)
+            }
+
+            // Called AFTER property change - file now has NEW value
+            override fun propertyChanged(event: VirtualFilePropertyEvent) {
+                updater.onFileChange(event.file)
             }
         }
     ) {
@@ -87,7 +89,10 @@ class MiseTomlFileListener(
                 Runnable {
                     if (project.isDisposed) return@Runnable
                     val scope = HashSet(dirtyTomlFiles)
-                    project.messageBus.syncPublisher(MiseTomlFileListener.MISE_TOML_CHANGED).invoke()
+                    MiseProjectEventListener.broadcast(
+                        project,
+                        MiseProjectEvent(MiseProjectEvent.Kind.TOML_CHANGED, "mise toml changed")
+                    )
                     dirtyTomlFiles.removeAll(scope)
                 }
 
