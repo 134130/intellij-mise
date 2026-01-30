@@ -45,6 +45,7 @@
   - Node.js
   - npm
   - Deno
+  - Vitest
 - **C / C++** (only support for application level settings)
   - C/C++ File
   - CMake Application
