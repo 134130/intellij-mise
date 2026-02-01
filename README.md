@@ -45,6 +45,7 @@
   - Node.js
   - npm
   - Deno
+  - JavaScript test runners (Jest, Vitest, Mocha, Karma)
 - **C / C++** (only support for application level settings)
   - C/C++ File
   - CMake Application
