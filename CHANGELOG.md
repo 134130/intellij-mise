@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [5.15.0] - 2026-02-01
+
+### Refactored
+
+- Refactor WSL path resolving logic for multi-WSL distributions
+- Add cache for Mise CLI executions with watching file system changes
+- Added an option to control plugin injection functionality
+
 ## [5.14.0] - 2026-01-24
 
 ### Refactored
@@ -502,7 +510,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.14.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.15.0...HEAD
+[5.15.0]: https://github.com/134130/intellij-mise/compare/v5.14.0...v5.15.0
 [5.14.0]: https://github.com/134130/intellij-mise/compare/v5.13.0...v5.14.0
 [5.13.0]: https://github.com/134130/intellij-mise/compare/v5.12.0...v5.13.0
 [5.12.0]: https://github.com/134130/intellij-mise/compare/v5.11.0...v5.12.0
