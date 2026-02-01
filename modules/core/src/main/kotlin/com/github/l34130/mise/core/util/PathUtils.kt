@@ -11,7 +11,6 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.PathUtil
 import com.intellij.util.application
-import java.io.File
 
 fun Project.baseDirectory(): String {
     if (application.isUnitTestMode) {
@@ -40,4 +39,9 @@ fun getRelativePath(
 fun getRelativePath(
     basePath: String,
     filePath: String,
-): String? = FileUtil.getRelativePath(basePath, filePath, File.separatorChar)
+): String? {
+    val systemIndependentBasePath = FileUtil.toSystemIndependentName(basePath)
+    val systemIndependentFilePath = FileUtil.toSystemIndependentName(filePath)
+    val relativePath = FileUtil.getRelativePath(systemIndependentBasePath, systemIndependentFilePath, '/')
+    return relativePath?.let(FileUtil::toSystemDependentName)
+}

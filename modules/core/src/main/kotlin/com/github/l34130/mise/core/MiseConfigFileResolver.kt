@@ -1,5 +1,7 @@
 package com.github.l34130.mise.core
 
+import com.github.l34130.mise.core.cache.MiseProjectEvent
+import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.Service
@@ -9,6 +11,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findFileOrDirectory
 import com.intellij.openapi.vfs.isFile
 import com.intellij.util.containers.addIfNotNull
+import com.intellij.util.application
 import fleet.multiplatform.shims.ConcurrentHashMap
 
 @Service(Service.Level.PROJECT)
@@ -22,8 +25,10 @@ class MiseConfigFileResolver(
         project.service<MiseTomlFileListener>()
         
         // Subscribe to cache invalidation events
-        project.messageBus.connect(this).subscribe(MiseTomlFileListener.MISE_TOML_CHANGED) {
-            cache.clear()
+        MiseProjectEventListener.subscribe(project, this) { event ->
+            if (event.kind == MiseProjectEvent.Kind.TOML_CHANGED) {
+                cache.clear()
+            }
         }
     }
 
@@ -33,7 +38,9 @@ class MiseConfigFileResolver(
         configEnvironment: String? = null,
     ): List<VirtualFile> {
         val cacheKey = "${baseDirVf.path}:${configEnvironment.orEmpty()}"
-        if (!refresh) cache[cacheKey]?.let { return it }
+        if (!refresh && !application.isUnitTestMode) {
+            cache[cacheKey]?.let { return it }
+        }
 
         // Parse environments outside readAction for efficiency
         val environments = if (!configEnvironment.isNullOrBlank()) {
@@ -69,7 +76,9 @@ class MiseConfigFileResolver(
                 }
             }
 
-        cache[cacheKey] = result
+        if (!application.isUnitTestMode) {
+            cache[cacheKey] = result
+        }
         return result
     }
 

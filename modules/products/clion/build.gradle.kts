@@ -14,7 +14,10 @@ dependencies {
 
     // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     intellijPlatform {
-        create(IntelliJPlatformType.CLion, properties("platformVersion"), false)
+        create(
+            IntelliJPlatformType.CLion,
+            properties("platformVersion")
+        ) { useInstaller = false }
 
         bundledPlugins("com.intellij.clion", "com.intellij.cidr.base", "com.intellij.nativeDebug")
 

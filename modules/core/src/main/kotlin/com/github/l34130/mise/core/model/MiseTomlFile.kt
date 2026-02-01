@@ -2,7 +2,7 @@ package com.github.l34130.mise.core.model
 
 import com.github.l34130.mise.core.lang.psi.getValueWithKey
 import com.github.l34130.mise.core.lang.psi.stringValue
-import com.github.l34130.mise.core.util.baseDirectory
+import com.github.l34130.mise.core.util.guessMiseProjectDir
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.util.childrenOfType
@@ -82,7 +82,7 @@ class MiseTomlFile {
             if (this == null) {
                 false
             } else {
-                this.presentableUrl == project.baseDirectory()
+                this == project.guessMiseProjectDir()
             }
     }
 }

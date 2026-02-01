@@ -1,10 +1,8 @@
 package com.github.l34130.mise.core.util
 
-import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.wm.ToolWindowManager
 import org.jetbrains.plugins.terminal.ShellTerminalWidget
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
@@ -18,7 +16,7 @@ object TerminalUtils {
     ) {
         val shellWidget =
             project.service<TerminalToolWindowManager>().createShellWidget(
-                project.guessProjectDir()?.path ?: ProjectUtil.getBaseDir(),
+                project.guessMiseProjectPath(),
                 tabName ?: "Mise",
                 true,
                 true,

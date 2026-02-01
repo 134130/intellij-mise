@@ -6,6 +6,8 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>org.toml.lang</depends>
+    <depends>Git4Idea</depends>
+
 
     <!-- Language Support -->
     <extensions defaultExtensionNs="com.intellij">
@@ -33,6 +35,7 @@
         <runLineMarkerContributor language="TOML" implementationClass="com.github.l34130.mise.core.execution.MiseTomlTaskRunLineMarkerContributor"/>
         <runConfigurationProducer implementation="com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationProducer"/>
         <vcs.envCustomizer implementation="com.github.l34130.mise.core.vcs.MiseVcsEnvCustomizer"/>
+        <commandLineEnvCustomizer implementation="com.github.l34130.mise.core.command.MiseCommandLineEnvCustomizer"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -74,7 +77,8 @@
     <depends optional="true" config-file="mise-goland.xml">org.jetbrains.plugins.go</depends>
     <depends optional="true" config-file="mise-gradle.xml">com.intellij.gradle</depends>
     <depends optional="true" config-file="mise-idea.xml">com.intellij.java</depends>
-    <depends optional="true" config-file="mise-javascript.xml">JavaScript</depends>
+    <depends optional="true" config-file="mise-nodejs.xml">NodeJS</depends>
+    <depends optional="true" config-file="mise-deno.xml">deno</depends>
     <depends optional="true" config-file="mise-nx.xml">dev.nx.console</depends>
     <depends optional="true" config-file="mise-pycharm.xml">com.intellij.modules.python</depends>
     <depends optional="true" config-file="mise-rider.xml">com.intellij.modules.rider</depends>

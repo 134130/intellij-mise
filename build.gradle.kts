@@ -28,6 +28,9 @@ kotlin {
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     testImplementation(libs.junit)
+    implementation(libs.jackson.module.kotlin)
+
+
 
     intellijPlatform {
         create(
@@ -185,16 +188,45 @@ val IntelliJPlatformPluginsExtension.pluginRepository by lazy {
     PluginRepositoryFactory.create("https://plugins.jetbrains.com")
 }
 
-runIdePlatformTypes.forEach { platformType ->
-    intellijPlatformTesting.runIde.register("run${platformType.name}") {
-        type = platformType
-        version = "2025.1"
-        useInstaller = false
+fun IntelliJPlatformPluginsExtension.configureIdeaRunIdePlugins() {
+    compatiblePlugin("org.toml.lang")
+    compatiblePlugin("org.jetbrains.plugins.go")   // Go support (mise-goland.xml)
+    compatiblePlugin("NodeJS")                      // NodeJS support (mise-nodejs.xml)
+    compatiblePlugin("JavaScript")                  // JavaScript ecosystem
+    compatiblePlugin("PythonCore")                  // Python support (mise-pycharm.xml)
+    compatiblePlugin("org.jetbrains.plugins.ruby")  // Ruby support (mise-ruby.xml)
+    bundledPlugin("com.intellij.database")       // Database support (mise-database.xml)
+    compatiblePlugin("com.intellij.gradle")         // Gradle support (mise-gradle.xml)
+    compatiblePlugin("com.jetbrains.sh")            // Shell script support (mise-sh.xml)
+    // Causes constant errors in WSL projects.
+    //compatiblePlugin("dev.nx.console")              // NX Console support (mise-nx.xml)
+}
 
-        plugins {
-            compatiblePlugin("org.toml.lang")
-            compatiblePlugin("org.jetbrains.plugins.go")
-//            compatiblePlugin("dev.nx.console")
-        }
+intellijPlatformTesting.runIde.register("runPyCharmCommunity") {
+    type = IntelliJPlatformType.PyCharmCommunity
+    version = "2025.1"
+    useInstaller = false
+    plugins {
+        compatiblePlugin("org.toml.lang")
+    }
+}
+
+intellijPlatformTesting.runIde.register("runIntellijIdeaUltimate") {
+    type = IntelliJPlatformType.IntellijIdeaUltimate
+    version = "2025.1"
+    useInstaller = false
+
+    plugins {
+        configureIdeaRunIdePlugins()
+    }
+}
+
+intellijPlatformTesting.runIde.register("runIntellijIdeaUltimate2025_3") {
+    type = IntelliJPlatformType.IntellijIdeaUltimate
+    version = "2025.3"
+    useInstaller = false
+
+    plugins {
+        configureIdeaRunIdePlugins()
     }
 }

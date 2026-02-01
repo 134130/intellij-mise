@@ -5,11 +5,11 @@ import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.Sdk
@@ -67,7 +67,7 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
         val useUv =
             // Check if the 'settings.python.uv_venv_auto' is set to true
             MiseCommandLineHelper
-                .getConfig(project.basePath, configEnvironment, "settings.python.uv_venv_auto")
+                .getConfig(project, project.guessMiseProjectPath(), configEnvironment, "settings.python.uv_venv_auto")
                 .getOrNull()
                 ?.trim()
                 ?.toBoolean() ?: false
@@ -78,7 +78,7 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
     }
 
     private fun MiseDevTool.asUvSdk(project: Project): Sdk {
-        val exists = PythonSdkUtil.getAllSdks().firstOrNull { it.name == this.uvSdkName() }
+        val exists = PythonSdkUtil.getAllSdks().firstOrNull { it.name == uvSdkName() }
         if (exists != null) {
             return exists
         }
@@ -88,7 +88,7 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
         // Get Python path from 'which python' command (returns Unix path in WSL)
         val pythonUnixPath =
             MiseCommandLineHelper
-                .executeCommand(project.basePath, configEnvironment, listOf("which", "python"))
+                .executeCommand(project, project.guessMiseProjectPath(), configEnvironment, listOf("which", "python"))
                 .getOrElse { throw IllegalStateException("Failed to find Python executable: ${it.message}") }
                 .trim()
 
@@ -98,13 +98,13 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
         // Get Python version
         val pythonVersion =
             MiseCommandLineHelper
-                .executeCommand(project.basePath, configEnvironment, listOf("python", "--version"))
+                .executeCommand(project, project.guessMiseProjectPath(), configEnvironment, listOf("python", "--version"))
                 .getOrElse { throw IllegalStateException("Failed to get Python version: ${it.message}") }
                 .replace("Python ", "")
                 .trim()
 
         return ProjectJdkImpl(
-            this.uvSdkName(),
+            uvSdkName(),
             PythonSdkType.getInstance(),
             pythonPath,
             pythonVersion,
@@ -112,8 +112,4 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
     }
 
     private fun MiseDevTool.uvSdkName() = "uv (python)"
-
-    companion object {
-        private val logger = logger<MisePythonSdkSetup>()
-    }
 }

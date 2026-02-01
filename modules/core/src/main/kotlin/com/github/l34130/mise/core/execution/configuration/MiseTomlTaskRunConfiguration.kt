@@ -1,20 +1,15 @@
 package com.github.l34130.mise.core.execution.configuration
 
-import com.github.l34130.mise.core.setting.MiseApplicationSettings
+import com.github.l34130.mise.core.command.MiseExecutableManager
 import com.github.l34130.mise.core.setting.MiseProjectSettings
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.execution.Executor
 import com.intellij.execution.configuration.EnvironmentVariablesData
-import com.intellij.execution.configurations.CommandLineState
-import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.execution.configurations.LocatableConfigurationBase
-import com.intellij.execution.configurations.PtyCommandLine
-import com.intellij.execution.configurations.RunConfiguration
-import com.intellij.execution.configurations.RunProfileState
+import com.intellij.execution.configurations.*
 import com.intellij.execution.process.ColoredProcessHandler
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessTerminatedListener
 import com.intellij.execution.runners.ExecutionEnvironment
-import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.components.PathMacroManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.SettingsEditor
@@ -23,8 +18,6 @@ import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.encoding.EncodingManager
 import com.intellij.util.EnvironmentUtil
-import com.intellij.util.PathUtil
-import com.intellij.util.application
 import com.intellij.util.execution.ParametersListUtil
 import org.jdom.Element
 import java.io.File
@@ -34,12 +27,11 @@ class MiseTomlTaskRunConfiguration(
     factory: MiseTomlTaskRunConfigurationFactory,
     name: String,
 ) : LocatableConfigurationBase<RunProfileState>(project, factory, name) {
-    private val applicationSettings = application.service<MiseApplicationSettings>().state
     private val projectSettings = project.service<MiseProjectSettings>().state
 
     var miseConfigEnvironment: String = projectSettings.miseConfigEnvironment
     var miseTaskName: String = ""
-    var workingDirectory: String = project.basePath ?: ProjectUtil.getBaseDir()
+    var workingDirectory: String = project.guessMiseProjectPath()
     var envVars: EnvironmentVariablesData = EnvironmentVariablesData.DEFAULT
     var taskParams: String = ""
 
@@ -49,7 +41,7 @@ class MiseTomlTaskRunConfiguration(
     ): RunProfileState {
         return object : CommandLineState(executionEnvironment) {
             override fun startProcess(): ProcessHandler {
-                val projectBasePath = project.basePath ?: ProjectUtil.getBaseDir()
+                val projectBasePath = project.guessMiseProjectPath()
 
                 val macroManager = PathMacroManager.getInstance(project)
                 val expandedWorkingDirectory = macroManager.expandPath(workingDirectory)
@@ -78,10 +70,11 @@ class MiseTomlTaskRunConfiguration(
                 commandLine.withEnvironment(EnvironmentUtil.getEnvironmentMap() + envVars.envs)
                 commandLine.withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
                 commandLine.withWorkDirectory(projectBasePath)
+                commandLine.withParameters(params)
 
-                val miseExecutablePath = applicationSettings.executablePath
-                commandLine.withExePath(miseExecutablePath.substringBefore(" "))
-                commandLine.withParameters(miseExecutablePath.split(' ').drop(1) + params)
+                val executableManager = project.service<MiseExecutableManager>()
+                val miseExecutablePath = executableManager.getExecutablePath()
+                commandLine.withExePath(miseExecutablePath)
 
                 return ColoredProcessHandler(commandLine).apply {
                     setShouldKillProcessSoftly(true)

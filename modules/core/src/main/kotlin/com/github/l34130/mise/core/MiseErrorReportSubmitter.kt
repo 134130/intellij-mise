@@ -2,6 +2,7 @@ package com.github.l34130.mise.core
 
 import com.github.l34130.mise.core.command.MiseCommandLine
 import com.github.l34130.mise.core.notification.MiseNotificationService
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationNamesInfo
@@ -56,7 +57,14 @@ class MiseErrorReportSubmitter : ErrorReportSubmitter() {
                             appendLine("### Environment")
                             appendLine("- IDE: ${applicationNamesInfo.productName} ${appInfo.fullVersion}")
                             appendLine("- Plugin: ${pluginDescriptor.name} ${pluginDescriptor.version}")
-                            appendLine("- Mise: mise@${MiseCommandLine.getMiseVersion()}")
+                            val miseVersion = try {
+                                val cmdLine = MiseCommandLine(project, project.guessMiseProjectPath(), null)
+                                val result = cmdLine.runRawCommandLine(listOf("version"))
+                                result.getOrNull()?.trim() ?: "unknown"
+                            } catch (e: Exception) {
+                                "error: ${e.message}"
+                            }
+                            appendLine("- Mise: $miseVersion")
                             appendLine("- OS: ${System.getProperty("os.name")} ${System.getProperty("os.version")}")
 
                             appendLine()

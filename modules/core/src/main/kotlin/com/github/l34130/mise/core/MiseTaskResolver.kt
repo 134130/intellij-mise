@@ -1,5 +1,7 @@
 package com.github.l34130.mise.core
 
+import com.github.l34130.mise.core.cache.MiseProjectEvent
+import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.model.MiseShellScriptTask
 import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.model.MiseTomlFile
@@ -20,6 +22,7 @@ import com.intellij.openapi.vfs.isFile
 import com.intellij.openapi.vfs.resolveFromRootOrRelative
 import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.util.childrenOfType
+import com.intellij.util.application
 import fleet.multiplatform.shims.ConcurrentHashMap
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlTable
@@ -34,12 +37,24 @@ class MiseTaskResolver(
     init {
         // Ensure the VFS listener service is initialized
         project.service<MiseTomlFileListener>()
-        
+
         // Subscribe to cache invalidation events
-        project.messageBus.connect(this).subscribe(MiseTomlFileListener.MISE_TOML_CHANGED) {
-            cache.clear()
+        MiseProjectEventListener.subscribe(project, this) { event ->
+            if (event.kind == MiseProjectEvent.Kind.TOML_CHANGED ||
+                event.kind == MiseProjectEvent.Kind.TOML_PSI_CHANGED) {
+                invalidateCache()
+            }
         }
     }
+
+    /**
+     * Invalidate the internal task cache.
+     * Should be called when mise configuration files change.
+     */
+    fun invalidateCache() {
+        cache.clear()
+    }
+
 
     suspend fun getMiseTasks(
         refresh: Boolean = false,
@@ -47,13 +62,20 @@ class MiseTaskResolver(
     ): List<MiseTask> {
         val baseDirVf: VirtualFile =
             readAction {
-                VirtualFileManager.getInstance().findFileByUrl("file://${project.baseDirectory()}")
+                if (application.isUnitTestMode) {
+                    VirtualFileManager.getInstance().findFileByUrl("temp:///src")
+                        ?: VirtualFileManager.getInstance().findFileByUrl("file://${project.baseDirectory()}")
+                } else {
+                    VirtualFileManager.getInstance().findFileByUrl("file://${project.baseDirectory()}")
+                }
             } ?: return emptyList()
 
         val configEnvironment = configEnvironment ?: project.service<MiseProjectSettings>().state.miseConfigEnvironment
 
         val cacheKey = configEnvironment
-        if (!refresh) cache[cacheKey]?.let { return it }
+        if (!refresh && !application.isUnitTestMode) {
+            cache[cacheKey]?.let { return it }
+        }
 
         val result = mutableListOf<MiseTask>()
         val configVfs = project.service<MiseConfigFileResolver>().resolveConfigFiles(baseDirVf, refresh, configEnvironment)
@@ -103,7 +125,9 @@ class MiseTaskResolver(
             }
         }
 
-        cache[cacheKey] = result
+        if (!application.isUnitTestMode) {
+            cache[cacheKey] = result
+        }
         return result
     }
 

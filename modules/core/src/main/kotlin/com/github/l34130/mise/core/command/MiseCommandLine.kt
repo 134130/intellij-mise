@@ -1,42 +1,44 @@
 package com.github.l34130.mise.core.command
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.l34130.mise.core.setting.MiseApplicationSettings
-import com.github.l34130.mise.core.wsl.WslCommandHelper
-import com.github.l34130.mise.core.wsl.WslPathUtils
+import com.github.l34130.mise.core.command.MiseCommandLineHelper.environmentSkipCustomization
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.process.ProcessOutput
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.util.SystemInfo
-import com.intellij.util.application
+import com.intellij.openapi.project.Project
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
+import com.intellij.util.execution.ParametersListUtil
+
+internal fun interface MiseCommandLineExecutor {
+    @Throws(ExecutionException::class)
+    fun execute(generalCommandLine: GeneralCommandLine, timeout: Int): ProcessOutput
+}
 
 internal class MiseCommandLine(
-    private val workDir: String? = null,
+    private val project: Project,
+    workDir: String? = null,
     private val configEnvironment: String? = null,
 ) {
-    @RequiresBackgroundThread
-    inline fun <reified T> runCommandLine(params: List<String>): Result<T> {
-        val typeReference = object : TypeReference<T>() {}
-        return runCommandLine(params, typeReference)
-    }
+    private val workDir: String = workDir?.takeIf { it.isNotBlank() } ?: project.guessMiseProjectPath()
 
-    suspend inline fun <reified T> runCommandLineAsync(params: List<String>): Result<T> {
+    @RequiresBackgroundThread
+    inline fun <reified T> runCommandLine(
+        params: List<String>,
+        noinline parser: ((String) -> T)? = null,
+    ): Result<T> {
         val typeReference = object : TypeReference<T>() {}
-        return runCommandLineAsync(params, typeReference)
+        return runCommandLine(params, typeReference, parser)
     }
 
     @RequiresBackgroundThread
     inline fun <reified T> runCommandLine(
         params: List<String>,
         typeReference: TypeReference<T>,
+        noinline parser: ((String) -> T)? = null,
     ): Result<T> {
         val rawResult = runRawCommandLine(params)
         return rawResult.fold(
@@ -44,40 +46,31 @@ internal class MiseCommandLine(
                 if (T::class == Unit::class) {
                     Result.success(Unit as T)
                 } else {
-                    Result.success(MiseCommandLineOutputParser.parse(output, typeReference))
+                    val parsed = parser?.invoke(output)
+                        ?: MiseCommandLineOutputParser.parse(output, typeReference)
+                    Result.success(parsed)
                 }
             },
             onFailure = { Result.failure(it) },
         )
     }
 
-    suspend inline fun <reified T> runCommandLineAsync(
-        params: List<String>,
-        typeReference: TypeReference<T>,
-    ): Result<T> =
-        withContext(Dispatchers.IO) {
-            val rawResult = runRawCommandLine(params)
-            rawResult.fold(
-                onSuccess = { output ->
-                    if (T::class == Unit::class) {
-                        Result.success(Unit as T)
-                    } else {
-                        Result.success(MiseCommandLineOutputParser.parse(output, typeReference))
-                    }
-                },
-                onFailure = { Result.failure(it) },
-            )
-        }
-
     @RequiresBackgroundThread
     fun runRawCommandLine(params: List<String>): Result<String> {
-        val miseVersion = getMiseVersion()
+        logger.debug("==> [COMMAND] Starting command execution (workDir: $workDir, params: $params)")
 
-        val settings = application.service<MiseApplicationSettings>()
-        val executablePath = settings.state.executablePath
-        val commandLineArgs = executablePath.split(' ').toMutableList()
+        // Determine the executable path with project override support
+        val executablePath = determineExecutablePath()
 
+        // Build command line arguments
+        val commandLineArgs = mutableListOf<String>()
+
+        // Handle executable path that may contain spaces.
+        commandLineArgs.addAll(ParametersListUtil.parse(executablePath))
+
+        // Add mise configuration environment parameter
         if (!configEnvironment.isNullOrBlank()) {
+            val miseVersion = project.service<MiseExecutableManager>().getExecutableVersion() ?: MiseVersion(0, 0, 0)
             if (miseVersion >= MiseVersion(2024, 12, 2)) {
                 commandLineArgs.add("--env")
                 commandLineArgs.add(configEnvironment)
@@ -87,50 +80,30 @@ internal class MiseCommandLine(
             }
         }
 
+        // Add user-provided parameters
         commandLineArgs.addAll(params)
 
-        // Use IntelliJ WSL API when in WSL mode or when the executable/workDir indicate WSL
-        val isWslContext =
-            SystemInfo.isWindows &&
-                (settings.state.isWslMode ||
-                    WslPathUtils.detectWslMode(executablePath) ||
-                    (workDir != null && WslPathUtils.detectWslMode(workDir)))
-
-        if (isWslContext) {
-            val distribution =
-                WslCommandHelper.resolveDistribution(settings.state)
-                    ?: WslCommandHelper.resolveDistributionFromPath(workDir)
-
-            if (distribution != null) {
-                logger.info("WSL detected for command. distro=${distribution.msId} workDir=$workDir exePath=$executablePath params=$params")
-                val linuxExe =
-                    if (settings.state.isWslMode || WslPathUtils.detectWslMode(executablePath)) WslCommandHelper.linuxExecutableFromConfig(executablePath)
-                    else "mise"
-                val linuxWorkDir = WslCommandHelper.toLinuxWorkDir(distribution, workDir)
-
-                val linuxCommand = mutableListOf<String>()
-                linuxCommand.add(linuxExe)
-                linuxCommand.addAll(params)
-
-                return try {
-                    logger.info("WSL command: distro=${distribution.msId} workDir=$workDir linuxWorkDir=$linuxWorkDir exe=$linuxExe args=$params")
-                    val cmd = WslCommandHelper.buildWslCommandLine(distribution, linuxCommand, linuxWorkDir)
-                    runCommandLineInternal(cmd)
-                } catch (e: ExecutionException) {
-                    Result.failure(e)
-                }
-            }
-        }
-
         return runCommandLineInternal(commandLineArgs, workDir)
+    }
+
+    /**
+     * Determine which mise executable to use.
+     * Delegates to MiseExecutableManager, which is the single source of truth.
+     */
+    private fun determineExecutablePath(): String {
+        val executableManager = project.service<MiseExecutableManager>()
+        val path = executableManager.getExecutablePath()
+        logger.debug("==> [EXECUTABLE] Using path: $path (workDir: $workDir)")
+        return path
     }
 
     @RequiresBackgroundThread
     private fun runCommandLineInternal(
         commandLineArgs: List<String>,
-        workDir: String? = this.workDir,
+        workingDir: String = this.workDir,
     ): Result<String> {
-        val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workDir)
+        val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workingDir.ifBlank { null })
+        environmentSkipCustomization(generalCommandLine.environment)
         return runCommandLineInternal(generalCommandLine)
     }
 
@@ -138,79 +111,90 @@ internal class MiseCommandLine(
     private fun runCommandLineInternal(
         generalCommandLine: GeneralCommandLine,
     ): Result<String> {
-        val processOutput =
-            try {
-                logger.debug("Running command: ${generalCommandLine.commandLineString}")
-                ExecUtil.execAndGetOutput(generalCommandLine, 3000)
-            } catch (e: ExecutionException) {
-                logger.info("Failed to execute command. (command=$generalCommandLine)", e)
-                return Result.failure(
-                    MiseCommandLineNotFoundException(
-                        generalCommandLine,
-                        e.message ?: "Failed to execute command.",
-                        e,
-                    ),
-                )
-            }
-
-        if (!processOutput.isExitCodeSet) {
-            when {
-                processOutput.isTimeout -> {
-                    return Result.failure(Throwable("Command timed out. (command=$generalCommandLine)"))
-                }
-
-                processOutput.isCancelled -> {
-                    return Result.failure(Throwable("Command was cancelled. (command=$generalCommandLine)"))
-                }
-            }
-        }
-
-        if (processOutput.exitCode != 0) {
-            val stderr = processOutput.stderr
-            val parsedError = MiseCommandLineException.parseFromStderr(generalCommandLine, stderr)
-            if (parsedError == null) {
-                logger.info("Failed to parse error from stderr. (stderr=$stderr)")
-                return Result.failure(Throwable(stderr))
-            } else {
-                logger.debug("Parsed error from stderr. (error=$parsedError)")
-                return Result.failure(parsedError)
-            }
-        }
-
-        logger.debug("Command executed successfully. (command=$generalCommandLine)")
-        return Result.success(processOutput.stdout)
+        return executeCommandLine(generalCommandLine, allowedToFail = false, timeout = 3000)
+            .map { it.stdout }
     }
 
     companion object {
-        private val commandCache =
-            Caffeine
-                .newBuilder()
-                .expireAfterWrite(5.seconds.toJavaDuration())
-                .build<String, Any>()
-
-        @RequiresBackgroundThread
-        fun getMiseVersion(): MiseVersion {
-            val cached: MiseVersion? = commandCache.getIfPresent("version") as? MiseVersion
-            if (cached != null) return cached
-
-            val miseCommandLine = MiseCommandLine()
-            val miseExecutable = application.service<MiseApplicationSettings>().state.executablePath
-            val versionString = miseCommandLine.runCommandLineInternal(listOf(miseExecutable, "version"))
-
-            val miseVersion =
-                versionString.fold(
-                    onSuccess = {
-                        MiseVersion.parse(it)
-                    },
-                    onFailure = { _ ->
-                        MiseVersion(0, 0, 0)
-                    },
-                )
-
-            commandCache.put("version", miseVersion)
-            return miseVersion
+        private val logger = Logger.getInstance(MiseCommandLine::class.java)
+        private object DefaultCommandLineExecutor : MiseCommandLineExecutor {
+            override fun execute(generalCommandLine: GeneralCommandLine, timeout: Int): ProcessOutput {
+                return ExecUtil.execAndGetOutput(generalCommandLine, timeout)
+            }
         }
 
-        private val logger = Logger.getInstance(MiseCommandLine::class.java)
+        @Volatile
+        internal var commandLineExecutor: MiseCommandLineExecutor = DefaultCommandLineExecutor
+
+        /**
+         * Execute a GeneralCommandLine and return the ProcessOutput.
+         * This is the single source of truth for command execution.
+         *
+         * @param generalCommandLine The command line to execute
+         * @param allowedToFail If true, failures are logged at debug level (for detection); if false, at info level
+         * @param timeout Timeout in milliseconds (default 3000ms)
+         * @return Result containing ProcessOutput on success, or exception on failure
+         */
+        @RequiresBackgroundThread
+        fun executeCommandLine(
+            generalCommandLine: GeneralCommandLine,
+            allowedToFail: Boolean = false,
+            timeout: Int = 3000
+        ): Result<ProcessOutput> {
+            logger.debug("==> [EXEC] ${generalCommandLine.commandLineString} (workDir: ${generalCommandLine.workDirectory})")
+
+            val processOutput =
+                try {
+                    commandLineExecutor.execute(generalCommandLine, timeout)
+                } catch (e: ExecutionException) {
+                    if (!allowedToFail) {
+                        logger.warn("Failed to execute command. (command=$generalCommandLine)", e)
+                    } else {
+                        logger.debug("Command failed, but is allowed to fail. (command=$generalCommandLine)", e)
+                    }
+                    return Result.failure(
+                        MiseCommandLineNotFoundException(
+                            generalCommandLine,
+                            e.message ?: "Failed to execute command.",
+                            e,
+                        ),
+                    )
+                }
+
+            if (!processOutput.isExitCodeSet) {
+                when {
+                    processOutput.isTimeout -> {
+                        return Result.failure(Throwable("Command timed out. (command=$generalCommandLine)"))
+                    }
+
+                    processOutput.isCancelled -> {
+                        return Result.failure(Throwable("Command was cancelled. (command=$generalCommandLine)"))
+                    }
+                }
+            }
+
+            if (processOutput.exitCode != 0) {
+                val stderr = processOutput.stderr
+                val parsedError = MiseCommandLineException.parseFromStderr(generalCommandLine, stderr)
+                if (parsedError == null) {
+                    if (!allowedToFail) {
+                        logger.warn("Failed to parse error from stderr. (command=$generalCommandLine, stderr=$stderr)")
+                    } else {
+                        logger.debug("Command failed, but is allowed to fail. (command=$generalCommandLine, stderr=$stderr)")
+                    }
+                    return Result.failure(Throwable(stderr))
+                } else {
+                    if (!allowedToFail) {
+                        logger.warn("Parsed error from stderr. (command=$generalCommandLine, error=$parsedError)")
+                    } else {
+                        logger.debug("Command failed, but is allowed to fail. (command=$generalCommandLine, error=$parsedError)")
+                    }
+                    return Result.failure(parsedError)
+                }
+            }
+
+            logger.debug("Command executed successfully. (command=$generalCommandLine)")
+            return Result.success(processOutput)
+        }
     }
 }

@@ -14,16 +14,16 @@ class MiseTomlTaskRunConfigurationProducerTest : FileTestBase() {
         @Language("TOML")
         val tomlText = """
             [tasks.foo]
-            //^
+            #^
             run = "echo foo"
         """.trimIndent()
 
         inlineFile(tomlText, "mise.toml") as TomlFile
         val element = findElementInEditor<PsiElement>()
-        
+
         val context = createConfigurationContext(element)
         val producer = MiseTomlTaskRunConfigurationProducer()
-        
+
         val configurationFromContext = producer.findOrCreateConfigurationFromContext(context)
         assertNotNull("Configuration should be created from context", configurationFromContext)
         assertEquals("Run foo", configurationFromContext?.configurationSettings?.name)
@@ -34,20 +34,20 @@ class MiseTomlTaskRunConfigurationProducerTest : FileTestBase() {
         val tomlText = """
             [tasks]
             "bar" = { run = "echo bar" }
-            //^
+            #^
         """.trimIndent()
 
         inlineFile(tomlText, "mise.toml") as TomlFile
         val element = findElementInEditor<PsiElement>()
-        
+
         val context = createConfigurationContext(element)
         val producer = MiseTomlTaskRunConfigurationProducer()
-        
+
         val configurationFromContext = producer.findOrCreateConfigurationFromContext(context)
         assertNotNull("Configuration should be created from context", configurationFromContext)
         assertEquals("Run bar", configurationFromContext?.configurationSettings?.name)
     }
-    
+
     private fun createConfigurationContext(element: PsiElement): ConfigurationContext {
         return ConfigurationContext.createEmptyContextForLocation(PsiLocation.fromPsiElement(myFixture.project, element))
     }

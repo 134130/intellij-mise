@@ -9,9 +9,11 @@ kotlin = "2.2.21"
 kover = "0.9.3"
 qodana = "2025.2.4"
 detekt = "1.23.7"
+jackson = "2.17.2"  # Matches IntelliJ Platform 2025.1's version. Seems to resolve a conflict caused by 2025.1 shipping jackson-core-2.17.0 with jackson-module-kotlin-2.17.2. Can probably be removed when the plugin moves on from 2025.1 and we can just depend on the bundled version again.
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+jackson-module-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version.ref = "jackson"}
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
