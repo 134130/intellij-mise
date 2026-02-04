@@ -3,6 +3,7 @@ package com.github.l34130.mise.core.setting
 import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.command.MiseExecutableManager
+import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
@@ -43,6 +44,8 @@ class MiseConfigurable(
     private val myMiseDatabaseCb = JBCheckBox("Use in database authentication")
     private val myMiseNxCb = JBCheckBox("Use in Nx commands")
     private val myMiseAllCommandLinesCb = JBCheckBox("Use in all other command line execution")
+    // Track per-provider rows for change detection and apply.
+    private val sdkSetupRows = mutableListOf<SdkSetupRow>()
 
     override fun getDisplayName(): String = "Mise Settings"
 
@@ -77,6 +80,7 @@ class MiseConfigurable(
         myMiseDatabaseCb.isSelected = projectSettings.state.useMiseInDatabaseAuthentication
         myMiseNxCb.isSelected = projectSettings.state.useMiseInNxCommands
         myMiseAllCommandLinesCb.isSelected = projectSettings.state.useMiseInAllCommandLines
+        sdkSetupRows.clear()
 
         // Set placeholder text for auto-detected path
         val autoDetectedInfo = executableManager.getAutoDetectedExecutableInfo()
@@ -185,6 +189,62 @@ class MiseConfigurable(
                     }
                 }
             }
+
+            group("SDK Setup", indent = false) {
+                val sdkSetupProviders =
+                    AbstractProjectSdkSetup.EP_NAME.extensionList
+                        .map { provider ->
+                            val displayName = provider.getSettingsDisplayName(project).ifBlank { provider.javaClass.simpleName }
+                            SdkSetupProvider(provider, displayName)
+                        }
+                        // Stable ordering makes it easier to scan settings and avoids UI jitter.
+                        .sortedBy { it.displayName.lowercase() }
+
+                if (sdkSetupProviders.isEmpty()) {
+                    row {
+                        label("No SDK setup providers are registered for this IDE.")
+                    }
+                } else {
+                    panel {
+                        indent {
+                            sdkSetupProviders.forEach { entry ->
+                                val provider = entry.provider
+                                val id = provider.getSettingsId(project)
+                                val defaultAutoInstall = provider.defaultAutoInstall(project)
+                                val defaultAutoConfigure = provider.defaultAutoConfigure(project)
+                                val effectiveOption =
+                                    projectSettings.effectiveSdkSetupOption(
+                                        id = id,
+                                        defaultAutoInstall = defaultAutoInstall,
+                                        defaultAutoConfigure = defaultAutoConfigure,
+                                    )
+
+                                val autoInstallCb = JBCheckBox("Auto install").apply {
+                                    isSelected = effectiveOption.autoInstall
+                                }
+                                val autoConfigureCb = JBCheckBox("Auto configure").apply {
+                                    isSelected = effectiveOption.autoConfigure
+                                }
+
+                                sdkSetupRows.add(
+                                    SdkSetupRow(
+                                        id = id,
+                                        autoInstall = autoInstallCb,
+                                        autoConfigure = autoConfigureCb,
+                                        defaultAutoInstall = defaultAutoInstall,
+                                        defaultAutoConfigure = defaultAutoConfigure,
+                                    ),
+                                )
+
+                                row(entry.displayName) {
+                                    cell(autoInstallCb)
+                                    cell(autoConfigureCb)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -212,7 +272,17 @@ class MiseConfigurable(
             myMiseVcsCb.isSelected != projectSettings.state.useMiseVcsIntegration ||
             myMiseDatabaseCb.isSelected != projectSettings.state.useMiseInDatabaseAuthentication ||
             myMiseNxCb.isSelected != projectSettings.state.useMiseInNxCommands ||
-            myMiseAllCommandLinesCb.isSelected != projectSettings.state.useMiseInAllCommandLines
+            myMiseAllCommandLinesCb.isSelected != projectSettings.state.useMiseInAllCommandLines ||
+            sdkSetupRows.any { row ->
+                val effectiveOption =
+                    projectSettings.effectiveSdkSetupOption(
+                        id = row.id,
+                        defaultAutoInstall = row.defaultAutoInstall,
+                        defaultAutoConfigure = row.defaultAutoConfigure,
+                    )
+                row.autoInstall.isSelected != effectiveOption.autoInstall ||
+                    row.autoConfigure.isSelected != effectiveOption.autoConfigure
+            }
     }
 
     override fun apply() {
@@ -241,6 +311,13 @@ class MiseConfigurable(
             projectSettings.state.useMiseInDatabaseAuthentication = myMiseDatabaseCb.isSelected
             projectSettings.state.useMiseInNxCommands = myMiseNxCb.isSelected
             projectSettings.state.useMiseInAllCommandLines = myMiseAllCommandLinesCb.isSelected
+            sdkSetupRows.forEach { row ->
+                projectSettings.upsertSdkSetupOption(
+                    id = row.id,
+                    autoInstall = row.autoInstall.isSelected,
+                    autoConfigure = row.autoConfigure.isSelected,
+                )
+            }
 
             // Notify listeners that settings have changed
             MiseProjectEventListener.broadcast(
@@ -251,4 +328,17 @@ class MiseConfigurable(
     }
 
     override fun getId(): String = MiseConfigurable::class.java.name
+
+    private data class SdkSetupProvider(
+        val provider: AbstractProjectSdkSetup,
+        val displayName: String,
+    )
+
+    private data class SdkSetupRow(
+        val id: String,
+        val autoInstall: JBCheckBox,
+        val autoConfigure: JBCheckBox,
+        val defaultAutoInstall: Boolean,
+        val defaultAutoConfigure: Boolean,
+    )
 }
