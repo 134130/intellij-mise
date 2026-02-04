@@ -3,6 +3,7 @@ package com.github.l34130.mise.core.util
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseExecutableManager
 import com.github.l34130.mise.core.command.MiseVersion
+import com.github.l34130.mise.core.notification.MiseNotificationService
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.ExecutionException
@@ -12,6 +13,8 @@ import com.intellij.execution.process.ColoredProcessHandler
 import com.intellij.execution.process.ProcessAdapter
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessTerminatedListener
+import com.intellij.ide.impl.isTrusted
+import com.intellij.ide.impl.isTrustedCheckDisabled
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.util.application
@@ -26,6 +29,15 @@ object RunWindowUtils {
         onFinish: (() -> Unit)? = null,
     ) {
         val title = "Failed to run $tabName"
+
+        if (!project.isTrusted() && !isTrustedCheckDisabled()) {
+            onFinish?.invoke()
+            MiseNotificationService.getInstance(project).warn(
+                "Mise is disabled for untrusted projects",
+                "Trust the project to run mise commands.",
+            )
+            return
+        }
 
         application.invokeLater {
             try {

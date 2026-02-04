@@ -4,6 +4,8 @@ import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.smartReadAction
+import com.intellij.ide.impl.isTrusted
+import com.intellij.ide.impl.isTrustedCheckDisabled
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -40,6 +42,10 @@ class MiseConfigFileResolver(
         val cacheKey = "${baseDirVf.path}:${configEnvironment.orEmpty()}"
         if (!refresh && !application.isUnitTestMode) {
             cache[cacheKey]?.let { return it }
+        }
+
+        if (!project.isTrusted() && !isTrustedCheckDisabled()) {
+            return emptyList()
         }
 
         // Parse environments outside readAction for efficiency

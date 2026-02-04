@@ -13,6 +13,8 @@ import com.github.l34130.mise.core.wsl.WslPathUtils.maybeConvertWindowsUncToUnix
 import com.github.l34130.mise.core.wsl.WslPathUtils.resolveUserHomeAbbreviations
 import com.intellij.execution.Platform
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.ide.impl.isTrusted
+import com.intellij.ide.impl.isTrustedCheckDisabled
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -166,6 +168,14 @@ class MiseExecutableManager(
             val projectSettings = project.service<MiseProjectSettings>()
             val appSettings = application.service<MiseApplicationSettings>()
             val projectPath = project.guessMiseProjectPath()
+            val isTrusted = project.isTrusted() || isTrustedCheckDisabled()
+
+            if (!isTrusted) {
+                val applicationExecutablePath = appSettings.state.executablePath
+                val fallbackPath = applicationExecutablePath.takeIf { it.isNotBlank() } ?: "mise"
+                logger.debug("Project not trusted; skipping mise executable detection")
+                return@getOrComputeExecutable MiseExecutableInfo(path = fallbackPath, version = null)
+            }
 
             // Priority 1: Project-level user configuration
             val projectExecutablePath = projectSettings.state.executablePath
@@ -194,6 +204,11 @@ class MiseExecutableManager(
 
     private fun getAutoDetectedInfo(): MiseExecutableInfo {
         return cacheService.getOrComputeExecutable(AUTO_DETECTED_KEY) {
+            if (!project.isTrusted() && !isTrustedCheckDisabled()) {
+                logger.debug("Project not trusted; skipping mise auto-detection")
+                return@getOrComputeExecutable MiseExecutableInfo(path = "mise", version = null)
+            }
+
             val projectPath = project.guessMiseProjectPath()
 
             // Detect mise executable (pass the project path for WSL context)
@@ -353,6 +368,11 @@ class MiseExecutableManager(
         interactiveShellCommandList: List<String>,
         workDir: String
     ): VersionCommandResult? {
+        if (!project.isTrusted() && !isTrustedCheckDisabled()) {
+            logger.debug("Project not trusted; skipping mise version command")
+            return null
+        }
+
         // Avoid running external processes under read actions; hop to pooled thread when needed.
         return if (application.isReadAccessAllowed) {
             runCatching {
