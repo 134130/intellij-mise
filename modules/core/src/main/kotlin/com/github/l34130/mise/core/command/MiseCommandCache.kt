@@ -86,6 +86,12 @@ class MiseCommandCache(
                 // Warm dev tools (used by tool window, SDK setup, etc.)
                 MiseCommandLineHelper.getDevTools(project, workDir, configEnvironment)
 
+                // Warm config file list (used for config resolution).
+                MiseCommandLineHelper.getConfigs(project, configEnvironment)
+
+                // Warm tracked config list (used for UI checks).
+                MiseCommandLineHelper.getTrackedConfigs(project, configEnvironment)
+
                 logger.debug("Command cache warmed successfully")
             } catch (e: Exception) {
                 logger.warn("Failed to warm command cache after invalidation", e)
@@ -208,6 +214,14 @@ class MiseCommandCache(
                 getCached(cacheKey, compute)
             }
         }
+    }
+
+    /**
+     * Get cached value if present, without triggering computation.
+     * Intended for fast checks in UI contexts.
+     */
+    fun <T> getCachedIfPresent(cacheKey: MiseCacheKey<T>): T? {
+        return getIfCached(cacheKey)
     }
 
     // === Data Classes ===

@@ -104,4 +104,36 @@ sealed class MiseCacheKey<out T> {
         override val key = "which:$commonBinName:$workDir:$configEnvironment"
         override val progressTitle = "Finding $commonBinName"
     }
+
+    /**
+     * Cache key for mise config command.
+     *
+     * Key format: `config:{workDir}:{configEnvironment}`
+     * Result type: `Result<List<String>>`
+     *
+     * Example: `config:/home/user/project:production`
+     */
+    data class Configs(
+        val workDir: String,
+        val configEnvironment: String?
+    ) : MiseCacheKey<Result<List<String>>>() {
+        override val key = "config:$workDir:$configEnvironment"
+        override val progressTitle = "Loading Mise Config Files"
+    }
+
+    /**
+     * Cache key for mise config --tracked-configs command.
+     *
+     * Key format: `config-tracked:{workDir}:{configEnvironment}`
+     * Result type: `Result<List<String>>`
+     *
+     * Example: `config-tracked:/home/user/project:production`
+     */
+    data class TrackedConfigs(
+        val workDir: String,
+        val configEnvironment: String?
+    ) : MiseCacheKey<Result<List<String>>>() {
+        override val key = "config-tracked:$workDir:$configEnvironment"
+        override val progressTitle = "Loading Mise Tracked Config Files"
+    }
 }

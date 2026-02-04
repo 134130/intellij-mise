@@ -2,6 +2,8 @@ package com.github.l34130.mise.core
 
 import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.smartReadAction
 import com.intellij.ide.impl.isTrusted
@@ -9,12 +11,14 @@ import com.intellij.ide.impl.isTrustedCheckDisabled
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findFileOrDirectory
 import com.intellij.openapi.vfs.isFile
 import com.intellij.util.containers.addIfNotNull
 import com.intellij.util.application
 import fleet.multiplatform.shims.ConcurrentHashMap
+import java.nio.file.Paths
 
 @Service(Service.Level.PROJECT)
 class MiseConfigFileResolver(
@@ -44,43 +48,38 @@ class MiseConfigFileResolver(
             cache[cacheKey]?.let { return it }
         }
 
+        if (application.isUnitTestMode) {
+            return resolveConfigFilesFromLayout(baseDirVf, configEnvironment)
+        }
+
         if (!project.isTrusted() && !isTrustedCheckDisabled()) {
             return emptyList()
         }
 
-        // Parse environments outside readAction for efficiency
-        val environments = if (!configEnvironment.isNullOrBlank()) {
-            configEnvironment.split(',').map { it.trim() }
-        } else {
-            emptyList()
-        }
+        val configEnvironmentValue =
+            configEnvironment ?: project.service<MiseProjectSettings>().state.miseConfigEnvironment
+        val configPaths =
+            MiseCommandLineHelper
+                .getConfigs(project, configEnvironmentValue)
+                .getOrElse { emptyList() }
 
+        val baseDirPath = baseDirVf.path
         val result =
-            smartReadAction(project) {
-                buildList {
-                    addIfNotNull(baseDirVf.findFileOrDirectory("mise/config.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory(".mise/config.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise/config.toml")?.takeIf { it.isFile })
-                    // .config/mise/conf.d/*.toml
-                    baseDirVf.findFileOrDirectory(".config/mise/conf.d")?.takeIf { it.isDirectory }?.let { dir ->
-                        addAll(dir.children.filter { it.name.endsWith(".toml") && it.isFile })
+            configPaths
+                .asSequence()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && it.endsWith(".toml") }
+                .map { path ->
+                    if (isAbsolutePath(path)) {
+                        path
+                    } else {
+                        Paths.get(baseDirPath, path).toString()
                     }
-                    
-                    // Add environment-specific config files if configEnvironment is specified
-                    // These are loaded after base configs but before local configs
-                    for (env in environments) {
-                        addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise.$env.toml")?.takeIf { it.isFile })
-                        addIfNotNull(baseDirVf.findFileOrDirectory(".mise.$env.toml")?.takeIf { it.isFile })
-                        addIfNotNull(baseDirVf.findFileOrDirectory("mise.$env.toml")?.takeIf { it.isFile })
-                    }
-                    
-                    addIfNotNull(baseDirVf.findFileOrDirectory("mise.local.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory("mise.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory(".mise.local.toml")?.takeIf { it.isFile })
-                    addIfNotNull(baseDirVf.findFileOrDirectory(".mise.toml")?.takeIf { it.isFile })
                 }
-            }
+                .mapNotNull { path -> LocalFileSystem.getInstance().findFileByPath(path) }
+                .filter { it.isFile }
+                .distinctBy { it.path }
+                .toList()
 
         if (!application.isUnitTestMode) {
             cache[cacheKey] = result
@@ -89,4 +88,46 @@ class MiseConfigFileResolver(
     }
 
     override fun dispose() { }
+
+    private fun isAbsolutePath(path: String): Boolean {
+        return runCatching { Paths.get(path).isAbsolute }.getOrDefault(false)
+    }
+
+    private suspend fun resolveConfigFilesFromLayout(
+        baseDirVf: VirtualFile,
+        configEnvironment: String? = null,
+    ): List<VirtualFile> {
+        // Parse environments outside readAction for efficiency
+        val environments = if (!configEnvironment.isNullOrBlank()) {
+            configEnvironment.split(',').map { it.trim() }
+        } else {
+            emptyList()
+        }
+
+        return smartReadAction(project) {
+            buildList {
+                addIfNotNull(baseDirVf.findFileOrDirectory("mise/config.toml")?.takeIf { it.isFile })
+                addIfNotNull(baseDirVf.findFileOrDirectory(".mise/config.toml")?.takeIf { it.isFile })
+                addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise.toml")?.takeIf { it.isFile })
+                addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise/config.toml")?.takeIf { it.isFile })
+                // .config/mise/conf.d/*.toml
+                baseDirVf.findFileOrDirectory(".config/mise/conf.d")?.takeIf { it.isDirectory }?.let { dir ->
+                    addAll(dir.children.filter { it.name.endsWith(".toml") && it.isFile })
+                }
+
+                // Add environment-specific config files if configEnvironment is specified
+                // These are loaded after base configs but before local configs
+                for (env in environments) {
+                    addIfNotNull(baseDirVf.findFileOrDirectory(".config/mise.$env.toml")?.takeIf { it.isFile })
+                    addIfNotNull(baseDirVf.findFileOrDirectory(".mise.$env.toml")?.takeIf { it.isFile })
+                    addIfNotNull(baseDirVf.findFileOrDirectory("mise.$env.toml")?.takeIf { it.isFile })
+                }
+
+                addIfNotNull(baseDirVf.findFileOrDirectory("mise.local.toml")?.takeIf { it.isFile })
+                addIfNotNull(baseDirVf.findFileOrDirectory("mise.toml")?.takeIf { it.isFile })
+                addIfNotNull(baseDirVf.findFileOrDirectory(".mise.local.toml")?.takeIf { it.isFile })
+                addIfNotNull(baseDirVf.findFileOrDirectory(".mise.toml")?.takeIf { it.isFile })
+            }
+        }
+    }
 }

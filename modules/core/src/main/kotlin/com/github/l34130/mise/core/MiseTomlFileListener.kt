@@ -112,7 +112,7 @@ class MiseTomlFileListener(
                 }
 
             fun onVfsChange(file: VirtualFile) {
-                if (MiseTomlFile.isMiseTomlFile(project, file)) {
+                if (MiseTomlFile.looksLikeMiseTomlFile(project, file)) {
                     dirtyTomlFiles.add(file)
                     vfsChanged.set(true)
                     updater.queue(runnable)
@@ -125,8 +125,8 @@ class MiseTomlFileListener(
                 newName: String,
             ) {
                 // Rename events have the new name already applied; check both sides to detect enter/exit.
-                val wasMiseToml = MiseTomlFile.isMiseTomlFile(project, file, oldName)
-                val isMiseToml = MiseTomlFile.isMiseTomlFile(project, file, newName)
+                val wasMiseToml = MiseTomlFile.looksLikeMiseTomlFile(project, file, oldName)
+                val isMiseToml = MiseTomlFile.looksLikeMiseTomlFile(project, file, newName)
                 if (wasMiseToml || isMiseToml) {
                     dirtyTomlFiles.add(file)
                     vfsChanged.set(true)
@@ -141,8 +141,8 @@ class MiseTomlFileListener(
             ) {
                 // Moves can change whether a config is in-scope without changing its name.
                 val fileName = file.name
-                val wasMiseToml = MiseTomlFile.isMiseTomlFile(project, file, fileName, oldParent)
-                val isMiseToml = MiseTomlFile.isMiseTomlFile(project, file, fileName, newParent)
+                val wasMiseToml = MiseTomlFile.looksLikeMiseTomlFile(project, file, fileName, oldParent)
+                val isMiseToml = MiseTomlFile.looksLikeMiseTomlFile(project, file, fileName, newParent)
                 if (wasMiseToml || isMiseToml) {
                     dirtyTomlFiles.add(file)
                     vfsChanged.set(true)
@@ -152,7 +152,7 @@ class MiseTomlFileListener(
 
             fun onPsiChange(file: VirtualFile) {
                 // PSI updates are used for in-editor parsing only; CLI work listens to VFS events.
-                if (MiseTomlFile.isMiseTomlFile(project, file)) {
+                if (MiseTomlFile.looksLikeMiseTomlFile(project, file)) {
                     dirtyTomlFiles.add(file)
                     psiChanged.set(true)
                     updater.queue(runnable)
