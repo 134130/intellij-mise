@@ -1,7 +1,9 @@
 <idea-plugin require-restart="false">
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.github.l34130.mise.idea.jdk.MiseProjectJdkSetup"/>
         <runConfigurationExtension implementation="com.github.l34130.mise.idea.run.MiseIdeaRunConfigurationExtension"/>
+    </extensions>
+    <extensions defaultExtensionNs="com.github.l34130.mise">
+        <miseSdkSetup implementation="com.github.l34130.mise.idea.jdk.MiseProjectJdkSetup"/>
     </extensions>
 
     <actions>

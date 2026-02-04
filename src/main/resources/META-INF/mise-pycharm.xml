@@ -4,6 +4,9 @@
         <!--suppress PluginXmlValidity -->
         <pythonCommandLineTargetEnvironmentProvider implementation="com.github.l34130.mise.pycharm.run.MisePythonCommandLineTargetEnvironmentProvider"/>
     </extensions>
+    <extensions defaultExtensionNs="com.github.l34130.mise">
+        <miseSdkSetup implementation="com.github.l34130.mise.pycharm.sdk.MisePythonSdkSetup"/>
+    </extensions>
 
     <actions>
         <action id="com.github.l34130.mise.pycharm.sdk.MisePythonSdkSetup"

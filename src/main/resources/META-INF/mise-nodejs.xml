@@ -1,7 +1,9 @@
 <idea-plugin require-restart="false">
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.github.l34130.mise.nodejs.node.MiseProjectInterpreterSetup"/>
-        <postStartupActivity implementation="com.github.l34130.mise.nodejs.node.MiseProjectPackageSetup"/>
+    </extensions>
+    <extensions defaultExtensionNs="com.github.l34130.mise">
+        <miseSdkSetup implementation="com.github.l34130.mise.nodejs.node.MiseProjectInterpreterSetup"/>
+        <miseSdkSetup implementation="com.github.l34130.mise.nodejs.node.MiseProjectPackageSetup"/>
     </extensions>
     <extensions defaultExtensionNs="JavaScript">
         <nodeRunConfigurationExtension
