@@ -69,32 +69,39 @@ sealed class MiseCacheKey<out T> {
     /**
      * Cache key for mise ls command.
      *
-     * Key format: `ls:{workDir}:{configEnvironment}`
+     * Key format: `ls:{scope}:{workDir}:{configEnvironment}`
      * Result type: `Result<Map<MiseDevToolName, List<MiseDevTool>>>`
      *
-     * Example: `ls:/home/user/project:production`
+     * Example: `ls:combined:/home/user/project:production`
      */
     data class DevTools(
         val workDir: String,
-        val configEnvironment: String?
+        val configEnvironment: String?,
+        val scope: MiseDevToolsScope
     ) : MiseCacheKey<Result<Map<MiseDevToolName, List<MiseDevTool>>>>() {
-        override val key = "ls:$workDir:$configEnvironment"
-        override val progressTitle = "Loading Mise Dev Tools"
+        override val key = "ls:${scope.cacheKeySegment}:$workDir:$configEnvironment"
+        override val progressTitle =
+            when (scope) {
+                MiseDevToolsScope.LOCAL -> "Loading Mise Dev Tools (Local)"
+                MiseDevToolsScope.GLOBAL -> "Loading Mise Dev Tools (Global)"
+                MiseDevToolsScope.COMBINED -> "Loading Mise Dev Tools"
+            }
     }
 
     /**
-     * Cache key for mise task ls command.
+     * Cache key for mise which command.
      *
-     * Key format: `tasks:{workDir}:{configEnvironment}`
-     * Result type: `Result<List<MiseTask>>`
+     * Key format: `which:{workDir}:{configEnvironment}`
+     * Result type: `Result<String>`
      *
-     * Example: `tasks:/home/user/project:production`
+     * Example: `ls:/home/user/project:production`
      */
-    data class Tasks(
+    data class WhichBin(
+        val commonBinName: String,
         val workDir: String,
         val configEnvironment: String?
-    ) : MiseCacheKey<Result<List<MiseTask>>>() {
-        override val key = "tasks:$workDir:$configEnvironment"
-        override val progressTitle = "Loading Mise Tasks"
+    ) : MiseCacheKey<Result<String>>() {
+        override val key = "which:$commonBinName:$workDir:$configEnvironment"
+        override val progressTitle = "Finding $commonBinName"
     }
 }
