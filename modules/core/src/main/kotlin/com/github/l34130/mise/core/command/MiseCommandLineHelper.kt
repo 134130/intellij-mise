@@ -230,7 +230,9 @@ object MiseCommandLineHelper {
             val executablePath = project.service<MiseExecutableManager>().getExecutablePath()
             val commandLineArgs = mutableListOf("which", commonBinName)
             val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
-            miseCommandLine.runRawCommandLine(commandLineArgs).map { WslPathUtils.maybeConvertUnixPathToWsl(it.trim(), executablePath) }
+            miseCommandLine
+                .runRawCommandLine(commandLineArgs)
+                .map { output -> parseMisePathOutput(output, executablePath).firstOrNull().orEmpty() }
         }
     }
 
@@ -242,10 +244,7 @@ object MiseCommandLineHelper {
         configEnvironment: String?,
         key: String,
     ): Result<String> {
-        val commandLineArgs = mutableListOf("config", "get", key)
-
-        val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
-        return miseCommandLine.runRawCommandLine(commandLineArgs)
+        return runConfigCommand(project, workDir, configEnvironment, listOf("get", key))
     }
 
     // mise config --tracked-configs
@@ -254,16 +253,68 @@ object MiseCommandLineHelper {
         project: Project,
         configEnvironment: String,
     ): Result<List<String>> {
-        val commandLineArgs = mutableListOf("config", "--tracked-configs")
-
         // Use the project's base path as the working directory to ensure correct mise context
-        // (Windows mise for Windows projects, WSL mise for WSL projects)
         val workDir = project.guessMiseProjectPath()
+        val executablePath = project.service<MiseExecutableManager>().getExecutablePath()
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.TrackedConfigs(workDir, configEnvironment)
 
+        return cache.getCachedWithProgress(cacheKey) {
+            runConfigCommand(project, workDir, configEnvironment, listOf("--tracked-configs"))
+                .map { output -> parseMisePathOutput(output, executablePath) }
+        }
+    }
+
+    // mise config
+    @RequiresBackgroundThread
+    fun getConfigs(
+        project: Project,
+        configEnvironment: String,
+    ): Result<List<String>> {
+        // Use the project's base path as the working directory to ensure correct mise context
+        val workDir = project.guessMiseProjectPath()
+        val executablePath = project.service<MiseExecutableManager>().getExecutablePath()
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.Configs(workDir, configEnvironment)
+
+        return cache.getCachedWithProgress(cacheKey) {
+            runConfigCommand(project, workDir, configEnvironment, emptyList())
+                .map { output -> parseMisePathOutput(output, executablePath) }
+        }
+    }
+
+    fun getTrackedConfigsIfCached(
+        project: Project,
+        configEnvironment: String,
+    ): List<String>? {
+        val workDir = project.guessMiseProjectPath()
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.TrackedConfigs(workDir, configEnvironment)
+        val cached = cache.getCachedIfPresent(cacheKey) ?: return null
+        return cached.getOrNull()
+    }
+
+    private fun runConfigCommand(
+        project: Project,
+        workDir: String?,
+        configEnvironment: String?,
+        args: List<String>,
+    ): Result<String> {
+        val commandLineArgs = mutableListOf("config")
+        commandLineArgs.addAll(args)
         val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
-        return miseCommandLine
-            .runRawCommandLine(commandLineArgs)
-            .map { it.lines().map { line -> line.trim() }.filter { trimmed -> trimmed.isNotEmpty() } }
+        return miseCommandLine.runRawCommandLine(commandLineArgs)
+    }
+
+    private fun parseMisePathOutput(
+        output: String,
+        executablePath: String,
+    ): List<String> {
+        return output.lineSequence()
+            .map { line -> line.trim() }
+            .filter { trimmed -> trimmed.isNotEmpty() }
+            .map { path -> WslPathUtils.maybeConvertUnixPathToWsl(path, executablePath) }
+            .toList()
     }
 
     // mise trust
