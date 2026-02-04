@@ -1,6 +1,8 @@
 <idea-plugin require-restart="false">
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.github.l34130.mise.nodejs.deno.MiseProjectDenoSetup"/>
+    </extensions>
+    <extensions defaultExtensionNs="com.github.l34130.mise">
+        <miseSdkSetup implementation="com.github.l34130.mise.nodejs.deno.MiseProjectDenoSetup"/>
     </extensions>
 
     <actions>
