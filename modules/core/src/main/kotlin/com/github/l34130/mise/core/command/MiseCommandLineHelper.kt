@@ -1,6 +1,8 @@
 package com.github.l34130.mise.core.command
 
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.guessMiseProjectPath
+import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.github.l34130.mise.core.wsl.WslPathUtils.maybeConvertWindowsUncToUnixPath
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.components.service
@@ -68,13 +70,7 @@ object MiseCommandLineHelper {
      * Safely gets an executable path from GeneralCommandLine, returning null if IllegalStateException occurs.
      * @return executable path or null if not set
      */
-    fun safeGetExePath(commandLine: GeneralCommandLine): String? {
-        return try {
-            commandLine.exePath
-        } catch (_: IllegalStateException) {
-            null
-        }
-    }
+    fun safeGetExePath(commandLine: GeneralCommandLine): String? = runCatching { commandLine.exePath }.getOrNull()
 
     /**
      * Checks if executable matches given names (e.g., "nx", "nx.cmd").
@@ -166,16 +162,75 @@ object MiseCommandLineHelper {
         configEnvironment: String? = null,
     ): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
         val cache = project.service<MiseCommandCache>()
-        val cacheKey = MiseCacheKey.DevTools(workDir, configEnvironment)
+        val cacheKey = MiseCacheKey.DevTools(workDir, configEnvironment, MiseDevToolsScope.COMBINED)
         return cache.getCachedWithProgress(cacheKey) {
-            val commandLineArgs = mutableListOf("ls", "--local", "--json")
+            val localResult = getDevTools(project, workDir, configEnvironment, MiseDevToolsScope.LOCAL)
+            val globalResult = getDevTools(project, workDir, configEnvironment, MiseDevToolsScope.GLOBAL)
+
+            val local = localResult.getOrElse { return@getCachedWithProgress Result.failure(it) }
+            val global = globalResult.getOrElse { return@getCachedWithProgress Result.failure(it) }
+
+            Result.success(mergeDevTools(local, global))
+        }
+    }
+
+    fun getDevTools(
+        project: Project,
+        workDir: String = project.guessMiseProjectPath(),
+        configEnvironment: String? = null,
+        scope: MiseDevToolsScope,
+    ): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
+        require(scope != MiseDevToolsScope.COMBINED) { "Use getDevTools without a scope for combined results." }
+
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.DevTools(workDir, configEnvironment, scope)
+        return cache.getCachedWithProgress(cacheKey) {
+            val commandLineArgs = mutableListOf("ls", scope.requireCommandFlag(), "--json")
+            val executablePath = project.service<MiseExecutableManager>().getExecutablePath()
 
             val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
             miseCommandLine
                 .runCommandLine<Map<String, List<MiseDevTool>>>(commandLineArgs)
                 .map { devTools ->
                     devTools.mapKeys { (toolName, _) -> MiseDevToolName(toolName) }
+                        .mapValues { (_, tools) ->
+                            tools.onEach { tool ->
+                                tool.miseExecutablePath = executablePath
+                            }
+                        }
                 }
+        }
+    }
+
+    internal fun mergeDevTools(
+        local: Map<MiseDevToolName, List<MiseDevTool>>,
+        global: Map<MiseDevToolName, List<MiseDevTool>>,
+    ): Map<MiseDevToolName, List<MiseDevTool>> {
+        if (local.isEmpty()) return global
+        if (global.isEmpty()) return local
+
+        val merged = global.toMutableMap()
+        for ((toolName, tools) in local) {
+            merged[toolName] = tools
+        }
+        return merged
+    }
+
+    // mise which
+    fun getBinPath(
+        commonBinName: String,
+        project: Project,
+        workDir: String = project.guessMiseProjectPath()
+    ): Result<String> {
+        val settings = project.service<MiseProjectSettings>().state
+        val configEnvironment = settings.miseConfigEnvironment
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.WhichBin(commonBinName, workDir, configEnvironment)
+        return cache.getCachedWithProgress(cacheKey) {
+            val executablePath = project.service<MiseExecutableManager>().getExecutablePath()
+            val commandLineArgs = mutableListOf("which", commonBinName)
+            val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
+            miseCommandLine.runRawCommandLine(commandLineArgs).map { WslPathUtils.maybeConvertUnixPathToWsl(it.trim(), executablePath) }
         }
     }
 
@@ -209,20 +264,6 @@ object MiseCommandLineHelper {
         return miseCommandLine
             .runRawCommandLine(commandLineArgs)
             .map { it.lines().map { line -> line.trim() }.filter { trimmed -> trimmed.isNotEmpty() } }
-    }
-
-    // mise exec
-    @RequiresBackgroundThread
-    fun executeCommand(
-        project: Project,
-        workDir: String?,
-        configEnvironment: String?,
-        command: List<String>,
-    ): Result<String> {
-        val commandLineArgs = mutableListOf("exec", "--") + command
-
-        val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
-        return miseCommandLine.runRawCommandLine(commandLineArgs)
     }
 
     // mise trust

@@ -1,5 +1,7 @@
 package com.github.l34130.mise.core.command
 
+import com.github.l34130.mise.core.wsl.WslPathUtils
+
 data class MiseDevTool(
     val version: String,
     val requestedVersion: String? = null,
@@ -8,20 +10,41 @@ data class MiseDevTool(
     val active: Boolean,
     val source: MiseSource? = null,
 ) {
-    fun shimsVersion(): String = requestedVersion ?: version
+    // Populated by command helpers to preserve WSL context for path conversion.
+    var miseExecutablePath: String? = null
 
-    fun shimsInstallPath(): String =
-        if (requestedVersion == null) {
-            installPath
-        } else {
-            // replace the version part of the install path with the requested version
-            val sanitizedPath = installPath.removeSuffix("/")
-            if (sanitizedPath.endsWith(version)) {
-                sanitizedPath.dropLast(version.length) + requestedVersion
-            } else {
-                // Silently returning the original path is a bug.
-                // Throw an exception if the path format is unexpected to avoid silent misconfiguration.
-                throw IllegalStateException("Could not determine version from install path: $installPath")
+    val resolvedVersion: String
+        get() = version.takeIf { it.isNotBlank() } ?: requestedVersionDisplay.orEmpty()
+
+    val displayVersion: String
+        get() = requestedVersionDisplay ?: resolvedVersion
+
+    val displayVersionWithResolved: String
+        get() {
+            val requested = requestedVersionDisplay
+            val resolved = version.takeIf { it.isNotBlank() }
+            return when {
+                requested == null -> resolved.orEmpty()
+                resolved == null || resolved == requested -> requested
+                else -> "$requested ($resolved)"
             }
+        }
+
+    private val requestedVersionDisplay: String?
+        get() = requestedVersion?.takeIf { it.isNotBlank() }
+
+    private var resolvedInstallPathCache: String? = null
+    private var resolvedInstallPathCacheKey: String? = null
+
+    val resolvedInstallPath: String
+        get() {
+            val key = miseExecutablePath
+            val cached = resolvedInstallPathCache
+            if (cached != null && resolvedInstallPathCacheKey == key) return cached
+
+            val resolved = WslPathUtils.maybeConvertUnixPathToWsl(installPath, key)
+            resolvedInstallPathCacheKey = key
+            resolvedInstallPathCache = resolved
+            return resolved
         }
 }
