@@ -4,6 +4,8 @@ import com.github.l34130.mise.core.MiseTomlFileListener
 import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.util.waitForProjectCache
+import com.intellij.ide.impl.isTrusted
+import com.intellij.ide.impl.isTrustedCheckDisabled
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
@@ -21,6 +23,10 @@ class MiseProjectSdkSetupActivity : ProjectActivity, DumbAware, Disposable {
         val updater = ZipperUpdater(400, Alarm.ThreadToUse.POOLED_THREAD, this)
         val recheckTask = Runnable {
             if (!project.isDisposed) {
+                if (!project.isTrusted() && !isTrustedCheckDisabled()) {
+                    logger.debug("Skipping SDK auto-configuration for untrusted project")
+                    return@Runnable
+                }
                 if (!project.waitForProjectCache()) {
                     return@Runnable
                 }

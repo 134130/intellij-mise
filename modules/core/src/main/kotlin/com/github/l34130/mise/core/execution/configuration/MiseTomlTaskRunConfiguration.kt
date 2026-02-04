@@ -4,12 +4,15 @@ import com.github.l34130.mise.core.command.MiseExecutableManager
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.execution.Executor
+import com.intellij.execution.ExecutionException
 import com.intellij.execution.configuration.EnvironmentVariablesData
 import com.intellij.execution.configurations.*
 import com.intellij.execution.process.ColoredProcessHandler
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessTerminatedListener
 import com.intellij.execution.runners.ExecutionEnvironment
+import com.intellij.ide.impl.isTrusted
+import com.intellij.ide.impl.isTrustedCheckDisabled
 import com.intellij.openapi.components.PathMacroManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.SettingsEditor
@@ -41,6 +44,9 @@ class MiseTomlTaskRunConfiguration(
     ): RunProfileState {
         return object : CommandLineState(executionEnvironment) {
             override fun startProcess(): ProcessHandler {
+                if (!project.isTrusted() && !isTrustedCheckDisabled()) {
+                    throw ExecutionException("Project is not trusted. Trust the project to run mise tasks.")
+                }
                 val projectBasePath = project.guessMiseProjectPath()
 
                 val macroManager = PathMacroManager.getInstance(project)

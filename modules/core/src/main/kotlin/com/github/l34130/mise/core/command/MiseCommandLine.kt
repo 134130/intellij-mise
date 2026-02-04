@@ -7,6 +7,8 @@ import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.ProcessOutput
 import com.intellij.execution.util.ExecUtil
+import com.intellij.ide.impl.isTrusted
+import com.intellij.ide.impl.isTrustedCheckDisabled
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -57,6 +59,9 @@ internal class MiseCommandLine(
 
     @RequiresBackgroundThread
     fun runRawCommandLine(params: List<String>): Result<String> {
+        if (!project.isTrusted() && !isTrustedCheckDisabled()) {
+            return Result.failure(IllegalStateException("Project is not trusted. Trust the project to run mise commands."))
+        }
         logger.debug("==> [COMMAND] Starting command execution (workDir: $workDir, params: $params)")
 
         // Determine the executable path with project override support
