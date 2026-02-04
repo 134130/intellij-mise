@@ -3,6 +3,7 @@ package com.github.l34130.mise.core.notification
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.l34130.mise.core.icon.MiseIcons
+import com.intellij.notification.Notification
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -21,7 +22,22 @@ class MiseNotificationService(
         htmlText: String,
         actionProvider: (() -> NotificationAction)? = null,
     ) {
-        showNotification(title, htmlText, NotificationType.INFORMATION, actionProvider)
+        if (actionProvider == null) {
+            showNotification(title, htmlText, NotificationType.INFORMATION)
+        } else {
+            showNotification(title, htmlText, NotificationType.INFORMATION) { notification ->
+                notification.addAction(actionProvider())
+            }
+        }
+    }
+
+    fun info(
+        title: String,
+        htmlText: String,
+        actionConfigurer: (Notification) -> Unit,
+    ) {
+        // Use this overload when multiple actions are needed.
+        showNotification(title, htmlText, NotificationType.INFORMATION, actionConfigurer)
     }
 
     fun warn(
@@ -29,7 +45,22 @@ class MiseNotificationService(
         htmlText: String,
         actionProvider: (() -> NotificationAction)? = null,
     ) {
-        showNotification(title, htmlText, NotificationType.WARNING, actionProvider)
+        if (actionProvider == null) {
+            showNotification(title, htmlText, NotificationType.WARNING)
+        } else {
+            showNotification(title, htmlText, NotificationType.WARNING) { notification ->
+                notification.addAction(actionProvider())
+            }
+        }
+    }
+
+    fun warn(
+        title: String,
+        htmlText: String,
+        actionConfigurer: (Notification) -> Unit,
+    ) {
+        // Use this overload when multiple actions are needed.
+        showNotification(title, htmlText, NotificationType.WARNING, actionConfigurer)
     }
 
     fun error(
@@ -37,14 +68,29 @@ class MiseNotificationService(
         htmlText: String,
         actionProvider: (() -> NotificationAction)? = null,
     ) {
-        showNotification(title, htmlText, NotificationType.ERROR, actionProvider)
+        if (actionProvider == null) {
+            showNotification(title, htmlText, NotificationType.ERROR)
+        } else {
+            showNotification(title, htmlText, NotificationType.ERROR) { notification ->
+                notification.addAction(actionProvider())
+            }
+        }
+    }
+
+    fun error(
+        title: String,
+        htmlText: String,
+        actionConfigurer: (Notification) -> Unit,
+    ) {
+        // Use this overload when multiple actions are needed.
+        showNotification(title, htmlText, NotificationType.ERROR, actionConfigurer)
     }
 
     private fun showNotification(
         title: String,
         htmlText: String,
         type: NotificationType,
-        actionProvider: (() -> NotificationAction)? = null,
+        actionConfigurer: ((Notification) -> Unit)? = null,
     ) {
         if (debounceMap.getIfPresent(title) != null) {
             // Debounce duplicate notifications
@@ -58,7 +104,7 @@ class MiseNotificationService(
                 .getNotificationGroup(NOTIFICATION_GROUP_ID)
                 .createNotification(title, htmlText, type)
 
-        actionProvider?.let { notification.addAction(it()) }
+        actionConfigurer?.invoke(notification)
 
         notification.icon = MiseIcons.DEFAULT
         notification.notify(project)
