@@ -77,6 +77,12 @@
                icon="com.github.l34130.mise.core.icon.MiseIcons.DEFAULT">
             <add-to-group group-id="ToolsMenu"/>
         </group>
+        <action id="com.github.l34130.mise.core.actions.MiseInstallAction"
+                class="com.github.l34130.mise.core.actions.MiseInstallAction"
+                text="Run Mise Install"
+                description="Run mise install for this project">
+            <add-to-group group-id="com.github.l34130.mise.actions"/>
+        </action>
     </actions>
 
     <depends optional="true" config-file="mise-clion.xml">com.intellij.clion</depends>
