@@ -38,7 +38,45 @@ class MiseProjectSettings() : PersistentStateComponent<MiseProjectSettings.MySta
                 it.useMiseInDatabaseAuthentication = myState.useMiseInDatabaseAuthentication
                 it.useMiseInNxCommands = myState.useMiseInNxCommands
                 it.useMiseInAllCommandLines = myState.useMiseInAllCommandLines
+                it.sdkSetupOptions = myState.sdkSetupOptions.map { option -> option.copy() }.toMutableList()
             }
+    }
+
+    fun getSdkSetupOption(id: String): SdkSetupOption? {
+        return myState.sdkSetupOptions.firstOrNull { it.id == id }
+    }
+
+    fun effectiveSdkSetupOption(
+        id: String,
+        defaultAutoInstall: Boolean,
+        defaultAutoConfigure: Boolean,
+    ): EffectiveSdkSetupOption {
+        // Resolve stored overrides against per-provider defaults.
+        val option = getSdkSetupOption(id)
+        return EffectiveSdkSetupOption(
+            autoInstall = option?.autoInstall ?: defaultAutoInstall,
+            autoConfigure = option?.autoConfigure ?: defaultAutoConfigure,
+        )
+    }
+
+    fun upsertSdkSetupOption(
+        id: String,
+        autoInstall: Boolean,
+        autoConfigure: Boolean,
+    ) {
+        val existing = getSdkSetupOption(id)
+        if (existing != null) {
+            existing.autoInstall = autoInstall
+            existing.autoConfigure = autoConfigure
+        } else {
+            myState.sdkSetupOptions.add(
+                SdkSetupOption(
+                    id = id,
+                    autoInstall = autoInstall,
+                    autoConfigure = autoConfigure,
+                ),
+            )
+        }
     }
 
     class MyState : Cloneable {
@@ -52,6 +90,7 @@ class MiseProjectSettings() : PersistentStateComponent<MiseProjectSettings.MySta
         var useMiseInDatabaseAuthentication: Boolean = true
         var useMiseInNxCommands: Boolean = true
         var useMiseInAllCommandLines: Boolean = false  // Conservative default
+        var sdkSetupOptions: MutableList<SdkSetupOption> = mutableListOf()
 
         // Deprecated fields - kept for backward compatibility during deserialization
         @Deprecated("Use executablePath instead")
@@ -70,6 +109,18 @@ class MiseProjectSettings() : PersistentStateComponent<MiseProjectSettings.MySta
                 it.useMiseInDatabaseAuthentication = useMiseInDatabaseAuthentication
                 it.useMiseInNxCommands = useMiseInNxCommands
                 it.useMiseInAllCommandLines = useMiseInAllCommandLines
+                it.sdkSetupOptions = sdkSetupOptions.map { option -> option.copy() }.toMutableList()
             }
     }
+
+    data class SdkSetupOption(
+        var id: String = "",
+        var autoInstall: Boolean = false,
+        var autoConfigure: Boolean = true,
+    )
+
+    data class EffectiveSdkSetupOption(
+        val autoInstall: Boolean,
+        val autoConfigure: Boolean,
+    )
 }

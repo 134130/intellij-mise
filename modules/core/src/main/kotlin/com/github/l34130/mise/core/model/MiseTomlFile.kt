@@ -36,46 +36,75 @@ class MiseTomlFile {
             val originalFile = if (file is LightVirtualFile) file.originalFile else file
             if (originalFile == null) return false
 
-            if (originalFile.name in listOf("mise.local.toml", ".mise.local.toml", "mise.toml", ".mise.toml") ||
-                originalFile.name.matches("^mise\\.(\\w+\\.)?toml$".toRegex())
+            return isMiseTomlFileName(project, originalFile, originalFile.name)
+        }
+
+        fun isMiseTomlFile(
+            project: Project,
+            file: VirtualFile,
+            fileNameOverride: String,
+            parentOverride: VirtualFile? = null,
+        ): Boolean {
+            // Used for rename/move events where name or parent changes but file type may not.
+            val originalFile = if (file is LightVirtualFile) file.originalFile else file
+            if (originalFile == null) return false
+
+            return isMiseTomlFileName(project, originalFile, fileNameOverride, parentOverride)
+        }
+
+        private fun isMiseTomlFileName(
+            project: Project,
+            file: VirtualFile,
+            fileName: String,
+            parentOverride: VirtualFile? = null,
+        ): Boolean {
+            if (!fileName.endsWith(".toml")) return false
+            val parent = parentOverride ?: file.parent
+
+            if (fileName in listOf("mise.local.toml", ".mise.local.toml", "mise.toml", ".mise.toml") ||
+                fileName.matches("^mise\\.(\\w+\\.)?toml$".toRegex())
             ) {
-                if (originalFile.parent.isProjectBaseDir(project)) return true
+                if (parent.isProjectBaseDir(project)) return true
             }
 
-            if (originalFile.name == "config.toml") {
-                if (originalFile.isParentName("mise") || originalFile.isParentName(".mise")) {
-                    if (originalFile.parentOf(2).isProjectBaseDir(project)) return true
+            if (fileName == "config.toml") {
+                if (parentNameMatches(parent, "mise") || parentNameMatches(parent, ".mise")) {
+                    if (parentOf(parent, 2).isProjectBaseDir(project)) return true
                 }
             }
 
-            if (originalFile.name == "mise.toml" && originalFile.isParentName(".config")) {
-                if (originalFile.parentOf(2).isProjectBaseDir(project)) return true
+            if (fileName == "mise.toml" && parentNameMatches(parent, ".config")) {
+                if (parentOf(parent, 2).isProjectBaseDir(project)) return true
             }
-            if (originalFile.name == "config.toml" && originalFile.isParentName("mise", ".config")) {
-                if (originalFile.parentOf(3).isProjectBaseDir(project)) return true
+            if (fileName == "config.toml" && parentNameMatches(parent, "mise", ".config")) {
+                if (parentOf(parent, 3).isProjectBaseDir(project)) return true
             }
-            if (originalFile.extension == "toml" && file.isParentName("conf.d", "mise", ".config")) {
-                if (file.parent?.parent.isProjectBaseDir(project)) return true
+            if (parentNameMatches(parent, "conf.d", "mise", ".config")) {
+                if (parent?.parent.isProjectBaseDir(project)) return true
             }
 
             return false
         }
 
-        private fun VirtualFile.isParentName(vararg names: String): Boolean {
-            var parent = this
+        private fun parentNameMatches(parent: VirtualFile?, vararg names: String): Boolean {
+            var current = parent
             for (i in names.indices.reversed()) {
-                parent = parent.parent ?: return false
-                if (parent.name != names[i]) return false
+                current ?: return false
+                if (current.name != names[i]) return false
+                current = current.parent
             }
             return true
         }
 
-        private fun VirtualFile.parentOf(depth: Int = 1): VirtualFile? {
-            var parent = this
-            repeat(depth) {
-                parent = parent.parent ?: return null
+        private fun parentOf(
+            parent: VirtualFile?,
+            depthFromFile: Int,
+        ): VirtualFile? {
+            var current = parent
+            repeat(depthFromFile - 1) {
+                current = current?.parent ?: return null
             }
-            return parent
+            return current
         }
 
         private fun VirtualFile?.isProjectBaseDir(project: Project): Boolean =
