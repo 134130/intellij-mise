@@ -3,13 +3,11 @@ package com.github.l34130.mise.goland.go
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.goide.configuration.GoSdkConfigurable
 import com.goide.sdk.GoSdk
 import com.goide.sdk.GoSdkService
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
@@ -35,7 +33,7 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
         if (currentSdk == GoSdk.NULL) {
             return SdkStatus.NeedsUpdate(
                 currentSdkVersion = null,
-                requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
+                currentSdkLocation = SdkLocation.Project,
             )
         }
 
@@ -51,35 +49,31 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
 
         return SdkStatus.NeedsUpdate(
             currentSdkVersion = currentSdk.version ?: currentSdk.majorVersion.name,
-            requestedInstallPath = VfsUtil.urlToPath(newSdk.homeUrl),
+            currentSdkLocation = SdkLocation.Project,
         )
     }
 
     override fun applySdkConfiguration(
         tool: MiseDevTool,
         project: Project,
-    ): ApplySdkResult {
+    ) {
         val sdkService = GoSdkService.getInstance(project)
 
-        return WriteAction.computeAndWait<ApplySdkResult, Throwable> {
+        WriteAction.computeAndWait<Unit, Throwable> {
             val sdk = tool.asGoSdk()
             if (sdk == GoSdk.NULL) {
-                throw IllegalStateException("Failed to create Go SDK from path: ${tool.shimsInstallPath()}")
+                throw IllegalStateException("Failed to create Go SDK from path: ${tool.resolvedInstallPath}")
             }
             sdkService.setSdk(sdk, true)
-            ApplySdkResult(
-                sdkName = sdk.name,
-                sdkVersion = sdk.version ?: tool.shimsVersion(),
-                sdkPath = sdk.homeUrl,
-            )
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Configurable> getConfigurableClass(): KClass<out T> = GoSdkConfigurable::class as KClass<out T>
+    override fun <T : Configurable> getSettingsConfigurableClass(): KClass<out T> =
+        GoSdkConfigurable::class as KClass<out T>
 
     private fun MiseDevTool.asGoSdk(): GoSdk {
-        val basePath = WslPathUtils.convertToolPathForWsl(this)
+        val basePath = resolvedInstallPath
         var sdk = GoSdk.fromHomePath(basePath)
         if (sdk == GoSdk.NULL) {
             // Go 1.25+ - try with /go subdirectory
@@ -96,9 +90,5 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
         val path1 = VfsUtil.urlToPath(url1)
         val path2 = VfsUtil.urlToPath(url2)
         return FileUtil.filesEqual(File(path1), File(path2))
-    }
-
-    companion object {
-        private val logger = logger<MiseProjectGoSdkSetup>()
     }
 }

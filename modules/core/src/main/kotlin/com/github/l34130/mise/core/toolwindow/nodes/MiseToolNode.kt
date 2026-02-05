@@ -49,7 +49,7 @@ class MiseToolNode(
         toolInfo,
         AllIcons.General.Gear,
     ) {
-    override fun displayName(): String = "${toolName.value}@${toolInfo.shimsVersion()}"
+    override fun displayName(): String = "${toolName.value}@${toolInfo.displayVersion}"
 
     override fun isActive(): Boolean = toolInfo.active
 

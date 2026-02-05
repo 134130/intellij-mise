@@ -2,13 +2,16 @@ package com.github.l34130.mise.core.command
 
 import com.github.l34130.mise.core.MiseEnvCustomizer
 import com.github.l34130.mise.core.setting.MiseProjectSettings
-import com.github.l34130.mise.core.util.canSafelyInvokeAndWait
+import com.github.l34130.mise.core.util.getWslDistribution
 import com.github.l34130.mise.core.util.waitForProjectCache
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.CommandLineEnvCustomizer
+import com.intellij.execution.wsl.WSLDistribution
+import com.intellij.execution.wsl.WslPath
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlin.io.path.Path
 
 /**
  * Base command line customizer that customizes mise environment variables.
@@ -33,23 +36,36 @@ open class MiseCommandLineEnvCustomizer : CommandLineEnvCustomizer, MiseEnvCusto
         // Immediately exit if this isn't required. This must always be the first check to avoid recursion
         if (!MiseCommandLineHelper.environmentNeedsCustomization(commandLine.environment)) return
 
-        // Skip if in unsafe threading context (WSL/IJent infrastructure, coroutines, etc.)
-        // This prevents threading issues, deadlocks, and project detection failures
-        if (!canSafelyInvokeAndWait()) {
-            logger.debug("Skipping environment customization due to unsafe threading context. (cmd=$commandLine)")
+        // Safe exePath check, this prevents an exception being thrown by a null exePath or workingDirectory.
+        // If we don't have both, we can't customize anyway.
+        if (hasNullExePathOrWorkingDirectory(commandLine)) return
+
+        // The IDE uses wsl.exe to explore the local wsl config. This is always run locally on Windows and is a pre-requisit for this
+        // plugin's Project setup and WSL caching. It must not be customized.
+        if(isInternalWslExeCommand(commandLine)) {
+            logger.trace(logMessage("Skipping environment customization of wsl commands.", commandLine))
             return
         }
 
-        // Safe exePath check, this prevents an exception being thrown by a null exePath
-        if (MiseCommandLineHelper.safeGetExePath(commandLine) == null) return
+        val project = MiseCommandLineHelper.resolveProjectFromCommandLine(commandLine)
 
-        val project = MiseCommandLineHelper.resolveProjectFromCommandLine(commandLine) ?: return
+        if (project == null ) {
+            logger.trace(logMessage("Skipping environment customization, could not resolve project.", commandLine))
+            return
+        }
+
+        if (isNotRunningOnProjectSystem(commandLine, project)) {
+            logger.trace(logMessage("Skipping environment customization of command on different system from project mise executable.", commandLine))
+            return
+        }
 
         // Perform checks that need the project (can be overridden by subclasses)
         if (!shouldCustomizeForProject(project, commandLine)) return
 
         val workDir = MiseCommandLineHelper.resolveWorkingDirectory(commandLine, project)
-        // Perform checks against settings (override shouldCustomizeForSettings in subclasses) and if good do the actual customization
+
+        logger.trace(logMessage("Customizing.", commandLine))
+        // Perform checks against settings (override shouldCustomizeForSettings in subclasses if needed) and if good do the actual customization
         customizeMiseEnvironment(project, workDir, environment)
     }
 
@@ -70,4 +86,14 @@ open class MiseCommandLineEnvCustomizer : CommandLineEnvCustomizer, MiseEnvCusto
     override fun shouldCustomizeForSettings(settings: MiseProjectSettings.MyState): Boolean {
         return settings.useMiseDirEnv && settings.useMiseInAllCommandLines
     }
+
+    private fun hasNullExePathOrWorkingDirectory(commandLine: GeneralCommandLine) = MiseCommandLineHelper.safeGetExePath(commandLine).isNullOrBlank() || commandLine.workingDirectory == null
+
+    private fun isInternalWslExeCommand(commandLine: GeneralCommandLine): Boolean = Path(commandLine.exePath) == WSLDistribution.findWslExe()
+
+    private fun isNotRunningOnProjectSystem(commandLine: GeneralCommandLine, project: Project): Boolean {
+        return commandLine.workingDirectory != null && project.getWslDistribution()?.msId != WslPath.getDistributionByWindowsUncPath(commandLine.exePath)?.msId
+    }
+
+    private fun logMessage(message: String, commandLine: GeneralCommandLine) = "$message (cmd=$commandLine, workingDirectory=${commandLine.workingDirectory})"
 }

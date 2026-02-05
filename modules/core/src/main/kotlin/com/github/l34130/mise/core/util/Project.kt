@@ -91,7 +91,7 @@ fun Project.getProjectShell(): String? {
  * Gets the user home directory path appropriate for the project's execution environment.
  *
  * For WSL projects, returns the Windows UNC path to the WSL user's home directory
- * (e.g., `\\wsl.localhost\Ubuntu\home\steve`).
+ * (e.g., `\\wsl.localhost\Ubuntu\home\user`).
  * For native projects, returns the system user home directory.
  *
  * @return User home path for the project environment

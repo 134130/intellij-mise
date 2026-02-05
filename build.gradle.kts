@@ -4,6 +4,7 @@ import org.jetbrains.intellij.platform.gradle.Constants.Constraints
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformPluginsExtension
+import org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask
 import org.jetbrains.intellij.pluginRepository.PluginRepositoryFactory
 
 plugins {
@@ -125,6 +126,20 @@ intellijPlatform {
 
     // https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html#intellijPlatform-buildSearchableOptions
     buildSearchableOptions = false
+    // Disable auto-reload by default: it is noisy during runIde and has been unreliable.
+    // Re-enable via `ideaAutoReload=true` in `gradle.properties` or `-PideaAutoReload=true`.
+    autoReload = providers.gradleProperty("ideaAutoReload")
+        .map { it.toBoolean() }
+        .orElse(false)
+}
+
+intellijPlatformTesting.runIde.configureEach {
+    plugins {
+        // Run-IDE sandbox only: Kubernetes plugin consistently fails on startup.
+        disablePlugin("com.intellij.kubernetes")
+        // Run-IDE sandbox only: Sass plugin logs missing color scheme resources.
+        disablePlugin("org.jetbrains.plugins.sass")
+    }
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -188,18 +203,47 @@ val IntelliJPlatformPluginsExtension.pluginRepository by lazy {
     PluginRepositoryFactory.create("https://plugins.jetbrains.com")
 }
 
+data class IdeaRunIdePlugin(val id: String, val bundled: Boolean = false)
+
+val ideaRunIdePlugins =
+    listOf(
+        IdeaRunIdePlugin("org.toml.lang"), // TOML support
+        IdeaRunIdePlugin("org.jetbrains.plugins.go"), // Go support (mise-goland.xml)
+        IdeaRunIdePlugin("NodeJS"), // NodeJS support (mise-nodejs.xml)
+        IdeaRunIdePlugin("JavaScript"), // JavaScript ecosystem
+        IdeaRunIdePlugin("PythonCore"), // Python support (mise-pycharm.xml)
+        IdeaRunIdePlugin("org.jetbrains.plugins.ruby"), // Ruby support (mise-ruby.xml)
+        IdeaRunIdePlugin("com.intellij.database", bundled = true), // Database support (mise-database.xml)
+        IdeaRunIdePlugin("com.intellij.gradle"), // Gradle support (mise-gradle.xml)
+        IdeaRunIdePlugin("com.jetbrains.sh"), // Shell script support (mise-sh.xml)
+    )
+
 fun IntelliJPlatformPluginsExtension.configureIdeaRunIdePlugins() {
-    compatiblePlugin("org.toml.lang")
-    compatiblePlugin("org.jetbrains.plugins.go")   // Go support (mise-goland.xml)
-    compatiblePlugin("NodeJS")                      // NodeJS support (mise-nodejs.xml)
-    compatiblePlugin("JavaScript")                  // JavaScript ecosystem
-    compatiblePlugin("PythonCore")                  // Python support (mise-pycharm.xml)
-    compatiblePlugin("org.jetbrains.plugins.ruby")  // Ruby support (mise-ruby.xml)
-    bundledPlugin("com.intellij.database")       // Database support (mise-database.xml)
-    compatiblePlugin("com.intellij.gradle")         // Gradle support (mise-gradle.xml)
-    compatiblePlugin("com.jetbrains.sh")            // Shell script support (mise-sh.xml)
+    ideaRunIdePlugins.forEach { plugin ->
+        if (plugin.bundled) {
+            bundledPlugin(plugin.id)
+        } else {
+            compatiblePlugin(plugin.id)
+        }
+    }
     // Causes constant errors in WSL projects.
     //compatiblePlugin("dev.nx.console")              // NX Console support (mise-nx.xml)
+}
+
+tasks.withType<RunIdeTask>().configureEach {
+    val requiredPluginIds =
+        listOf(
+            providers.gradleProperty("pluginGroup").get(),
+            "com.intellij.modules.ultimate",
+        ) + ideaRunIdePlugins.map { it.id }
+    val isUltimateTask = name.contains("IntellijIdeaUltimate")
+    if (isUltimateTask) {
+        // Ensure required-plugins mode keeps Ultimate enabled for IU runs.
+        jvmArgumentProviders +=
+            CommandLineArgumentProvider {
+                listOf("-Didea.required.plugins.id=${requiredPluginIds.distinct().joinToString(",")}")
+            }
+    }
 }
 
 intellijPlatformTesting.runIde.register("runPyCharmCommunity") {

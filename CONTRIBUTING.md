@@ -28,3 +28,7 @@ After that, you can run the desired IDE by running the following command:
 
 > [!TIP]
 > If you want to test other version of IDEs, you can change the version field in the [build.gradle.kts](./build.gradle.kts) file.
+
+## Extension points
+
+If you are adding SDK integration for a new tool or language, see the `miseSdkSetup` extension point documentation: [`docs/extension-points.md`](docs/extension-points.md)

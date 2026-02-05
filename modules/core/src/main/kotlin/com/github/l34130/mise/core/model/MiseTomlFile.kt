@@ -1,9 +1,13 @@
 package com.github.l34130.mise.core.model
 
+import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.lang.psi.getValueWithKey
 import com.github.l34130.mise.core.lang.psi.stringValue
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.guessMiseProjectDir
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.util.childrenOfType
 import com.intellij.testFramework.LightVirtualFile
@@ -36,53 +40,107 @@ class MiseTomlFile {
             val originalFile = if (file is LightVirtualFile) file.originalFile else file
             if (originalFile == null) return false
 
-            if (originalFile.name in listOf("mise.local.toml", ".mise.local.toml", "mise.toml", ".mise.toml") ||
-                originalFile.name.matches("^mise\\.(\\w+\\.)?toml$".toRegex())
-            ) {
-                if (originalFile.parent.isProjectBaseDir(project)) return true
-            }
+            // Authoritative check: only treat files that `mise config --tracked-configs` says are active.
+            return isMiseTomlFileName(project, originalFile, originalFile.name)
+        }
 
-            if (originalFile.name == "config.toml") {
-                if (originalFile.isParentName("mise") || originalFile.isParentName(".mise")) {
-                    if (originalFile.parentOf(2).isProjectBaseDir(project)) return true
-                }
-            }
+        fun looksLikeMiseTomlFile(
+            project: Project,
+            file: VirtualFile,
+        ): Boolean {
+            if (file.fileType != TomlFileType) return false
 
-            if (originalFile.name == "mise.toml" && originalFile.isParentName(".config")) {
-                if (originalFile.parentOf(2).isProjectBaseDir(project)) return true
-            }
-            if (originalFile.name == "config.toml" && originalFile.isParentName("mise", ".config")) {
-                if (originalFile.parentOf(3).isProjectBaseDir(project)) return true
-            }
-            if (originalFile.extension == "toml" && file.isParentName("conf.d", "mise", ".config")) {
-                if (file.parent?.parent.isProjectBaseDir(project)) return true
-            }
+            val originalFile = if (file is LightVirtualFile) file.originalFile else file
+            if (originalFile == null) return false
 
+            // Heuristic for file listeners: broad match to know when to refresh `mise config` cache.
+            return looksLikeMiseTomlFileName(project, originalFile, originalFile.name)
+        }
+
+        fun looksLikeMiseTomlFile(
+            project: Project,
+            file: VirtualFile,
+            fileNameOverride: String,
+            parentOverride: VirtualFile? = null,
+        ): Boolean {
+            // Used for rename/move events where name or parent changes but file type may not.
+            val originalFile = if (file is LightVirtualFile) file.originalFile else file
+            if (originalFile == null) return false
+
+            // Heuristic for file listeners: broad match to know when to refresh `mise config` cache.
+            return looksLikeMiseTomlFileName(project, originalFile, fileNameOverride, parentOverride)
+        }
+
+        private fun isMiseTomlFileName(
+            project: Project,
+            file: VirtualFile,
+            fileName: String,
+            parentOverride: VirtualFile? = null,
+        ): Boolean {
+            // Keep UI aligned with the tracked configs list, not just file names.
+            if (!fileName.endsWith(".toml")) return false
+            val parent = parentOverride ?: file.parent ?: return false
+            val baseDir = project.guessMiseProjectDir()
+            val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
+            val configPaths = MiseCommandLineHelper.getTrackedConfigsIfCached(project, configEnvironment) ?: return false
+
+            val candidatePath = FileUtil.toSystemIndependentName("${parent.path}/$fileName")
+            val basePath = FileUtil.toSystemIndependentName(baseDir.path).trimEnd('/')
+            val basePrefix = if (basePath.endsWith("/")) basePath else "$basePath/"
+
+            return configPaths.any { configPath ->
+                val normalized = FileUtil.toSystemIndependentName(configPath.trim())
+                val absolutePath =
+                    if (FileUtil.isAbsolute(normalized)) {
+                        normalized
+                    } else {
+                        "$basePrefix$normalized"
+                    }
+                absolutePath == candidatePath
+            }
+        }
+
+        private fun looksLikeMiseTomlFileName(
+            project: Project,
+            file: VirtualFile,
+            fileName: String,
+            parentOverride: VirtualFile? = null,
+        ): Boolean {
+            // Intentionally wider than `isMiseTomlFileName`; only used to trigger cache refresh.
+            if (!fileName.endsWith(".toml")) return false
+            val parent = parentOverride ?: file.parent ?: return false
+            val baseDir = project.guessMiseProjectDir()
+
+            val relativePath = relativePathFromProject(baseDir, parent, fileName) ?: return false
+            return looksLikeConfigPath(relativePath)
+        }
+
+        private fun relativePathFromProject(
+            baseDir: VirtualFile,
+            parent: VirtualFile,
+            fileName: String,
+        ): String? {
+            val basePath = FileUtil.toSystemIndependentName(baseDir.path).trimEnd('/')
+            val basePrefix = if (basePath.endsWith("/")) basePath else "$basePath/"
+
+            val parentPath = FileUtil.toSystemIndependentName(parent.path).trimEnd('/')
+            val filePath = FileUtil.toSystemIndependentName("$parentPath/$fileName")
+            if (!filePath.startsWith(basePrefix)) return null
+
+            return filePath.removePrefix(basePrefix).takeIf { it.isNotBlank() }
+        }
+
+        private fun looksLikeConfigPath(relativePath: String): Boolean {
+            if (relativePath == "mise.toml" || relativePath == ".mise.toml") return true
+            if (relativePath == "mise.local.toml" || relativePath == ".mise.local.toml") return true
+            if (relativePath.matches(Regex("mise\\..+\\.toml"))) return true
+            if (relativePath.matches(Regex("\\.mise\\..+\\.toml"))) return true
+            if (relativePath == "mise/config.toml" || relativePath == ".mise/config.toml") return true
+            if (relativePath == ".config/mise.toml") return true
+            if (relativePath.matches(Regex("\\.config/mise\\..+\\.toml"))) return true
+            if (relativePath == ".config/mise/config.toml") return true
+            if (relativePath.startsWith(".config/mise/conf.d/") && relativePath.endsWith(".toml")) return true
             return false
         }
-
-        private fun VirtualFile.isParentName(vararg names: String): Boolean {
-            var parent = this
-            for (i in names.indices.reversed()) {
-                parent = parent.parent ?: return false
-                if (parent.name != names[i]) return false
-            }
-            return true
-        }
-
-        private fun VirtualFile.parentOf(depth: Int = 1): VirtualFile? {
-            var parent = this
-            repeat(depth) {
-                parent = parent.parent ?: return null
-            }
-            return parent
-        }
-
-        private fun VirtualFile?.isProjectBaseDir(project: Project): Boolean =
-            if (this == null) {
-                false
-            } else {
-                this == project.guessMiseProjectDir()
-            }
     }
 }
