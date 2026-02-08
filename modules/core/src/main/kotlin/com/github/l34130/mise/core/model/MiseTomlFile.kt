@@ -82,21 +82,24 @@ class MiseTomlFile {
             // ~/.config/mise/conf.d/*.toml
             
             return when {
-                // ~/.config/mise/config.toml
-                originalFile.name == "config.toml" && originalFile.isParentName("mise", ".config") -> true
+                // ~/.config/mise/config.toml - check that both .config and mise are consecutive parents
+                originalFile.name == "config.toml" && 
+                    originalFile.parent?.name == "mise" && 
+                    originalFile.parent?.parent?.name == ".config" -> true
                 // ~/.config/mise.toml
-                originalFile.name == "mise.toml" && originalFile.isParentName(".config") -> true
+                originalFile.name == "mise.toml" && originalFile.parent?.name == ".config" -> true
                 // ~/.mise/config.toml
-                originalFile.name == "config.toml" && originalFile.isParentName(".mise") -> true
-                // ~/.mise.toml
-                originalFile.name == ".mise.toml" && path.contains("${separator}.mise.toml") -> true
+                originalFile.name == "config.toml" && originalFile.parent?.name == ".mise" -> true
+                // ~/.mise.toml - must be in root of some directory (likely home)
+                originalFile.name == ".mise.toml" -> true
                 // ~/.config/mise/conf.d/*.toml
-                originalFile.extension == "toml" && originalFile.isParentName("conf.d", "mise", ".config") -> true
+                originalFile.extension == "toml" && 
+                    originalFile.parent?.name == "conf.d" &&
+                    originalFile.parent?.parent?.name == "mise" &&
+                    originalFile.parent?.parent?.parent?.name == ".config" -> true
                 else -> false
             }
         }
-        
-        private const val separator = System.getProperty("file.separator")
 
         private fun VirtualFile.isParentName(vararg names: String): Boolean {
             var parent = this
