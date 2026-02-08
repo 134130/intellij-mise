@@ -4,6 +4,7 @@ import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.setting.MiseProjectSettings
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -12,6 +13,7 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -59,6 +61,8 @@ class MiseTrackedConfigService(
      * 
      * Relies entirely on `mise config --tracked-configs` to report all files
      * that mise is watching, including global configs and env_file references.
+     * 
+     * Converts all relative paths to absolute paths based on the project directory.
      */
     private fun refreshTrackedConfigs() {
         cs.launch(Dispatchers.IO) {
@@ -73,14 +77,26 @@ class MiseTrackedConfigService(
                 // - env_file references (both local and from MISE_ENV_FILE)
                 val result = MiseCommandLineHelper.getTrackedConfigs(project, configEnvironment)
                 result.onSuccess { configs ->
+                    val projectPath = project.guessMiseProjectPath()
+                    
+                    // Convert all paths to absolute paths for consistent matching with VFS events
+                    val absolutePaths = configs.map { path ->
+                        if (Path.of(path).isAbsolute) {
+                            path
+                        } else {
+                            // Relative path - resolve it relative to the project directory
+                            Path.of(projectPath).resolve(path).normalize().toString()
+                        }
+                    }.toSet()
+                    
                     // Update the tracked configs set atomically
                     synchronized(trackedConfigs) {
                         trackedConfigs.clear()
-                        trackedConfigs.addAll(configs)
+                        trackedConfigs.addAll(absolutePaths)
                     }
-                    logger.info("Refreshed tracked configs from mise CLI: ${configs.size} files")
+                    logger.info("Refreshed tracked configs from mise CLI: ${absolutePaths.size} files")
                     if (logger.isDebugEnabled) {
-                        configs.forEach { logger.debug("  Tracking: $it") }
+                        absolutePaths.forEach { logger.debug("  Tracking: $it") }
                     }
                 }.onFailure { error ->
                     logger.debug("Failed to get tracked configs from mise CLI", error)
