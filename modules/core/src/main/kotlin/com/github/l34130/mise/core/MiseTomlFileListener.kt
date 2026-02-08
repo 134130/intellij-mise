@@ -5,6 +5,7 @@ import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.model.MiseTomlFile
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ZipperUpdater
 import com.intellij.openapi.vfs.VirtualFile
@@ -21,9 +22,13 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Project-level service that manages the VFS listener for Mise TOML files.
+ * Project-level service that manages the VFS listener for Mise TOML files and tracked config files.
  * This ensures that the listener is only registered once per project,
  * avoiding duplicate listener registrations.
+ * 
+ * Watches for changes to:
+ * - Mise TOML configuration files (.mise.toml, mise.toml, etc.)
+ * - External files tracked by mise (e.g., .env files loaded via env_file directive)
  */
 @Service(Service.Level.PROJECT)
 class MiseTomlFileListener(
@@ -110,7 +115,15 @@ class MiseTomlFileListener(
                 }
 
             fun onVfsChange(file: VirtualFile) {
-                if (MiseTomlFile.isMiseTomlFile(project, file)) {
+                val isMiseToml = MiseTomlFile.isMiseTomlFile(project, file)
+                val isTrackedConfig = if (!isMiseToml) {
+                    // Check if this file is tracked by mise (e.g., .env file)
+                    project.service<MiseTrackedConfigService>().isTrackedConfig(file.path)
+                } else {
+                    false
+                }
+                
+                if (isMiseToml || isTrackedConfig) {
                     dirtyTomlFiles.add(file)
                     vfsChanged.set(true)
                     updater.queue(runnable)
