@@ -24,6 +24,32 @@ import com.intellij.util.application
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KClass
 
+/**
+ * Base class for automatically configuring project SDKs based on mise.toml configuration.
+ *
+ * This class implements both [ProjectActivity] (for automatic startup configuration) and
+ * [DumbAwareAction] (for manual user-triggered configuration via menu actions).
+ *
+ * ## Automatic Configuration Behavior
+ *
+ * When a project opens ([execute] is called as [ProjectActivity]):
+ * - If the tool is configured in mise.toml AND the SDK is NOT currently configured in the IDE,
+ *   the SDK is **automatically applied** without user interaction. This prevents warning banners
+ *   like "Node.js is required for IntelliJ IDEA to work correctly."
+ * - If the tool is configured in mise.toml AND there's a version mismatch with the existing SDK,
+ *   a notification is shown with a "Sync" button, giving users control over changing existing
+ *   configurations.
+ * - If the tool is not configured in mise.toml, no action is taken.
+ *
+ * ## Manual Configuration Behavior
+ *
+ * When manually triggered via menu action ([actionPerformed]):
+ * - The SDK configuration is **always applied** regardless of current state
+ * - Notifications are always shown with detailed status information
+ *
+ * Subclasses must implement methods to check SDK status and apply configuration for their
+ * specific tool type (e.g., Node.js, Python, Go).
+ */
 abstract class AbstractProjectSdkSetup :
     DumbAwareAction(),
     ProjectActivity,
