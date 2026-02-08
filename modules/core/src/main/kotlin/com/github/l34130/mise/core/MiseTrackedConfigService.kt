@@ -60,9 +60,11 @@ class MiseTrackedConfigService(
                 
                 val result = MiseCommandLineHelper.getTrackedConfigs(project, configEnvironment)
                 result.onSuccess { configs ->
-                    // Update the tracked configs set
-                    trackedConfigs.clear()
-                    trackedConfigs.addAll(configs)
+                    // Update the tracked configs set atomically
+                    synchronized(trackedConfigs) {
+                        trackedConfigs.clear()
+                        trackedConfigs.addAll(configs)
+                    }
                     logger.debug("Refreshed tracked configs: ${configs.size} files")
                 }.onFailure { error ->
                     logger.debug("Failed to refresh tracked configs", error)

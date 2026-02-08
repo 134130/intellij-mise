@@ -97,6 +97,10 @@ class MiseTomlFileListener(
             private val dirtyTomlFiles: MutableSet<VirtualFile> = ConcurrentHashMap.newKeySet()
             private val vfsChanged = AtomicBoolean(false)
             private val psiChanged = AtomicBoolean(false)
+            
+            // Cache the service reference to avoid repeated lookups
+            private val trackedConfigService by lazy { project.service<MiseTrackedConfigService>() }
+            
             private val runnable =
                 Runnable {
                     if (project.isDisposed) return@Runnable
@@ -121,7 +125,7 @@ class MiseTomlFileListener(
             fun onVfsChange(file: VirtualFile) {
                 val isMiseToml = MiseTomlFile.isMiseTomlFile(project, file)
                 // Check if this file is tracked by mise (e.g., .env file)
-                val isTrackedConfig = !isMiseToml && project.service<MiseTrackedConfigService>().isTrackedConfig(file.path)
+                val isTrackedConfig = !isMiseToml && trackedConfigService.isTrackedConfig(file.path)
                 
                 if (isMiseToml || isTrackedConfig) {
                     dirtyTomlFiles.add(file)
