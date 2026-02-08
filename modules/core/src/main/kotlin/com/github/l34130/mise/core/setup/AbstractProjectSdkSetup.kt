@@ -156,9 +156,17 @@ abstract class AbstractProjectSdkSetup :
                             )
                         }
 
-                        if (isUserInteraction) {
+                        // Auto-apply configuration in two cases:
+                        // 1. User manually triggered the action (isUserInteraction = true)
+                        // 2. Automatic startup AND SDK is not configured yet (currentSdkVersion == null)
+                        //    This prevents the "SDK is required" warning banner in the IDE
+                        val shouldAutoApply = isUserInteraction || status.currentSdkVersion == null
+
+                        if (shouldAutoApply) {
                             applyAction()
                         } else {
+                            // For version mismatches on startup, show notification to avoid
+                            // unexpectedly changing existing configuration
                             miseNotificationService.info(title, description) {
                                 NotificationAction.createSimpleExpiring(
                                     "Sync to ${tool.shimsVersion()}",
