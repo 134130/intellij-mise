@@ -167,11 +167,12 @@ jobs:
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: false
-          large-packages: false
 
       # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       # Set up Java environment for the next steps
       - name: Setup Java
