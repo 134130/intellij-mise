@@ -35,6 +35,10 @@ class MiseTomlFileListener(
     project: Project,
 ) : Disposable {
     init {
+        // Ensure MiseTrackedConfigService is initialized early
+        // This service will listen for events and update tracked configs
+        project.service<MiseTrackedConfigService>()
+        
         // Register the VFS listener once for the entire project
         val connection = project.messageBus.connect(this)
         FileListener.startListening(project, this, connection)
