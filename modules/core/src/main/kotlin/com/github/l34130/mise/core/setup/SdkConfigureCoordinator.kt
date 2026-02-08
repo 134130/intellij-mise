@@ -118,9 +118,17 @@ internal class SdkConfigureCoordinator(
         }
 
         when {
+            // Auto-apply configuration in three cases:
+            // 1. User manually triggered the action (isUserInteraction = true)
             isUserInteraction -> applyAction(false)
+            // 2. Automatic startup AND SDK is not configured yet (currentSdkVersion == null)
+            //    This prevents the "SDK is required" warning banner in the IDE
+            status.currentSdkVersion == null -> applyAction(true)
+            // 3. The user has specifically enabled auto-configuration in the settings.
             autoConfigureEnabled -> applyAction(true)
             else -> {
+                // For version mismatches on startup, show notification to avoid
+                // unexpectedly changing existing configuration
                 notificationService.info(title, description) { notification ->
                     notification.addAction(
                         NotificationAction.createSimpleExpiring("Configure now") {
