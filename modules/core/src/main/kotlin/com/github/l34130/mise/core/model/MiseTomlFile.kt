@@ -36,6 +36,7 @@ class MiseTomlFile {
             val originalFile = if (file is LightVirtualFile) file.originalFile else file
             if (originalFile == null) return false
 
+            // Check project-level mise config files
             if (originalFile.name in listOf("mise.local.toml", ".mise.local.toml", "mise.toml", ".mise.toml") ||
                 originalFile.name.matches("^mise\\.(\\w+\\.)?toml$".toRegex())
             ) {
@@ -60,6 +61,42 @@ class MiseTomlFile {
 
             return false
         }
+        
+        /**
+         * Check if a file is a global mise configuration file.
+         * Global configs are in the user's home directory (~/.config/mise/, etc.)
+         */
+        fun isGlobalMiseTomlFile(file: VirtualFile): Boolean {
+            if (file.fileType != TomlFileType) return false
+            
+            val originalFile = if (file is LightVirtualFile) file.originalFile else file
+            if (originalFile == null) return false
+            
+            val path = originalFile.path
+            
+            // Check for global mise config patterns
+            // ~/.config/mise/config.toml
+            // ~/.config/mise.toml
+            // ~/.mise/config.toml
+            // ~/.mise.toml
+            // ~/.config/mise/conf.d/*.toml
+            
+            return when {
+                // ~/.config/mise/config.toml
+                originalFile.name == "config.toml" && originalFile.isParentName("mise", ".config") -> true
+                // ~/.config/mise.toml
+                originalFile.name == "mise.toml" && originalFile.isParentName(".config") -> true
+                // ~/.mise/config.toml
+                originalFile.name == "config.toml" && originalFile.isParentName(".mise") -> true
+                // ~/.mise.toml
+                originalFile.name == ".mise.toml" && path.contains("${separator}.mise.toml") -> true
+                // ~/.config/mise/conf.d/*.toml
+                originalFile.extension == "toml" && originalFile.isParentName("conf.d", "mise", ".config") -> true
+                else -> false
+            }
+        }
+        
+        private const val separator = System.getProperty("file.separator")
 
         private fun VirtualFile.isParentName(vararg names: String): Boolean {
             var parent = this

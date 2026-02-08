@@ -27,7 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * avoiding duplicate listener registrations.
  * 
  * Watches for changes to:
- * - Mise TOML configuration files (.mise.toml, mise.toml, etc.)
+ * - Mise TOML configuration files (.mise.toml, mise.toml, etc.) in the project directory
+ * - Global mise config files (~/.config/mise/config.toml, etc.) in the user's home directory
  * - External files tracked by mise (e.g., .env files loaded via env_file directive)
  */
 @Service(Service.Level.PROJECT)
@@ -124,10 +125,11 @@ class MiseTomlFileListener(
 
             fun onVfsChange(file: VirtualFile) {
                 val isMiseToml = MiseTomlFile.isMiseTomlFile(project, file)
+                val isGlobalMiseToml = MiseTomlFile.isGlobalMiseTomlFile(file)
                 // Check if this file is tracked by mise (e.g., .env file)
-                val isTrackedConfig = !isMiseToml && trackedConfigService.isTrackedConfig(file.path)
+                val isTrackedConfig = !isMiseToml && !isGlobalMiseToml && trackedConfigService.isTrackedConfig(file.path)
                 
-                if (isMiseToml || isTrackedConfig) {
+                if (isMiseToml || isGlobalMiseToml || isTrackedConfig) {
                     dirtyTomlFiles.add(file)
                     vfsChanged.set(true)
                     updater.queue(runnable)
@@ -135,7 +137,9 @@ class MiseTomlFileListener(
             }
 
             fun onPsiChange(file: VirtualFile) {
-                if (MiseTomlFile.isMiseTomlFile(project, file)) {
+                val isMiseToml = MiseTomlFile.isMiseTomlFile(project, file)
+                val isGlobalMiseToml = MiseTomlFile.isGlobalMiseTomlFile(file)
+                if (isMiseToml || isGlobalMiseToml) {
                     dirtyTomlFiles.add(file)
                     psiChanged.set(true)
                     updater.queue(runnable)
