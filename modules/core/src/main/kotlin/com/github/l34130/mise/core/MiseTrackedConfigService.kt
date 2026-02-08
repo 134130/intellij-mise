@@ -40,7 +40,6 @@ class MiseTrackedConfigService(
             when (event.kind) {
                 MiseProjectEvent.Kind.STARTUP,
                 MiseProjectEvent.Kind.TOML_CHANGED,
-                MiseProjectEvent.Kind.TOML_PSI_CHANGED,
                 MiseProjectEvent.Kind.SETTINGS_CHANGED -> {
                     refreshTrackedConfigs()
                 }

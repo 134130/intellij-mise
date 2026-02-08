@@ -120,12 +120,8 @@ class MiseTomlFileListener(
 
             fun onVfsChange(file: VirtualFile) {
                 val isMiseToml = MiseTomlFile.isMiseTomlFile(project, file)
-                val isTrackedConfig = if (!isMiseToml) {
-                    // Check if this file is tracked by mise (e.g., .env file)
-                    project.service<MiseTrackedConfigService>().isTrackedConfig(file.path)
-                } else {
-                    false
-                }
+                // Check if this file is tracked by mise (e.g., .env file)
+                val isTrackedConfig = !isMiseToml && project.service<MiseTrackedConfigService>().isTrackedConfig(file.path)
                 
                 if (isMiseToml || isTrackedConfig) {
                     dirtyTomlFiles.add(file)

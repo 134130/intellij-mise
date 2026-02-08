@@ -22,4 +22,13 @@ class MiseTrackedConfigServiceTest : BasePlatformTestCase() {
         val isTracked = service.isTrackedConfig("/non/existent/file.env")
         assertFalse("Non-existent file should not be tracked", isTracked)
     }
+    
+    fun `test getTrackedConfigs returns set`() {
+        val service = project.service<MiseTrackedConfigService>()
+        
+        // getTrackedConfigs should return a Set
+        val configs = service.getTrackedConfigs()
+        assertNotNull("getTrackedConfigs should return a non-null set", configs)
+        assertTrue("getTrackedConfigs should return a Set", configs is Set<String>)
+    }
 }
