@@ -14,6 +14,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectForFile
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.xml.util.XmlStringUtil
 import org.jetbrains.concurrency.runAsync
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -48,39 +49,44 @@ object MiseNotificationServiceUtils {
 
 
 
+                        val configPath = FileUtil.getLocationRelativeToUserHome(throwable.configFilePath)
+                        val escapedConfigPath = XmlStringUtil.escapeString(configPath)
+                        val escapedConfigFilePath = XmlStringUtil.escapeString(throwable.configFilePath)
+
                         notificationService.warn(
                             "Config file is not trusted.",
                             """
-                            Trust the file <code>${FileUtil.getLocationRelativeToUserHome(throwable.configFilePath)}</code>
+                            Trust the file <code>$escapedConfigPath</code>
                             """.trimIndent(),
-                        ) {
-                            NotificationAction.createSimple(
-                                "`mise trust`",
-                            ) {
-                                logger.debug("Trust action triggered for: ${throwable.configFilePath}")
-                                runAsync {
-                                    val vfsWorkingDir = VirtualFileManager.getInstance().findFileByNioPath(throwable.generalCommandLine.workDirectory.toPath())
-                                    val guessedProjectCloseEnoughForUserHome = vfsWorkingDir?.let { guessProjectForFile(it) } ?: project
-                                    // Returns a full wsl path if the file is on WSL, which is then handled appropriately by the trust command.
-                                    val absolutePath = resolveUserHomeAbbreviations(throwable.configFilePath, guessedProjectCloseEnoughForUserHome).toString()
-                                    val vf = VirtualFileManager.getInstance().findFileByUrl("file://$absolutePath")
-                                    val guessedProject = vf?.let { guessProjectForFile(it) } ?: project
-                                    // Get the config environment from the project settings
-                                    val configEnvironment = guessedProject.service<MiseProjectSettings>().state.miseConfigEnvironment
+                            actionProvider = {
+                                NotificationAction.createSimple(
+                                    "`mise trust`",
+                                ) {
+                                    logger.debug("Trust action triggered for: ${throwable.configFilePath}")
+                                    runAsync {
+                                        val vfsWorkingDir = VirtualFileManager.getInstance().findFileByNioPath(throwable.generalCommandLine.workDirectory.toPath())
+                                        val guessedProjectCloseEnoughForUserHome = vfsWorkingDir?.let { guessProjectForFile(it) } ?: project
+                                        // Returns a full wsl path if the file is on WSL, which is then handled appropriately by the trust command.
+                                        val absolutePath = resolveUserHomeAbbreviations(throwable.configFilePath, guessedProjectCloseEnoughForUserHome).toString()
+                                        val vf = VirtualFileManager.getInstance().findFileByUrl("file://$absolutePath")
+                                        val guessedProject = vf?.let { guessProjectForFile(it) } ?: project
+                                        // Get the config environment from the project settings
+                                        val configEnvironment = guessedProject.service<MiseProjectSettings>().state.miseConfigEnvironment
 
-                                    MiseCommandLineHelper
-                                        .trustConfigFile(guessedProject, absolutePath, configEnvironment)
-                                        .onSuccess {
-                                            notificationService.info(
-                                                "Config file trusted",
-                                                "Config file <code>${throwable.configFilePath}</code> is now trusted",
-                                            )
-                                        }.onFailure {
-                                            notifyException("Failed to trust config file", it, project)
-                                        }
+                                        MiseCommandLineHelper
+                                            .trustConfigFile(guessedProject, absolutePath, configEnvironment)
+                                            .onSuccess {
+                                                notificationService.info(
+                                                    "Config file trusted",
+                                                    "Config file <code>$escapedConfigFilePath</code> is now trusted",
+                                                )
+                                            }.onFailure {
+                                                notifyException("Failed to trust config file", it, project)
+                                            }
+                                    }
                                 }
-                            }
-                        }
+                            },
+                        )
                     }
 
                     else -> {

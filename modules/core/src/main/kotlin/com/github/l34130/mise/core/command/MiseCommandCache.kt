@@ -1,9 +1,9 @@
 package com.github.l34130.mise.core.command
 
 import com.github.l34130.mise.core.MiseTomlFileListener
+import com.github.l34130.mise.core.cache.MiseCacheService
 import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
-import com.github.l34130.mise.core.cache.MiseCacheService
 import com.github.l34130.mise.core.util.canSafelyInvokeAndWait
 import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.github.l34130.mise.core.util.waitForProjectCache
@@ -16,11 +16,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.platform.ide.progress.withBackgroundProgress
 import com.intellij.util.application
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 
 /**
@@ -74,6 +70,9 @@ class MiseCommandCache(
      * This prevents EDT blocking when UI components (tool window, etc.) refresh.
      */
     fun warmCommonCommands() {
+        if (application.isUnitTestMode) {
+            return
+        }
         cs.launch(Dispatchers.IO) {
             try {
                 logger.debug("Warming command cache for commonly-used commands")
@@ -86,6 +85,12 @@ class MiseCommandCache(
 
                 // Warm dev tools (used by tool window, SDK setup, etc.)
                 MiseCommandLineHelper.getDevTools(project, workDir, configEnvironment)
+
+                // Warm config file list (used for config resolution).
+                MiseCommandLineHelper.getConfigs(project, configEnvironment)
+
+                // Warm tracked config list (used for UI checks).
+                MiseCommandLineHelper.getTrackedConfigs(project, configEnvironment)
 
                 logger.debug("Command cache warmed successfully")
             } catch (e: Exception) {
@@ -209,6 +214,14 @@ class MiseCommandCache(
                 getCached(cacheKey, compute)
             }
         }
+    }
+
+    /**
+     * Get cached value if present, without triggering computation.
+     * Intended for fast checks in UI contexts.
+     */
+    fun <T> getCachedIfPresent(cacheKey: MiseCacheKey<T>): T? {
+        return getIfCached(cacheKey)
     }
 
     // === Data Classes ===

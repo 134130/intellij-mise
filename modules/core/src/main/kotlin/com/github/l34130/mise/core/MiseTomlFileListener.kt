@@ -10,6 +10,7 @@ import com.intellij.openapi.util.ZipperUpdater
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileContentsChangedAdapter
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.VirtualFileMoveEvent
 import com.intellij.openapi.vfs.VirtualFilePropertyEvent
 import com.intellij.openapi.vfs.impl.BulkVirtualFileListenerAdapter
 import com.intellij.psi.PsiFile
@@ -48,18 +49,19 @@ class MiseTomlFileListener(
                 updater.onVfsChange(fileOrDirectory)
             }
 
-            override fun onBeforeFileChange(fileOrDirectory: VirtualFile) {
-                updater.onVfsChange(fileOrDirectory)
-            }
-
-            // Called BEFORE property change - file still has OLD value
-            override fun beforePropertyChange(event: VirtualFilePropertyEvent) {
-                updater.onVfsChange(event.file)
-            }
+            override fun onBeforeFileChange(fileOrDirectory: VirtualFile) = Unit
 
             // Called AFTER property change - file now has NEW value
             override fun propertyChanged(event: VirtualFilePropertyEvent) {
-                updater.onVfsChange(event.file)
+                if (event.propertyName == VirtualFile.PROP_NAME) {
+                    val oldName = event.oldValue as? String ?: return
+                    val newName = event.newValue as? String ?: return
+                    updater.onVfsRename(event.file, oldName, newName)
+                }
+            }
+
+            override fun fileMoved(event: VirtualFileMoveEvent) {
+                updater.onVfsMove(event.file, event.oldParent, event.newParent)
             }
         }
     ) {
@@ -110,7 +112,38 @@ class MiseTomlFileListener(
                 }
 
             fun onVfsChange(file: VirtualFile) {
-                if (MiseTomlFile.isMiseTomlFile(project, file)) {
+                if (MiseTomlFile.looksLikeMiseTomlFile(project, file)) {
+                    dirtyTomlFiles.add(file)
+                    vfsChanged.set(true)
+                    updater.queue(runnable)
+                }
+            }
+
+            fun onVfsRename(
+                file: VirtualFile,
+                oldName: String,
+                newName: String,
+            ) {
+                // Rename events have the new name already applied; check both sides to detect enter/exit.
+                val wasMiseToml = MiseTomlFile.looksLikeMiseTomlFile(project, file, oldName)
+                val isMiseToml = MiseTomlFile.looksLikeMiseTomlFile(project, file, newName)
+                if (wasMiseToml || isMiseToml) {
+                    dirtyTomlFiles.add(file)
+                    vfsChanged.set(true)
+                    updater.queue(runnable)
+                }
+            }
+
+            fun onVfsMove(
+                file: VirtualFile,
+                oldParent: VirtualFile,
+                newParent: VirtualFile,
+            ) {
+                // Moves can change whether a config is in-scope without changing its name.
+                val fileName = file.name
+                val wasMiseToml = MiseTomlFile.looksLikeMiseTomlFile(project, file, fileName, oldParent)
+                val isMiseToml = MiseTomlFile.looksLikeMiseTomlFile(project, file, fileName, newParent)
+                if (wasMiseToml || isMiseToml) {
                     dirtyTomlFiles.add(file)
                     vfsChanged.set(true)
                     updater.queue(runnable)
@@ -118,7 +151,8 @@ class MiseTomlFileListener(
             }
 
             fun onPsiChange(file: VirtualFile) {
-                if (MiseTomlFile.isMiseTomlFile(project, file)) {
+                // PSI updates are used for in-editor parsing only; CLI work listens to VFS events.
+                if (MiseTomlFile.looksLikeMiseTomlFile(project, file)) {
                     dirtyTomlFiles.add(file)
                     psiChanged.set(true)
                     updater.queue(runnable)

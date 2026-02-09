@@ -4,6 +4,7 @@ import com.github.l34130.mise.core.MiseTaskResolver
 import com.github.l34130.mise.core.cache.MiseCacheService
 import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
+import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.github.l34130.mise.core.setting.MiseConfigurable
 import com.intellij.icons.AllIcons
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -188,6 +189,8 @@ class MiseTreeToolWindow(
         // Invalidate MiseTaskResolver cache (used by tool window)
         project.service<MiseTaskResolver>().invalidateCache()
         project.service<MiseCacheService>().invalidateAllCommands()
+        // Refresh SDK state from the latest mise config.
+        AbstractProjectSdkSetup.runAll(project, isUserInteraction = false)
         // Redraw the tree
         runInEdt { redrawContent() }
     }

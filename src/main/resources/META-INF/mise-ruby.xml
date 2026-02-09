@@ -2,10 +2,13 @@
     <extensions defaultExtensionNs="org.jetbrains.plugins.ruby">
         <runConfigurationExtension implementation="com.github.l34130.mise.ruby.run.MiseRubyMineRunConfigurationExtension"/>
     </extensions>
+    <extensions defaultExtensionNs="com.github.l34130.mise">
+        <miseSdkSetup implementation="com.github.l34130.mise.ruby.sdk.MiseProjectRubySdkSetup"/>
+    </extensions>
 
     <actions>
         <action id="com.github.l34130.mise.ruby.sdk.MiseSdkRefresher"
-                class="com.github.l34130.mise.ruby.sdk.MiseRubyProjectSdkSetup"
+                class="com.github.l34130.mise.ruby.sdk.MiseProjectRubySdkSetup"
                 text="Reload Ruby SDK"
         >
             <add-to-group group-id="com.github.l34130.mise.actions"/>

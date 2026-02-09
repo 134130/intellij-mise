@@ -83,6 +83,10 @@
   Download the [latest release](https://github.com/134130/intellij-mise/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
+## Extending this plugin with your own plugin
+
+The intellij-mise plugin exposes an extension point to enable developers of unsupported language plugins to integrate with it. The extension point allows a third party plugin to register its own SDK definitions with the intellij-mise plugin to enable auto installation and configuration of tools. See the dedicated docs for more information: [`docs/extension-points.md`](docs/extension-points.md)
+
 ## Acknowledgements
 
 - [mirrord-intellij](https://github.com/metalbear-co/mirrord-intellij)

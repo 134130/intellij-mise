@@ -9,6 +9,9 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Centralized caching service for all mise-related data using Caffeine.
@@ -35,6 +38,7 @@ class MiseCacheService(private val project: Project) {
             }
         }
         .build()
+    private val commandInFlight = ConcurrentHashMap<String, CompletableFuture<Any?>>()
 
     /**
      * Cache for executable info (resolved path + version)
@@ -56,15 +60,38 @@ class MiseCacheService(private val project: Project) {
      * Uses Caffeine's built-in stampede protection - only one computation per key.
      */
     fun <T> getCachedCommand(key: String, compute: () -> T?): T? {
-        @Suppress("UNCHECKED_CAST")
-        return commandCache.get(key) {
+        val cached: Any? = commandCache.getIfPresent(key)
+        if (cached != null) {
+            @Suppress("UNCHECKED_CAST")
+            return cached as T
+        }
+
+        val mine = CompletableFuture<Any?>()
+        val prior = commandInFlight.putIfAbsent(key, mine)
+        if (prior != null) {
+            return try {
+                @Suppress("UNCHECKED_CAST")
+                prior.join() as T?
+            } catch (e: CompletionException) {
+                throw e.cause ?: e
+            }
+        }
+
+        try {
             logger.debug("Command cache miss: $key")
             val result = compute()
             if (result != null) {
                 logger.debug("Command cached: $key")
+                commandCache.put(key, result)
             }
-            result as Any?
-        } as T?
+            mine.complete(result)
+            return result
+        } catch (t: Throwable) {
+            mine.completeExceptionally(t)
+            throw t
+        } finally {
+            commandInFlight.remove(key, mine)
+        }
     }
 
         /**
