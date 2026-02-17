@@ -82,7 +82,12 @@ class MiseTaskNode(
         val parentDirectory = parent?.directoryPath
         val pathText =
             if (parentDirectory != null) {
-                taskInfo.source.replace("$parentDirectory/", "")
+                val source = taskInfo.source
+                if (source.startsWith("$parentDirectory/") || source.startsWith("$parentDirectory\\")) {
+                    source.replace("$parentDirectory/", "").replace("$parentDirectory\\", "")
+                } else {
+                    displayPath(project, source, nonProjectPathDisplay)
+                }
             } else {
                 displayPath(project, taskInfo.source, nonProjectPathDisplay)
             }

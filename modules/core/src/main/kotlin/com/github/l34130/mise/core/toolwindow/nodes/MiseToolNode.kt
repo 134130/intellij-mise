@@ -7,7 +7,9 @@ import com.github.l34130.mise.core.toolwindow.displayPath
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
+import com.intellij.ide.util.treeView.InplaceCommentAppender
 import com.intellij.openapi.project.Project
+import com.intellij.ui.SimpleTextAttributes
 
 class MiseToolServiceNode(
     project: Project,
@@ -38,6 +40,7 @@ class MiseToolConfigDirectoryNode(
                 MiseToolNode(
                     project = project,
                     toolName = it.first,
+                    nonProjectPathDisplay = nonProjectPathDisplay,
                     toolInfo = it.second,
                 )
             }
@@ -46,13 +49,19 @@ class MiseToolConfigDirectoryNode(
 class MiseToolNode(
     project: Project,
     val toolName: MiseDevToolName,
+    private val nonProjectPathDisplay: NonProjectPathDisplay,
     val toolInfo: MiseDevTool,
 ) : MiseLeafNode<MiseDevTool>(
         project,
         toolInfo,
         AllIcons.General.Gear,
-    ) {
+) {
     override fun displayName(): String = "${toolName.value}@${toolInfo.shimsVersion()}"
+
+    override fun appendInplaceComments(appender: InplaceCommentAppender) {
+        val sourcePath = toolInfo.source?.absolutePath ?: return
+        appender.append(" ${displayPath(project, sourcePath, nonProjectPathDisplay)}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+    }
 
     override fun isActive(): Boolean = toolInfo.active
 
@@ -84,6 +93,7 @@ class MiseToolResolvedContextNode(
             MiseToolNode(
                 project = project,
                 toolName = toolName,
+                nonProjectPathDisplay = nonProjectPathDisplay,
                 toolInfo = toolInfo,
             )
         }

@@ -83,6 +83,7 @@ class MiseRootNode(
                     MiseToolNode(
                         project = project,
                         toolName = toolName,
+                        nonProjectPathDisplay = nonProjectPathDisplay,
                         toolInfo = toolInfo,
                     )
                 }
