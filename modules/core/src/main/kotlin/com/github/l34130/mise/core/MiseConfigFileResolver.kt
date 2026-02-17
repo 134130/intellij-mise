@@ -34,12 +34,12 @@ class MiseConfigFileResolver(
     data class TrackedConfigSnapshot(
         val configTomlFiles: List<VirtualFile>,
         val externalTrackedFiles: List<VirtualFile>,
-        val allTrackedFiles: List<VirtualFile>,
-        val trackedPathSet: Set<String>,
+        val trackedInputs: List<VirtualFile>,
+        val normalizedTrackedPaths: Set<String>,
     )
 
-    private val cache = ConcurrentHashMap<String, TrackedConfigSnapshot>()
-    private val trackedPathLookup = ConcurrentHashMap.newKeySet<String>()
+    private val snapshotByContext = ConcurrentHashMap<String, TrackedConfigSnapshot>()
+    private val globalTrackedPathIndex = ConcurrentHashMap.newKeySet<String>()
     private val logger = logger<MiseConfigFileResolver>()
 
     init {
@@ -49,13 +49,13 @@ class MiseConfigFileResolver(
         // Subscribe to cache invalidation events
         MiseProjectEventListener.subscribe(project, this) { event ->
             if (event.kind == MiseProjectEvent.Kind.TOML_CHANGED || event.kind == MiseProjectEvent.Kind.SETTINGS_CHANGED) {
-                cache.clear()
-                trackedPathLookup.clear()
+                snapshotByContext.clear()
+                globalTrackedPathIndex.clear()
             }
         }
     }
 
-    fun isTrackedPath(file: VirtualFile): Boolean = trackedPathLookup.contains(normalizePath(file.path))
+    fun isTrackedPath(file: VirtualFile): Boolean = globalTrackedPathIndex.contains(normalizePath(file.path))
 
     suspend fun resolveConfigFiles(
         baseDirVf: VirtualFile,
@@ -70,7 +70,7 @@ class MiseConfigFileResolver(
     ): TrackedConfigSnapshot {
         val cacheKey = "${baseDirVf.path}:${configEnvironment.orEmpty()}"
         if (!refresh && !application.isUnitTestMode) {
-            cache[cacheKey]?.let { return it }
+            snapshotByContext[cacheKey]?.let { return it }
         }
 
         val trackedTomlFiles =
@@ -85,16 +85,16 @@ class MiseConfigFileResolver(
             TrackedConfigSnapshot(
                 configTomlFiles = trackedTomlFiles,
                 externalTrackedFiles = externalTrackedFiles,
-                allTrackedFiles = allTrackedFiles,
-                trackedPathSet = allTrackedFiles.mapTo(linkedSetOf()) { normalizePath(it.path) },
+                trackedInputs = allTrackedFiles,
+                normalizedTrackedPaths = allTrackedFiles.mapTo(linkedSetOf()) { normalizePath(it.path) },
             )
 
         if (!application.isUnitTestMode) {
-            cache[cacheKey] = snapshot
+            snapshotByContext[cacheKey] = snapshot
             refreshTrackedPathLookup()
             logger.info(
                 @Suppress("ktlint:standard:max-line-length")
-                "Resolved ${snapshot.configTomlFiles.size} config TOML files and ${snapshot.externalTrackedFiles.size} external files for environment '$configEnvironment': ${snapshot.allTrackedFiles.joinToString { it.path }}",
+                "Resolved ${snapshot.configTomlFiles.size} config TOML files and ${snapshot.externalTrackedFiles.size} external files for environment '$configEnvironment': ${snapshot.trackedInputs.joinToString { it.path }}",
             )
         }
         return snapshot
@@ -270,9 +270,9 @@ class MiseConfigFileResolver(
     }
 
     private fun refreshTrackedPathLookup() {
-        trackedPathLookup.clear()
-        for (snapshot in cache.values) {
-            trackedPathLookup.addAll(snapshot.trackedPathSet)
+        globalTrackedPathIndex.clear()
+        for (snapshot in snapshotByContext.values) {
+            globalTrackedPathIndex.addAll(snapshot.normalizedTrackedPaths)
         }
     }
 
