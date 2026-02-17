@@ -198,12 +198,9 @@ object MiseCommandLineHelper {
     fun getTrackedConfigs(
         project: Project,
         configEnvironment: String,
+        workDir: String = project.guessMiseProjectPath(),
     ): Result<List<String>> {
         val commandLineArgs = mutableListOf("config", "--tracked-configs")
-
-        // Use the project's base path as the working directory to ensure correct mise context
-        // (Windows mise for Windows projects, WSL mise for WSL projects)
-        val workDir = project.guessMiseProjectPath()
 
         val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
         return miseCommandLine
