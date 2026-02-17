@@ -18,14 +18,21 @@ class MiseToolWindowState : PersistentStateComponent<MiseToolWindowState.MyState
 
     class MyState : Cloneable {
         var groupByConfigPath: Boolean = false
+        var nonProjectPathDisplay: NonProjectPathDisplay = NonProjectPathDisplay.RELATIVE
         var envOverride: String = ""
         var envInitialized: Boolean = false
 
         public override fun clone(): MyState =
             MyState().also {
                 it.groupByConfigPath = groupByConfigPath
+                it.nonProjectPathDisplay = nonProjectPathDisplay
                 it.envOverride = envOverride
                 it.envInitialized = envInitialized
             }
     }
+}
+
+enum class NonProjectPathDisplay {
+    RELATIVE,
+    ABSOLUTE,
 }

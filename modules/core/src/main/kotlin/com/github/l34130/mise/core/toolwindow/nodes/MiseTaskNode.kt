@@ -7,7 +7,8 @@ import com.github.l34130.mise.core.model.MiseTomlTableTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.github.l34130.mise.core.toolwindow.ActionOnRightClick
 import com.github.l34130.mise.core.toolwindow.DoubleClickable
-import com.github.l34130.mise.core.util.presentablePath
+import com.github.l34130.mise.core.toolwindow.NonProjectPathDisplay
+import com.github.l34130.mise.core.toolwindow.displayPath
 import com.intellij.icons.AllIcons
 import com.intellij.ide.DataManager
 import com.intellij.ide.projectView.PresentationData
@@ -46,6 +47,7 @@ class MiseTaskDirectoryNode(
     project: Project,
     val directoryPath: String,
     val directoryName: String,
+    private val nonProjectPathDisplay: NonProjectPathDisplay,
     val parent: MiseTaskDirectoryNode?,
     val children: MutableList<MiseTaskDirectoryNode>,
     val tasks: MutableList<MiseTaskNode>,
@@ -55,8 +57,8 @@ class MiseTaskDirectoryNode(
         AllIcons.Nodes.Folder,
     ) {
     override fun displayName(): String {
-        val relPath = if (parent == null) directoryPath else directoryName
-        return presentablePath(project, relPath)
+        if (parent != null) return directoryName
+        return displayPath(project, directoryPath, nonProjectPathDisplay)
     }
 
     override fun getChildren(): Collection<AbstractTreeNode<*>> = children + tasks
@@ -65,6 +67,7 @@ class MiseTaskDirectoryNode(
 class MiseTaskNode(
     project: Project,
     val parent: MiseTaskDirectoryNode?,
+    private val nonProjectPathDisplay: NonProjectPathDisplay,
     val taskInfo: MiseTask,
 ) : MiseLeafNode<MiseTask>(
         project,
@@ -76,11 +79,14 @@ class MiseTaskNode(
     override fun displayName(): String = taskInfo.name
 
     override fun appendInplaceComments(appender: InplaceCommentAppender) {
-        val relPath =
-            parent?.directoryPath?.let {
-                taskInfo.source.replace("$it/", "")
-            } ?: taskInfo.source
-        appender.append(" ${presentablePath(project, relPath)}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+        val parentDirectory = parent?.directoryPath
+        val pathText =
+            if (parentDirectory != null) {
+                taskInfo.source.replace("$parentDirectory/", "")
+            } else {
+                displayPath(project, taskInfo.source, nonProjectPathDisplay)
+            }
+        appender.append(" $pathText", SimpleTextAttributes.GRAYED_ATTRIBUTES)
     }
 
     override fun createPresentation(): PresentationData =

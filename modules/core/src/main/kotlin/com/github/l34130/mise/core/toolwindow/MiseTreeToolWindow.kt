@@ -6,6 +6,8 @@ import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.setting.MiseConfigurable
 import com.github.l34130.mise.core.setting.MiseProjectSettings
+import com.github.l34130.mise.core.toolwindow.NonProjectPathDisplay.ABSOLUTE
+import com.github.l34130.mise.core.toolwindow.NonProjectPathDisplay.RELATIVE
 import com.intellij.icons.AllIcons
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.NodeDescriptor
@@ -278,6 +280,39 @@ class MiseTreeToolWindow(
                     state: Boolean,
                 ) {
                     toolWindowState.state.groupByConfigPath = state
+                    scheduleRefresh()
+                }
+            },
+        )
+        group.addSeparator("Path Display")
+        group.add(
+            object : ToggleAction("Relative", "Show non-project paths relative to project path", AllIcons.Actions.Show) {
+                override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+
+                override fun isSelected(e: AnActionEvent): Boolean = toolWindowState.state.nonProjectPathDisplay == RELATIVE
+
+                override fun setSelected(
+                    e: AnActionEvent,
+                    state: Boolean,
+                ) {
+                    if (!state) return
+                    toolWindowState.state.nonProjectPathDisplay = RELATIVE
+                    scheduleRefresh()
+                }
+            },
+        )
+        group.add(
+            object : ToggleAction("Absolute", "Show non-project paths as absolute", AllIcons.Actions.ShowWriteAccess) {
+                override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+
+                override fun isSelected(e: AnActionEvent): Boolean = toolWindowState.state.nonProjectPathDisplay == ABSOLUTE
+
+                override fun setSelected(
+                    e: AnActionEvent,
+                    state: Boolean,
+                ) {
+                    if (!state) return
+                    toolWindowState.state.nonProjectPathDisplay = ABSOLUTE
                     scheduleRefresh()
                 }
             },

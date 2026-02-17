@@ -8,6 +8,7 @@ import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.toolwindow.MiseToolWindowContext
 import com.github.l34130.mise.core.toolwindow.MiseToolWindowContextResolver
+import com.github.l34130.mise.core.toolwindow.NonProjectPathDisplay
 import com.github.l34130.mise.core.toolwindow.MiseToolWindowState
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -30,9 +31,11 @@ class MiseRootNode(
     override fun getChildren(): Collection<AbstractTreeNode<*>> {
         val state = project.service<MiseToolWindowState>().state
         val context = project.service<MiseToolWindowContextResolver>().resolve()
+        val groupByConfigPath = state.groupByConfigPath
+        val nonProjectPathDisplay = state.nonProjectPathDisplay
 
         return listOf(
-            runCatching { getToolNodes(state.groupByConfigPath, context) }.fold(
+            runCatching { getToolNodes(groupByConfigPath, nonProjectPathDisplay, context) }.fold(
                 onSuccess = { tools -> MiseToolServiceNode(project, tools) },
                 onFailure = { e ->
                     logger.warn("Failed to get tool nodes", e)
@@ -40,7 +43,7 @@ class MiseRootNode(
                     MiseErrorNode(project, e)
                 },
             ),
-            runCatching { getTaskNodes(context) }.fold(
+            runCatching { getTaskNodes(groupByConfigPath, nonProjectPathDisplay, context) }.fold(
                 onSuccess = { tasks -> MiseTaskServiceNode(project, tasks) },
                 onFailure = { e ->
                     logger.warn("Failed to get task nodes", e)
@@ -48,7 +51,7 @@ class MiseRootNode(
                     MiseErrorNode(project, e)
                 },
             ),
-            runCatching { getEnvironmentNodes(context) }.fold(
+            runCatching { getEnvironmentNodes(groupByConfigPath, nonProjectPathDisplay, context) }.fold(
                 onSuccess = { envs -> MiseEnvironmentServiceNode(project, envs) },
                 onFailure = { e ->
                     logger.warn("Failed to get settings nodes", e)
@@ -61,6 +64,7 @@ class MiseRootNode(
 
     private fun getToolNodes(
         groupByConfigPath: Boolean,
+        nonProjectPathDisplay: NonProjectPathDisplay,
         context: MiseToolWindowContext,
     ): Collection<AbstractTreeNode<*>> {
         val toolsByToolNames =
@@ -93,16 +97,23 @@ class MiseRootNode(
             }
         }
         return toolsBySourcePaths
+            .toList()
+            .sortedWith(compareBy({ sortGroupPriority(it.first) }, { sortGroupDepth(it.first) }, { sortGroupName(it.first) }))
             .map { (sourcePath, tools) ->
                 MiseToolConfigDirectoryNode(
                     project = project,
                     configDirPath = sourcePath,
+                    nonProjectPathDisplay = nonProjectPathDisplay,
                     tools = tools,
                 )
             }
     }
 
-    private fun getEnvironmentNodes(context: MiseToolWindowContext): Collection<MiseEnvironmentNode> {
+    private fun getEnvironmentNodes(
+        groupByConfigPath: Boolean,
+        nonProjectPathDisplay: NonProjectPathDisplay,
+        context: MiseToolWindowContext,
+    ): Collection<AbstractTreeNode<*>> {
         val envs =
             MiseCommandLineHelper
                 .getEnvVarsExtended(
@@ -111,7 +122,22 @@ class MiseRootNode(
                     configEnvironment = context.configEnvironment,
                 ).getOrThrow()
 
-        return envs.map { (key, value) ->
+        if (!groupByConfigPath) {
+            return envs.map { (key, value) ->
+                MiseEnvironmentNode(
+                    project = project,
+                    key = key,
+                    value =
+                        if (value.redacted) {
+                            "[redacted]"
+                        } else {
+                            value.value
+                        },
+                )
+            }
+        }
+
+        val envNodes = envs.map { (key, value) ->
             MiseEnvironmentNode(
                 project = project,
                 key = key,
@@ -123,9 +149,24 @@ class MiseRootNode(
                     },
             )
         }
+
+        return envNodes
+            .groupBy { normalizeEnvSourceLabel(envs[it.key]?.source) }
+            .toList()
+            .sortedWith(compareBy({ sortGroupPriority(it.first) }, { sortGroupDepth(it.first) }, { sortGroupName(it.first) }))
+            .map { (source, nodes) ->
+                MiseEnvironmentConfigDirectoryNode(
+                    project = project,
+                    configDirPath = source,
+                    nonProjectPathDisplay = nonProjectPathDisplay,
+                    environments = nodes,
+                )
+            }
     }
 
     private fun getTaskNodes(
+        groupByConfigPath: Boolean,
+        nonProjectPathDisplay: NonProjectPathDisplay,
         context: MiseToolWindowContext,
     ): Collection<AbstractTreeNode<*>> {
         val taskResolver = project.service<MiseTaskResolver>()
@@ -140,6 +181,7 @@ class MiseRootNode(
                 project = project,
                 directoryPath = projectBaseDir,
                 directoryName = StringUtil.ELLIPSIS,
+                nonProjectPathDisplay = nonProjectPathDisplay,
                 parent = null,
                 children = mutableListOf(),
                 tasks = mutableListOf(),
@@ -165,11 +207,42 @@ class MiseRootNode(
                 val inAllowedConfigDirs = allowedConfigDirs.any { allowedDir -> isPathInDirectory(taskSourcePath, allowedDir) }
                 inProjectTree || inParentChain || inAllowedConfigDirs
             }
+
+        if (groupByConfigPath) {
+            return filteredTasks
+                .groupBy { PathUtil.getParentPath(it.source) }
+                .toList()
+                .sortedWith(compareBy({ sortGroupPriority(it.first) }, { sortGroupDepth(it.first) }, { sortGroupName(it.first) }))
+                .map { (sourceDir, tasks) ->
+                    val sourceNode =
+                        MiseTaskDirectoryNode(
+                            project = project,
+                            directoryPath = sourceDir,
+                            directoryName = StringUtil.ELLIPSIS,
+                            nonProjectPathDisplay = nonProjectPathDisplay,
+                            parent = null,
+                            children = mutableListOf(),
+                            tasks = mutableListOf(),
+                        )
+                    tasks.sortedBy { it.name }.forEach { task ->
+                        sourceNode.tasks +=
+                            MiseTaskNode(
+                                project = project,
+                                parent = sourceNode,
+                                nonProjectPathDisplay = nonProjectPathDisplay,
+                                taskInfo = task,
+                            )
+                    }
+                    sourceNode
+                }
+        }
+
         for (task in filteredTasks) {
             val taskNode =
                 MiseTaskNode(
                     project = project,
                     parent = projectDirNode,
+                    nonProjectPathDisplay = nonProjectPathDisplay,
                     taskInfo = task,
                 )
             projectDirNode.tasks += taskNode
@@ -200,7 +273,32 @@ class MiseRootNode(
 
     private fun normalize(path: String): Path = Paths.get(path).normalize()
 
+    private fun normalizeEnvSourceLabel(source: String?): String {
+        if (source.isNullOrBlank()) return MISE_SYSTEM_ENV_SOURCE_LABEL
+        return source
+    }
+
+    private fun sortGroupPriority(source: String): Int =
+        if (source == MISE_SYSTEM_ENV_SOURCE_LABEL) {
+            0
+        } else {
+            1
+        }
+
+    private fun sortGroupDepth(source: String): Int =
+        if (isPathLike(source)) {
+            runCatching { normalize(source).nameCount }.getOrDefault(Int.MAX_VALUE)
+        } else {
+            Int.MAX_VALUE
+        }
+
+    private fun sortGroupName(source: String): String = source.lowercase()
+
+    private fun isPathLike(source: String): Boolean =
+        source.contains("/") || source.contains("\\")
+
     companion object {
+        private const val MISE_SYSTEM_ENV_SOURCE_LABEL = "Mise System"
         private val logger =
             Logger.getInstance(MiseRootNode::class.java)
     }
