@@ -5,6 +5,7 @@ import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.model.MiseTomlFile
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ZipperUpdater
 import com.intellij.openapi.vfs.VirtualFile
@@ -110,7 +111,7 @@ class MiseTomlFileListener(
                 }
 
             fun onVfsChange(file: VirtualFile) {
-                if (MiseTomlFile.isMiseTomlFile(project, file)) {
+                if (isTrackedMiseInput(file)) {
                     dirtyTomlFiles.add(file)
                     vfsChanged.set(true)
                     updater.queue(runnable)
@@ -123,6 +124,22 @@ class MiseTomlFileListener(
                     psiChanged.set(true)
                     updater.queue(runnable)
                 }
+            }
+
+            private fun isTrackedMiseInput(file: VirtualFile): Boolean {
+                if (project.service<MiseConfigFileResolver>().isTrackedPath(file)) return true
+                if (MiseTomlFile.isMiseTomlFile(project, file)) return true
+                return isLikelyMiseRelatedFile(file)
+            }
+
+            private fun isLikelyMiseRelatedFile(file: VirtualFile): Boolean {
+                val name = file.name
+                if (name == "config.toml" || name == "mise.toml" || name == ".mise.toml") return true
+                if (name == "mise.local.toml" || name == ".mise.local.toml") return true
+                if (name.startsWith(".env")) return true
+                if (name.matches("^mise\\.[^/]+\\.toml$".toRegex())) return true
+                if (name.matches("^\\.mise\\.[^/]+\\.toml$".toRegex())) return true
+                return false
             }
         }
     }
