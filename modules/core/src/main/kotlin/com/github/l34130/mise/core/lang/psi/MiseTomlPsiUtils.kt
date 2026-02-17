@@ -2,11 +2,17 @@ package com.github.l34130.mise.core.lang.psi
 
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import org.toml.lang.psi.TomlArray
+import org.toml.lang.psi.TomlFile
+import org.toml.lang.psi.TomlKeyValue
 import org.toml.lang.psi.TomlKeyValueOwner
 import org.toml.lang.psi.TomlLiteral
 import org.toml.lang.psi.TomlValue
 import org.toml.lang.psi.ext.TomlLiteralKind
 import org.toml.lang.psi.ext.kind
+
+@RequiresReadLock
+fun TomlFile.getValueWithKey(key: String): TomlValue? =
+    children.filterIsInstance<TomlKeyValue>().find { it.key.text == key }?.value
 
 @RequiresReadLock
 fun TomlKeyValueOwner.getValueWithKey(key: String): TomlValue? = entries.find { it.key.text == key }?.value

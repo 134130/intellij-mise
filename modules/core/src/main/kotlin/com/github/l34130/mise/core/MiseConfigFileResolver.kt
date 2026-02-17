@@ -23,7 +23,6 @@ import com.intellij.util.application
 import com.intellij.util.containers.addIfNotNull
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlFileType
-import org.toml.lang.psi.TomlKeyValue
 import org.toml.lang.psi.TomlTable
 import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap
@@ -206,13 +205,7 @@ class MiseConfigFileResolver(
 
         val result = mutableListOf<String>()
         readAction {
-            result +=
-                (parsedToml
-                    .children
-                    .filterIsInstance<TomlKeyValue>()
-                    .firstOrNull { it.key.text == "env_file" }
-                    ?.value
-                    ?.stringArray ?: emptyList())
+            result += parsedToml.getValueWithKey("env_file")?.stringArray ?: emptyList()
             for (table in parsedToml.childrenOfType<TomlTable>()) {
                 val segments = table.header.key?.segments?.map { it.name } ?: continue
                 if (segments == listOf("env", "_")) {
