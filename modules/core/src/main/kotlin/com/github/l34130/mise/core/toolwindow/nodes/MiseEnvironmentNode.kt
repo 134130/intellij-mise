@@ -38,6 +38,7 @@ class MiseEnvironmentNode(
     project: Project,
     val key: String,
     val value: String,
+    private val nonProjectPathDisplay: NonProjectPathDisplay,
     private val source: String? = null,
     private val tool: String? = null,
 ) : MiseLeafNode<Pair<String, String>>(
@@ -58,10 +59,17 @@ class MiseEnvironmentNode(
             }
         presentation.addText(" = $compactValue", SimpleTextAttributes.GRAYED_ATTRIBUTES)
 
-        val metaParts = listOfNotNull(source?.takeIf { it.isNotBlank() }, tool?.takeIf { it.isNotBlank() })
+        val renderedSource =
+            source
+                ?.takeIf { it.isNotBlank() }
+                ?.let { if (isPathLike(it)) displayPath(project, it, nonProjectPathDisplay) else it }
+        val metaParts = listOfNotNull(renderedSource, tool?.takeIf { it.isNotBlank() })
         if (metaParts.isNotEmpty()) {
             presentation.addText("  [${metaParts.joinToString(" | ")}]", SimpleTextAttributes.GRAY_ATTRIBUTES)
         }
         presentation.tooltip = value
     }
+
+    private fun isPathLike(source: String): Boolean =
+        source.contains("/") || source.contains("\\")
 }

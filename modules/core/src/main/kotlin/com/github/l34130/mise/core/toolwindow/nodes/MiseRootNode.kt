@@ -133,6 +133,7 @@ class MiseRootNode(
                         } else {
                             value.value
                         },
+                    nonProjectPathDisplay = nonProjectPathDisplay,
                     source = value.source,
                     tool = value.tool,
                 )
@@ -149,6 +150,7 @@ class MiseRootNode(
                     } else {
                         value.value
                     },
+                nonProjectPathDisplay = nonProjectPathDisplay,
                 source = value.source,
                 tool = value.tool,
             )
