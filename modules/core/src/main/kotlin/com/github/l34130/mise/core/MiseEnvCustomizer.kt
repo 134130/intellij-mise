@@ -6,6 +6,7 @@ import com.github.l34130.mise.core.util.waitForProjectCache
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.CancellationException
 
 /**
  * Common interface for all mise environment customizers.
@@ -58,6 +59,7 @@ interface MiseEnvCustomizer {
             (environment as MutableMap<String?, String?>).putAll(envVars)
             return true
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             logger.error("Failed to customize mise environment", e)
             MiseCommandLineHelper.environmentCustomizationFailed(environment)
             return false
