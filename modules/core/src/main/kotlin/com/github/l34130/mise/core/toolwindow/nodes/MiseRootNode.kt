@@ -133,6 +133,8 @@ class MiseRootNode(
                         } else {
                             value.value
                         },
+                    source = value.source,
+                    tool = value.tool,
                 )
             }
         }
@@ -147,6 +149,8 @@ class MiseRootNode(
                     } else {
                         value.value
                     },
+                source = value.source,
+                tool = value.tool,
             )
         }
 
