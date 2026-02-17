@@ -5,13 +5,23 @@ import com.github.l34130.mise.core.cache.MiseCacheService
 import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.setting.MiseConfigurable
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.icons.AllIcons
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.ide.util.treeView.NodeRenderer
 import com.intellij.ide.util.treeView.TreeState
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionGroup
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.ActionUpdateThread
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.Presentation
+import com.intellij.openapi.actionSystem.ToggleAction
+import com.intellij.openapi.actionSystem.ex.CustomComponentAction
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.ShowSettingsUtil
@@ -21,15 +31,19 @@ import com.intellij.ui.DoubleClickListener
 import com.intellij.ui.PopupHandler
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.TreeUIHelper
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.treeStructure.Tree
-import com.intellij.util.concurrency.Invoker
 import com.intellij.util.application
+import com.intellij.util.concurrency.Invoker
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.tree.TreeUtil
 import java.awt.Component
+import java.awt.event.FocusAdapter
+import java.awt.event.FocusEvent
 import java.awt.event.MouseEvent
+import javax.swing.JComponent
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 
@@ -38,17 +52,55 @@ class MiseTreeToolWindow(
     treeStructure: MiseTreeStructure,
 ) : SimpleToolWindowPanel(true, true),
     Disposable {
+    private val toolWindowState = project.service<MiseToolWindowState>()
     private val treeModel =
         StructureTreeModel(treeStructure, null, Invoker.forBackgroundPoolWithoutReadAction(this), this)
     private val myTree = Tree(AsyncTreeModel(treeModel, true, this))
 
     init {
+        initializeEnvFromProjectSettingsIfNeeded()
+
         val actionManager = ActionManager.getInstance()
         val actionGroup = DefaultActionGroup()
         actionGroup.add(
             object : AnAction("Refresh", "Refresh the Tree", AllIcons.Actions.Refresh) {
                 override fun actionPerformed(e: AnActionEvent) {
                     invalidateCachesAndRefresh()
+                }
+            },
+        )
+        actionGroup.add(
+            createViewOptionsAction(),
+        )
+        actionGroup.add(
+            object : AnAction(), CustomComponentAction {
+                override fun actionPerformed(e: AnActionEvent) = Unit
+
+                override fun createCustomComponent(
+                    presentation: Presentation,
+                    place: String,
+                ): JComponent {
+                    val textField = JBTextField(toolWindowState.state.envOverride)
+                    textField.columns = 6
+                    textField.toolTipText = "Mise Environment"
+
+                    fun applyEnvValue(raw: String) {
+                        val value = raw.trim()
+                        toolWindowState.state.envOverride = value
+                        toolWindowState.state.envInitialized = true
+                        scheduleRefresh()
+                    }
+                    textField.addActionListener {
+                        applyEnvValue(textField.text)
+                    }
+                    textField.addFocusListener(
+                        object : FocusAdapter() {
+                            override fun focusLost(e: FocusEvent?) {
+                                applyEnvValue(textField.text)
+                            }
+                        },
+                    )
+                    return textField
                 }
             },
         )
@@ -148,9 +200,9 @@ class MiseTreeToolWindow(
             }
         }
 
-        redrawContent()
-
         TreeUtil.expand(myTree, 2)
+
+        scheduleRefresh()
     }
 
     override fun dispose() {
@@ -211,7 +263,32 @@ class MiseTreeToolWindow(
         state.applyTo(myTree)
     }
 
-    companion object {
-//        fun getInstance(project: Project): MiseTreeToolWindow = project.service()
+    private fun createViewOptionsAction(): ActionGroup {
+        val group = DefaultActionGroup("View Options", true)
+        group.templatePresentation.icon = AllIcons.General.InspectionsEye
+        group.addSeparator("Group By")
+        group.add(
+            object : ToggleAction("Config Path", "Group nodes by source config path", AllIcons.Nodes.ConfigFolder) {
+                override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+
+                override fun isSelected(e: AnActionEvent): Boolean = toolWindowState.state.groupByConfigPath
+
+                override fun setSelected(
+                    e: AnActionEvent,
+                    state: Boolean,
+                ) {
+                    toolWindowState.state.groupByConfigPath = state
+                    scheduleRefresh()
+                }
+            },
+        )
+        return group
+    }
+
+    private fun initializeEnvFromProjectSettingsIfNeeded() {
+        val state = toolWindowState.state
+        if (state.envInitialized) return
+        state.envOverride = project.service<MiseProjectSettings>().state.miseConfigEnvironment
+        state.envInitialized = true
     }
 }

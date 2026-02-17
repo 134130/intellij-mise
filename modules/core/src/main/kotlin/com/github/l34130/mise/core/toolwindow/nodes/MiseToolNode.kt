@@ -5,17 +5,18 @@ import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.util.presentablePath
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
+import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.Project
 
 class MiseToolServiceNode(
     project: Project,
-    val tools: Collection<MiseToolConfigDirectoryNode>,
+    val tools: Collection<AbstractTreeNode<*>>,
 ) : MiseNode<String>(
         project,
         "Tools",
         AllIcons.Nodes.ConfigFolder,
     ) {
-    override fun getChildren(): Collection<MiseToolConfigDirectoryNode> = tools
+    override fun getChildren(): Collection<AbstractTreeNode<*>> = tools
 }
 
 class MiseToolConfigDirectoryNode(
@@ -61,5 +62,26 @@ class MiseToolNode(
                         append("${toolName.canonicalName()} is inactivated because it is not installed.")
                     }
                 }
+        }
+}
+
+class MiseToolResolvedContextNode(
+    project: Project,
+    private val workDir: String,
+    private val tools: List<Pair<MiseDevToolName, MiseDevTool>>,
+) : MiseNode<String>(
+        project,
+        workDir,
+        AllIcons.Nodes.Folder,
+    ) {
+    override fun displayName(): String = "Resolved from ${presentablePath(project, workDir)}"
+
+    override fun getChildren(): Collection<MiseToolNode> =
+        tools.map { (toolName, toolInfo) ->
+            MiseToolNode(
+                project = project,
+                toolName = toolName,
+                toolInfo = toolInfo,
+            )
         }
 }
