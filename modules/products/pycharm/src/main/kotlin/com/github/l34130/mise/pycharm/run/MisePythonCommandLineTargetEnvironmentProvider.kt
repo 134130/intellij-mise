@@ -1,6 +1,7 @@
 package com.github.l34130.mise.pycharm.run
 
 import com.github.l34130.mise.core.MiseHelper
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.openapi.project.Project
 import com.jetbrains.python.run.AbstractPythonRunConfiguration
 import com.jetbrains.python.run.PythonExecution
@@ -26,7 +27,7 @@ class MisePythonCommandLineTargetEnvironmentProvider : PythonCommandLineTargetEn
                 // For python script or python console which do not have RunConfiguration
                 MiseHelper.getMiseEnvVarsOrNotify(
                     project = project,
-                    workingDirectory = runParams.workingDirectory,
+                    workingDirectory = runParams.workingDirectory ?: project.guessMiseProjectPath(),
                 )
             }
 
