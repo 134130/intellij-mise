@@ -1,27 +1,28 @@
 package com.github.l34130.mise.core.command
 
 import com.github.l34130.mise.core.MiseTomlFileListener
+import com.github.l34130.mise.core.cache.MiseCacheService
 import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
-import com.github.l34130.mise.core.cache.MiseCacheService
-import com.github.l34130.mise.core.util.canSafelyInvokeAndWait
 import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.github.l34130.mise.core.util.waitForProjectCache
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.diagnostic.trace
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
-import com.intellij.platform.ide.progress.withBackgroundProgress
 import com.intellij.util.application
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-
+import java.util.concurrent.CancellationException as FutureCancellationException
+import java.util.concurrent.ExecutionException as FutureExecutionException
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 /**
  * Smart cache for mise commands with broadcast-based invalidation and proactive warming.
@@ -50,6 +51,20 @@ class MiseCommandCache(
     private val logger = logger<MiseCommandCache>()
     private val cacheService = project.service<MiseCacheService>()
 
+    override fun dispose() {}
+
+    private data class CacheEntry(
+        val value: Any
+    )
+
+    private companion object {
+        /**
+         * mise info commands should normally complete very quickly; this is a last-resort bound to detect
+         * stuck process execution (e.g., WSL plumbing stalled).
+         */
+        private const val STUCK_COMMAND_TIMEOUT_SECS: Long = 10L
+    }
+
     init {
         // Ensure VFS listener is initialized so config changes trigger cache invalidation.
         project.service<MiseTomlFileListener>()
@@ -57,6 +72,7 @@ class MiseCommandCache(
         MiseProjectEventListener.subscribe(project, this) { event ->
             when (event.kind) {
                 MiseProjectEvent.Kind.STARTUP -> warmCommonCommands()
+
                 MiseProjectEvent.Kind.SETTINGS_CHANGED,
                 MiseProjectEvent.Kind.EXECUTABLE_CHANGED,
                 MiseProjectEvent.Kind.TOML_CHANGED -> {
@@ -64,6 +80,7 @@ class MiseCommandCache(
                     cacheService.invalidateAllCommands()
                     warmCommonCommands()
                 }
+
                 else -> Unit
             }
         }
@@ -98,6 +115,10 @@ class MiseCommandCache(
      * Get the cached value or compute it.
      * Uses Caffeine's built-in stampede protection.
      * Internal method - callers should use getCachedWithProgress for threading protection.
+     *
+     * If the project cache isn't warm, this will wait for up to [com.github.l34130.mise.core.util.PROJECT_CACHE_WAIT_TIMEOUT] seconds
+     * for it to be ready. If it isn't ready within the timeout, it just carries on and allows
+     * whatever the compute is doing to succeed or fail without the project cache.
      */
     private fun <T> getCached(
         cacheKey: MiseCacheKey<T>,
@@ -105,17 +126,15 @@ class MiseCommandCache(
     ): T {
         getIfCached(cacheKey)?.let { return it }
 
-        // If the project cache isn't warm, this will wait for up to 10 seconds
-        // for it to be ready. Even if it isn't ready, it just carries on and allows
-        // what ever the compute is doing to succeed or fail without the project cache.
-        val waitOnCache: () -> T = {
+
+        val waitForProjectCacheThenCompute: () -> T = {
             project.waitForProjectCache()
             compute()
         }
 
         var savedResult: T? = null
         val entry = cacheService.getCachedCommand(cacheKey.key) {
-            val result = waitOnCache()
+            val result = waitForProjectCacheThenCompute()
             savedResult = result
             if (result is Result<*> && result.isFailure) {
                 null
@@ -147,17 +166,17 @@ class MiseCommandCache(
     /**
      * Get cached value with automatic fast-path optimization and threading protection.
      *
-     * - Fast path: Returns cached result synchronously (instant, no thread switching)
-     * - Slow path: Executes compute() on appropriate thread with progress indicator
+     * - Fast path (cache hit): Returns cached result synchronously (instant, no thread switching)
+     * - Slow path (cache miss): Computes on a pooled thread, blocking for up to [STUCK_COMMAND_TIMEOUT_SECS] seconds,
+     *                              throws ProcessCanceledException if computation can’t complete within the timeout.
      *
      * Thread-safe: Can be called from EDT, background thread, or read-action thread.
-     * The cache automatically handles threading based on calling context.
-     *
      * Type-safe: Uses sealed class MiseCacheKey to guarantee key→type mapping at compile time.
      *
      * @param cacheKey Type-safe cache key (contains key string + progress title + type information)
      * @param compute Function to compute value on cache miss (must be thread-safe)
      * @return Cached or computed value of type T
+     * @throws ProcessCanceledException
      */
     fun <T> getCachedWithProgress(
         cacheKey: MiseCacheKey<T>,
@@ -165,58 +184,47 @@ class MiseCommandCache(
     ): T {
         // Fast path: check cache synchronously (instant, no threading overhead)
         getIfCached(cacheKey)?.let {
-            logger.trace("getCachedWithProgress hit for key: ${cacheKey.key}")
+            logger.trace { "getCachedWithProgress hit for key: ${cacheKey.key}" }
             return it
         }
 
-        logger.debug("getCachedWithProgress miss for key: ${cacheKey.key}")
+        logger.trace { "getCachedWithProgress miss for key: ${cacheKey.key}" }
 
-        // Slow path: execute with appropriate threading strategy
-        return when {
-            application.isDispatchThread -> {
-                logger.trace("getCachedWithProgress EDT detected, using modal progress")
-                runWithModalProgressBlocking(project, cacheKey.progressTitle) {
-                    getCached(cacheKey, compute)
-                }
-            }
-            application.isReadAccessAllowed -> {
-                // Background thread with read lock - use background progress
-                logger.debug("getCachedWithProgress Background thread with read lock, using background progress")
-                runBlocking {
-                    withBackgroundProgress(project, cacheKey.progressTitle) {
-                        withContext(Dispatchers.IO) {
-                            getCached(cacheKey, compute)
-                        }
-                    }
-                }
-            }
-            canSafelyInvokeAndWait() -> {
-                // Background thread without read lock, but safe to dispatch to EDT
-                logger.trace("getCachedWithProgress Background thread without read lock, safe to dispatch to EDT")
-                var result: T? = null
-                application.invokeAndWait {
-                    runWithModalProgressBlocking(project, cacheKey.progressTitle) {
-                        result = getCached(cacheKey, compute)
-                    }
-                }
-                result ?: throw ProcessCanceledException()
-            }
+        // Compute on pooled thread to avoid deadlocks/re-entrancy when called from env customization / read-action contexts.
+        // EDT callers are allowed to block, but only to *wait* (with modal progress), never to *compute*.
+        val future: Future<T> = application.executeOnPooledThread<T> {
+            getCached(cacheKey, compute)
+        }
 
-            else -> {
-                // Background thread without read lock, UNSAFE to dispatch to EDT
-                // Fall back to silent background execution without UI progress
-                logger.trace("getCachedWithProgress Background thread without read lock in unsafe context (thread: ${Thread.currentThread().name}), executing without UI")
-                getCached(cacheKey, compute)
+        return if (application.isDispatchThread) {
+            logger.trace { "getCachedWithProgress EDT detected, using modal progress to wait for pooled computation" }
+            runWithModalProgressBlocking(project, cacheKey.progressTitle) {
+                awaitFutureOrCancel(cacheKey, future)
             }
+        } else {
+            awaitFutureOrCancel(cacheKey, future)
         }
     }
 
-    // === Data Classes ===
-
-    private data class CacheEntry(
-        val value: Any
-    )
-
-    override fun dispose() {
+    /**
+     * Waits for a pooled computation and normalizes timeout/interrupt/cancellation to ProcessCanceledException.
+     */
+    private fun <T> awaitFutureOrCancel(cacheKey: MiseCacheKey<T>, future: Future<T>): T {
+        return try {
+            future.get(STUCK_COMMAND_TIMEOUT_SECS, TimeUnit.SECONDS)
+        } catch (_: TimeoutException) {
+            future.cancel(true)
+            logger.warn("getCachedWithProgress compute timed out in ${STUCK_COMMAND_TIMEOUT_SECS}s for key: ${cacheKey.key}")
+            throw ProcessCanceledException()
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+            future.cancel(true)
+            throw ProcessCanceledException()
+        } catch (_: FutureCancellationException) {
+            throw ProcessCanceledException()
+        } catch (e: FutureExecutionException) {
+            val cause = e.cause ?: e
+            throw cause
+        }
     }
 }

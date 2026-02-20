@@ -35,6 +35,7 @@ private data class ProjectInfo(
 
 private val PROJECT_INFO_KEY = Key.create<CachedValue<ProjectInfo>>("mise.project.info")
 private val PROJECT_CACHE_LATCH_KEY = Key.create<CountDownLatch>("mise.project.cache.latch")
+private const val PROJECT_CACHE_WAIT_TIMEOUT: Long = 10
 
 /**
  * Gets the canonical path for the Mise project directory.
@@ -213,7 +214,7 @@ private fun <T> runWithProgressIndicator(action: () -> T): T {
 
 fun Project.waitForProjectCache(): Boolean {
     return try {
-        getProjectCacheLatch().await(10, TimeUnit.SECONDS)
+        getProjectCacheLatch().await(PROJECT_CACHE_WAIT_TIMEOUT, TimeUnit.SECONDS)
     } catch (_: InterruptedException) {
         Thread.currentThread().interrupt()
         false
