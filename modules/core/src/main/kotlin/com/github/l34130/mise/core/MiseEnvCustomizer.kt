@@ -46,18 +46,20 @@ interface MiseEnvCustomizer {
     fun customizeMiseEnvironment(
         project: Project,
         workDir: String,
-        environment: MutableMap<out String?, out String?>
+        environment: MutableMap<String, String>
     ): Boolean {
-        val settings = project.service<MiseProjectSettings>().state
-        if (!shouldCustomizeForSettings(settings)) return false
-        if (!project.waitForProjectCache()) return false
-
-        // 3. Customize with error handling
         try {
-            val envVars = MiseHelper.getMiseEnvVarsOrNotify(project, workDir, settings.miseConfigEnvironment)
-            @Suppress("UNCHECKED_CAST")
-            (environment as MutableMap<String?, String?>).putAll(envVars)
-            return true
+            val settings = project.service<MiseProjectSettings>().state
+            if (!shouldCustomizeForSettings(settings)) return false
+            if (!project.waitForProjectCache()) return false
+
+            if (MiseCommandLineHelper.environmentNeedsCustomization(environment)) {
+                val envVars = MiseHelper.getMiseEnvVarsOrNotify(project, workDir, settings.miseConfigEnvironment)
+                environment.putAll(envVars)
+                MiseCommandLineHelper.environmentHasBeenCustomized(environment)
+                return true
+            }
+            return false
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             logger.error("Failed to customize mise environment", e)
