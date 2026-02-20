@@ -2,6 +2,7 @@ package com.github.l34130.mise.core.command
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.l34130.mise.core.command.MiseCommandLineHelper.environmentSkipCustomization
+import com.github.l34130.mise.core.command.MiseEnvCacheKeyService.Companion.MISE_ENV_CACHE_KEY
 import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -104,7 +105,14 @@ internal class MiseCommandLine(
     ): Result<String> {
         val generalCommandLine = GeneralCommandLine(commandLineArgs).withWorkDirectory(workingDir.ifBlank { null })
         environmentSkipCustomization(generalCommandLine.environment)
+        injectMiseEnvCacheEnvironment(generalCommandLine.environment)
         return runCommandLineInternal(generalCommandLine)
+    }
+
+    private fun injectMiseEnvCacheEnvironment(environment: MutableMap<String?, String?>) {
+        if (environment[MISE_ENV_CACHE_KEY].isNullOrBlank()) {
+            environment[MISE_ENV_CACHE_KEY] = project.service<MiseEnvCacheKeyService>().sessionKey
+        }
     }
 
     @RequiresBackgroundThread
