@@ -1,6 +1,7 @@
 package com.github.l34130.mise.core.command
 
 import com.github.l34130.mise.core.util.guessMiseProjectPath
+import com.github.l34130.mise.core.util.tryComputeReadAction
 import com.github.l34130.mise.core.wsl.WslPathUtils.maybeConvertWindowsUncToUnixPath
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.components.service
@@ -89,13 +90,17 @@ object MiseCommandLineHelper {
 
     /**
      * Resolves project from GeneralCommandLine working directory.
+     *
+     * Requires a Read lock, so to avoid blocking we wrap in tryComputeReadAction and return null
+     * if we can't get one.
+     *
      * @param commandLine the command line to resolve the project from
      * @return Project or null if not found
      */
     fun resolveProjectFromCommandLine(commandLine: GeneralCommandLine): Project? {
         val workDir = commandLine.workingDirectory?.pathString ?: return null
         val vf = LocalFileSystem.getInstance().findFileByPath(workDir) ?: return null
-        return ProjectLocator.getInstance().guessProjectForFile(vf)
+        return tryComputeReadAction { ProjectLocator.getInstance().guessProjectForFile(vf) }
     }
 
     /**
