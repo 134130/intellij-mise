@@ -47,7 +47,7 @@ object MiseHelper {
         project: Project,
         workingDirectory: String,
         configEnvironment: String? = null,
-    ): MutableMap<String, String> {
+    ): Map<String, String> {
         val projectState = project.service<MiseProjectSettings>().state
 
         // Early return if disabled
@@ -70,13 +70,9 @@ object MiseHelper {
     private fun processEnvVarsResult(
         result: Result<Map<String, String>>,
         project: Project
-    ): MutableMap<String, String> {
+    ): Map<String, String> {
         return result.fold(
-            onSuccess = { envVars ->
-                val mutableEnvVars = envVars.toMutableMap()
-                MiseCommandLineHelper.environmentHasBeenCustomized(mutableEnvVars)
-                mutableEnvVars
-            },
+            onSuccess = { envVars -> envVars },
             onFailure = { exception ->
                 if (exception !is MiseCommandLineNotFoundException) {
                     MiseNotificationServiceUtils.notifyException(
