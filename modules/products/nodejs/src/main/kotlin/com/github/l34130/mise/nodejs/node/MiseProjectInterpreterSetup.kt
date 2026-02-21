@@ -10,7 +10,6 @@ import com.intellij.javascript.nodejs.interpreter.local.NodeJsLocalInterpreter
 import com.intellij.javascript.nodejs.settings.NodeSettingsConfigurable
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
@@ -81,9 +80,5 @@ class MiseProjectInterpreterSetup : AbstractProjectSdkSetup() {
                 .toString()
 
         return NodeJsLocalInterpreter(interpreterPath)
-    }
-
-    companion object {
-        private val logger = logger<MiseProjectInterpreterSetup>()
     }
 }

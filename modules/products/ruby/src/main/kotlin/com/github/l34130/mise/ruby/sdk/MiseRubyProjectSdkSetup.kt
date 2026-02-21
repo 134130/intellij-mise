@@ -6,7 +6,6 @@ import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
@@ -74,9 +73,5 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
             sdkPath,
             this.shimsVersion(),
         )
-    }
-
-    companion object {
-        private val logger = logger<MiseRubyProjectSdkSetup>()
     }
 }

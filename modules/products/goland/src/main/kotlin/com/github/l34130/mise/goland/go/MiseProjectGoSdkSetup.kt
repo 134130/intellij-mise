@@ -9,7 +9,6 @@ import com.goide.sdk.GoSdk
 import com.goide.sdk.GoSdkService
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
@@ -96,9 +95,5 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
         val path1 = VfsUtil.urlToPath(url1)
         val path2 = VfsUtil.urlToPath(url2)
         return FileUtil.filesEqual(File(path1), File(path2))
-    }
-
-    companion object {
-        private val logger = logger<MiseProjectGoSdkSetup>()
     }
 }
