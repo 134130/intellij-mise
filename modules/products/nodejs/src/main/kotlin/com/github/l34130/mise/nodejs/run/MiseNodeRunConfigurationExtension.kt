@@ -40,7 +40,7 @@ class MiseNodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension(
     override fun createLaunchSession(
         configuration: AbstractNodeTargetRunProfile,
         environment: ExecutionEnvironment,
-    ): NodeRunConfigurationLaunchSession? {
+    ): NodeRunConfigurationLaunchSession {
         val envVars =
             MiseHelper.getMiseEnvVarsOrNotify(
                 configuration = configuration,

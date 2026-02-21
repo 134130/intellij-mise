@@ -89,10 +89,10 @@ class MiseShellScriptTask internal constructor(
     val file: VirtualFile,
 ) : MiseTask {
     companion object {
-        fun resolveOrNull(
+        fun resolve(
             baseDir: VirtualFile,
             file: VirtualFile,
-        ): MiseShellScriptTask? =
+        ): MiseShellScriptTask =
             MiseShellScriptTask(
                 name = FileUtil.splitPath(getRelativePath(baseDir, file)!!.substringBeforeLast('.')).joinToString(":"),
                 file = file,
