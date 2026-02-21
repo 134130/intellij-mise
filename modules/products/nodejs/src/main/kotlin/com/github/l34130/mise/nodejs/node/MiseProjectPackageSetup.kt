@@ -71,7 +71,7 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = NodeSettingsConfigurable::class as KClass<out T>
+    override fun <T : Configurable> getConfigurableClass(): KClass<out T> = NodeSettingsConfigurable::class as KClass<out T>
 
     private fun inspectPackageManager(project: Project): String {
         val basePath =

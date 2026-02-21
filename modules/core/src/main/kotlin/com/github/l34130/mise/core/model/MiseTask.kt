@@ -42,7 +42,7 @@ sealed interface MiseTask {
     val source: String
 
     companion object {
-        val DATA_KEY = DataKey.create<MiseTask>(javaClass.simpleName)
+        val DATA_KEY = DataKey.create<MiseTask>(MiseTask::class.java.simpleName)
     }
 }
 
@@ -85,10 +85,10 @@ class MiseShellScriptTask internal constructor(
     val file: VirtualFile,
 ) : MiseTask {
     companion object {
-        fun resolveOrNull(
+        fun resolve(
             baseDir: VirtualFile,
             file: VirtualFile,
-        ): MiseShellScriptTask? =
+        ): MiseShellScriptTask =
             MiseShellScriptTask(
                 name = FileUtil.splitPath(getRelativePath(baseDir, file)!!.substringBeforeLast('.')).joinToString(":"),
                 file = file,
