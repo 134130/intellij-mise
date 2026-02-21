@@ -6,7 +6,7 @@ import com.intellij.openapi.project.Project
 import org.toml.lang.psi.TomlKeySegment
 
 class MiseTomlTaskRunConfigurationFactory(
-    private val runConfigurationType: MiseTomlTaskRunConfigurationType,
+    runConfigurationType: MiseTomlTaskRunConfigurationType,
 ) : ConfigurationFactory(runConfigurationType) {
     override fun getId(): String = "MiseTomlTask"
 
