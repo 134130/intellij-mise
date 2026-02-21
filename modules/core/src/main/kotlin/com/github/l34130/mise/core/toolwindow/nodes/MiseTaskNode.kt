@@ -142,7 +142,7 @@ class MiseTaskNode(
     }
 
     companion object {
-        val EP_NAME = ConcurrentHashMap.newKeySet<MiseTaskNodeActionsContributor>()
+        val EP_NAME: MutableSet<MiseTaskNodeActionsContributor> = ConcurrentHashMap.newKeySet()
     }
 
     interface MiseTaskNodeActionsContributor {
