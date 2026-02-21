@@ -19,7 +19,6 @@ class MiseFileTaskCommentCompletionProvider : CompletionProvider<CompletionParam
         result: CompletionResultSet,
     ) {
         val element = parameters.position
-        val project = element.project
 
         val elementText = element.text.substringBefore(CompletionUtilCore.DUMMY_IDENTIFIER_TRIMMED)
         if (!elementText.startsWith("#MISE ")) return
