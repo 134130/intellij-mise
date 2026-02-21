@@ -51,7 +51,7 @@ class MiseCommandLineNotTrustedConfigFileException(
 
 class MiseCommandLineErrorParsingConfigFileException(
     generalCommandLine: GeneralCommandLine,
-    val configFilePath: String,
+    configFilePath: String,
 ) : MiseCommandLineException(
         generalCommandLine = generalCommandLine,
         message = "error parsing config file: $configFilePath",
