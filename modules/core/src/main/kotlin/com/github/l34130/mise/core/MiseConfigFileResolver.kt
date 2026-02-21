@@ -102,7 +102,7 @@ class MiseConfigFileResolver(
 
     override fun dispose() { }
 
-    private suspend fun resolveTrackedTomlFiles(
+    private fun resolveTrackedTomlFiles(
         baseDirVf: VirtualFile,
         configEnvironment: String?,
     ): List<VirtualFile> {
