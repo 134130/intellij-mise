@@ -13,7 +13,6 @@ import com.intellij.javascript.nodejs.util.NodePackage
 import com.intellij.javascript.nodejs.util.NodePackageRef
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -100,9 +99,5 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
             "Failed to create NodePackage for $devToolName at path: ${this.shimsInstallPath()} (resolved to $path)"
         }
         return nodePackage
-    }
-
-    companion object {
-        private val logger = logger<MiseProjectPackageSetup>()
     }
 }

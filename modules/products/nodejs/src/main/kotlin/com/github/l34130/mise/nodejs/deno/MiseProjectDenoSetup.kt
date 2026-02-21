@@ -9,7 +9,6 @@ import com.intellij.deno.DenoConfigurable
 import com.intellij.deno.DenoSettings
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import kotlin.reflect.KClass
@@ -62,9 +61,5 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
     private fun MiseDevTool.asDenoPath(): String {
         val basePath = WslPathUtils.convertToolPathForWsl(this)
         return ShimUtils.findExecutable(basePath, "deno").path
-    }
-
-    companion object {
-        private val logger = logger<MiseProjectDenoSetup>()
     }
 }
