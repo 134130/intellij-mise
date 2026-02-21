@@ -18,17 +18,11 @@ import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.ActionUiKind
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.Task
-import com.intellij.openapi.progress.currentThreadCoroutineScope
 import com.intellij.openapi.progress.runBackgroundableTask
-import com.intellij.openapi.progress.util.BackgroundTaskUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.findPsiFile
-import com.intellij.platform.ide.progress.withBackgroundProgress
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.util.OpenSourceUtil
-import kotlinx.coroutines.Dispatchers
 import java.awt.event.MouseEvent
 import java.util.concurrent.ConcurrentHashMap
 
