@@ -63,7 +63,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
             .replace("Azul Zulu", "", ignoreCase = true)
             .replace("java version", "", ignoreCase = true)
             .replace("\"", "")
-            .replace(Regex("\\s*[-]?\\s*(aarch64|x86_64|x64|amd64)"), "")
+            .replace(Regex("\\s*-?\\s*(aarch64|x86_64|x64|amd64)"), "")
             .trim()
     }
 
