@@ -46,7 +46,7 @@ class MiseTomlTaskDependsReferenceProvider : PsiReferenceProvider() {
             val literalValue = element.stringValue ?: return ResolveResult.EMPTY_ARRAY
             if (element.containingFile !is TomlFile) return ResolveResult.EMPTY_ARRAY
 
-            var value = literalValue.split(' ', ignoreCase = false, limit = 2).firstOrNull() ?: return ResolveResult.EMPTY_ARRAY
+            val value = literalValue.split(' ', ignoreCase = false, limit = 2).firstOrNull() ?: return ResolveResult.EMPTY_ARRAY
             val isWildcard = value.endsWith(":*")
 
             val project = element.project
