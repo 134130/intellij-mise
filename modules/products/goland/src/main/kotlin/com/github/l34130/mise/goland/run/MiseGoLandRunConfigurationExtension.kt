@@ -40,7 +40,7 @@ class MiseGoLandRunConfigurationExtension : GoRunConfigurationExtension() {
         commandLineType: GoRunningState.CommandLineType,
     ) {
         MiseHelper
-            .getMiseEnvVarsOrNotify(configuration, configuration.getWorkingDirectory())
+            .getMiseEnvVarsOrNotify(configuration, configuration.workingDirectory)
             .forEach { (k, v) -> cmdLine.addEnvironmentVariable(k, v) }
     }
 

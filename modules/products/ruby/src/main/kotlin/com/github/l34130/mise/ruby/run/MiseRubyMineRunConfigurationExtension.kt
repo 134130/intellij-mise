@@ -46,7 +46,7 @@ class MiseRubyMineRunConfigurationExtension : RubyRunConfigurationExtension() {
         runnerId: String,
     ) {
         MiseHelper
-            .getMiseEnvVarsOrNotify(configuration, configuration.getWorkingDirectory())
+            .getMiseEnvVarsOrNotify(configuration, configuration.workingDirectory)
             .forEach { (k, v) -> cmdLine.withEnvironment(k, v) }
     }
 }
