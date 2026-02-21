@@ -34,7 +34,7 @@ class MiseFileTaskCommentCompletionProvider : CompletionProvider<CompletionParam
 
     companion object {
         private val MISE_CONFIGURATION_OPTIONS =
-            listOf<TaskConfigOption>(
+            listOf(
                 TaskConfigOption(
                     name = "alias",
                     description = "alias for this task",
