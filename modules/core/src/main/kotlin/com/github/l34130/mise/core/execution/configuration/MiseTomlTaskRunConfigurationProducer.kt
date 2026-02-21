@@ -38,7 +38,7 @@ internal class MiseTomlTaskRunConfigurationProducer : LazyRunConfigurationProduc
         context.dataContext.getData(MiseTask.DATA_KEY)?.let { return it }
 
         // If not available, try to resolve from the PSI element at the caret position
-        var psiElement = context.psiLocation ?: return null
+        val psiElement = context.psiLocation ?: return null
 
         // Try current element and related elements to find a task
         // This handles cases where the caret is on different parts of the task definition
