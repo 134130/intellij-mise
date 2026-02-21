@@ -23,7 +23,7 @@ class MiseTaskGraphProvider : BaseDiagramProvider<MiseTaskGraphable>() {
                 setUmlProvider(this@MiseTaskGraphProvider)
             }
 
-            override fun findInDataContext(o: DataContext): MiseTaskGraphable? {
+            override fun findInDataContext(o: DataContext): MiseTaskGraphable {
                 CommonDataKeys.PSI_ELEMENT.getData(o)?.let { psiElement ->
                     MiseTomlTableTask.resolveFromInlineTableInTaskTable(psiElement)?.let { return MiseTaskGraphableTaskWrapper(it) }
                     MiseTomlTableTask.resolveFromTaskChainedTable(psiElement)?.let { return MiseTaskGraphableTaskWrapper(it) }

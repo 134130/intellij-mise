@@ -259,7 +259,7 @@ class MiseExecutableManager(
     private fun detectOnWindows(executable: String = "mise", shell: String?): MiseExecutableInfo? {
         assertBackgroundThread()
         val interactiveShellCommand = if (shell == null ) {
-            listOf<String>()
+            listOf()
         } else {
             listOf(shell, "/c")
         }

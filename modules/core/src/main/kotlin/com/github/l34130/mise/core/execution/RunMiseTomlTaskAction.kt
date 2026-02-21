@@ -4,11 +4,7 @@ import com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfig
 import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.model.MiseUnknownTask
 import com.github.l34130.mise.core.model.psiLocation
-import com.intellij.execution.Executor
-import com.intellij.execution.Location
-import com.intellij.execution.RunManager
-import com.intellij.execution.RunManagerEx
-import com.intellij.execution.RunnerAndConfigurationSettings
+import com.intellij.execution.*
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.icons.AllIcons
@@ -16,11 +12,7 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
-import com.intellij.openapi.application.readAction
-import com.intellij.openapi.application.readActionBlocking
 import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.application.smartReadActionBlocking
-import kotlinx.coroutines.runBlocking
 
 internal class RunMiseTomlTaskAction(
     private val miseTask: MiseTask,
