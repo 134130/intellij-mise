@@ -11,7 +11,7 @@ import org.jetbrains.plugins.ruby.ruby.run.configuration.AbstractRubyRunConfigur
 import org.jetbrains.plugins.ruby.ruby.run.configuration.RubyRunConfigurationExtension
 
 class MiseRubyMineRunConfigurationExtension : RubyRunConfigurationExtension() {
-    override fun getEditorTitle(): @NlsContexts.TabTitle String? = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
+    override fun getEditorTitle(): @NlsContexts.TabTitle String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
     override fun getSerializationId(): String = MiseRunConfigurationSettingsEditor.SERIALIZATION_ID
 
