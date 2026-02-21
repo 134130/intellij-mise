@@ -16,7 +16,7 @@ fun Project.baseDirectory(): String {
     if (application.isUnitTestMode) {
         return getBaseDirectories().first().path
     }
-    return this.presentableUrl ?: this.service<PathMacroManager>().collapsePath("\$PROJECT_DIR$")
+    return this.presentableUrl ?: this.service<PathMacroManager>().collapsePath($$"$PROJECT_DIR$")
 }
 
 fun presentablePath(
