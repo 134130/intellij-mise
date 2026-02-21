@@ -7,16 +7,11 @@ import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile
 import com.intellij.javascript.nodejs.execution.NodeTargetRun
 import com.intellij.javascript.nodejs.execution.runConfiguration.AbstractNodeRunConfigurationExtension
 import com.intellij.javascript.nodejs.execution.runConfiguration.NodeRunConfigurationLaunchSession
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.SettingsEditor
 import com.jetbrains.nodejs.run.NodeJsRunConfiguration
 import org.jdom.Element
 
 class MiseNodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
-    companion object {
-        private val LOG = Logger.getInstance(MiseNodeRunConfigurationExtension::class.java)
-    }
-
     override fun getEditorTitle(): String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
     override fun <P : AbstractNodeTargetRunProfile> createEditor(configuration: P): SettingsEditor<P> = MiseRunConfigurationSettingsEditor()
