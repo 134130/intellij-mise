@@ -65,7 +65,7 @@ fun Project.guessMiseProjectDir(): VirtualFile {
     if (projectDir != null) return projectDir
 
     val userHome = SystemProperties.getUserHome()
-    val userHomeDir = LocalFileSystem.getInstance().refreshAndFindFileByPath(userHome)
+    val userHomeDir = LocalFileSystem.getInstance().findFileByPath(userHome)
     checkNotNull(userHomeDir) {
         "Project has no base directory and user home is unavailable. project=${this.name}, userHome=$userHome"
     }
