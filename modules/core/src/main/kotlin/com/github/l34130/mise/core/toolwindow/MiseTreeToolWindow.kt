@@ -164,30 +164,30 @@ class MiseTreeToolWindow(
 
         myTree.addMouseListener(
             (
-                    object : PopupHandler() {
-                        override fun invokePopup(
-                            comp: Component?,
-                            x: Int,
-                            y: Int,
-                        ) {
-                            val node = getSelectedNodesSameType<AbstractTreeNode<*>>()?.get(0) ?: return
-                            val actionManager = ActionManager.getInstance()
-                            val totalActions = mutableListOf<AnAction>()
-                            val actionPlace = ActionPlaces.TOOLWINDOW_CONTENT
-                            if (node is ActionOnRightClick) {
-                                val actions = node.actions()
-                                totalActions.addAll(actions)
-                            }
+                object : PopupHandler() {
+                    override fun invokePopup(
+                        comp: Component?,
+                        x: Int,
+                        y: Int,
+                    ) {
+                        val node = getSelectedNodesSameType<AbstractTreeNode<*>>()?.get(0) ?: return
+                        val actionManager = ActionManager.getInstance()
+                        val totalActions = mutableListOf<AnAction>()
+                        val actionPlace = ActionPlaces.TOOLWINDOW_CONTENT
+                        if (node is ActionOnRightClick) {
+                            val actions = node.actions()
+                            totalActions.addAll(actions)
+                        }
 
-                            val actionGroup = DefaultActionGroup(totalActions)
-                            if (actionGroup.childrenCount > 0) {
-                                val popupMenu = actionManager.createActionPopupMenu(actionPlace, actionGroup)
-                                popupMenu.setTargetComponent(this@MiseTreeToolWindow)
-                                popupMenu.component.show(comp, x, y)
-                            }
+                        val actionGroup = DefaultActionGroup(totalActions)
+                        if (actionGroup.childrenCount > 0) {
+                            val popupMenu = actionManager.createActionPopupMenu(actionPlace, actionGroup)
+                            popupMenu.setTargetComponent(this@MiseTreeToolWindow)
+                            popupMenu.component.show(comp, x, y)
                         }
                     }
-                    ),
+                }
+            ),
         )
 
         // Subscribe to cache invalidation events for automatic refresh
@@ -195,10 +195,13 @@ class MiseTreeToolWindow(
             when (event.kind) {
                 MiseProjectEvent.Kind.SETTINGS_CHANGED,
                 MiseProjectEvent.Kind.EXECUTABLE_CHANGED,
-                MiseProjectEvent.Kind.TOML_CHANGED -> {
+                MiseProjectEvent.Kind.TASK_CACHE_REFRESHED,
+                MiseProjectEvent.Kind.TOML_CHANGED,
+                -> {
                     scheduleRefresh()
                 }
-                else -> Unit
+
+                else -> {}
             }
         }
 
@@ -240,7 +243,7 @@ class MiseTreeToolWindow(
      */
     private fun invalidateCachesAndRefresh() {
         // Invalidate MiseTaskResolver cache (used by tool window)
-        project.service<MiseTaskResolver>().invalidateCache()
+        project.service<MiseTaskResolver>().markCacheAsStaleAndTriggerRefresh()
         project.service<MiseCacheService>().invalidateAllCommands()
         // Redraw the tree
         runInEdt { redrawContent() }
