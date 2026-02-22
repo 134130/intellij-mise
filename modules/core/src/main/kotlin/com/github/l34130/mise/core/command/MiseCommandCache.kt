@@ -93,6 +93,7 @@ class MiseCommandCache(
      * This prevents EDT blocking when UI components (tool window, etc.) refresh.
      */
     fun warmCommonCommands() {
+        if (application.isUnitTestMode) return
         cs.launch(Dispatchers.IO) {
             try {
                 logger.debug("Warming command cache for commonly-used commands")
