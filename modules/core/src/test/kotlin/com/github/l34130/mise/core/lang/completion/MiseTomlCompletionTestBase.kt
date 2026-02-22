@@ -1,9 +1,23 @@
 package com.github.l34130.mise.core.lang.completion
 
 import com.github.l34130.mise.core.FileTestBase
+import com.github.l34130.mise.core.MiseTaskResolver
+import com.github.l34130.mise.core.withMiseCommandLineExecutor
 import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.openapi.components.service
+import kotlinx.coroutines.runBlocking
 import org.intellij.lang.annotations.Language
 
+/**
+ * Base class for TOML completion tests.
+ *
+ * Note: This class shares similar structure with [com.github.l34130.mise.sh.lang.completion.MiseShCompletionTestBase]
+ * in the sh module. Key differences:
+ * - This class uses @Language("TOML") annotations and warms the task cache before tests
+ * - Shell version uses @Language("Shell Script") and has no cache warming (shell scripts don't use task cache)
+ *
+ * If modifying this class, consider whether similar changes apply to the sh version.
+ */
 internal abstract class MiseTomlCompletionTestBase : FileTestBase() {
     protected fun testSingleCompletion(
         @Language("TOML") before: String,
@@ -38,7 +52,13 @@ internal abstract class MiseTomlCompletionTestBase : FileTestBase() {
         after: String,
         action: () -> Unit,
     ) {
+        // Clear any stale cache from previous tests to ensure isolation
+        project.service<MiseTaskResolver>().markCacheAsStale()
+
         inlineFile(code, "mise.toml")
+        withMiseCommandLineExecutor {
+            runBlocking { project.service<MiseTaskResolver>().computeTasksFromSource() }
+        }
         action()
         myFixture.checkResult(replaceCaretMarker(after))
     }
