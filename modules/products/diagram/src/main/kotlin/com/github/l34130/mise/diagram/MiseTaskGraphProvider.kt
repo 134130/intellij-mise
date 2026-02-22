@@ -23,7 +23,7 @@ class MiseTaskGraphProvider : BaseDiagramProvider<MiseTaskGraphable>() {
                 setUmlProvider(this@MiseTaskGraphProvider)
             }
 
-            override fun findInDataContext(o: DataContext): MiseTaskGraphable? {
+            override fun findInDataContext(o: DataContext): MiseTaskGraphable {
                 CommonDataKeys.PSI_ELEMENT.getData(o)?.let { psiElement ->
                     MiseTomlTableTask.resolveFromInlineTableInTaskTable(psiElement)?.let { return MiseTaskGraphableTaskWrapper(it) }
                     MiseTomlTableTask.resolveFromTaskChainedTable(psiElement)?.let { return MiseTaskGraphableTaskWrapper(it) }
@@ -36,7 +36,7 @@ class MiseTaskGraphProvider : BaseDiagramProvider<MiseTaskGraphable>() {
                     }
                 }
                 return DefaultMiseTaskGraphable
-            }
+        }
 
             override fun isContainerFor(
                 container: MiseTaskGraphable?,
@@ -72,7 +72,12 @@ class MiseTaskGraphProvider : BaseDiagramProvider<MiseTaskGraphable>() {
         }
     private val vfsResolver: DiagramVfsResolver<MiseTaskGraphable> =
         object : DiagramVfsResolver<MiseTaskGraphable> {
-            override fun getQualifiedName(element: MiseTaskGraphable?): String? = null
+            override fun getQualifiedName(element: MiseTaskGraphable?): String? =
+                when (element) {
+                    is MiseTaskGraphableTaskWrapper<*> -> element.task.name
+                    is MiseTaskGraphableTomlFile -> element.tomlFile.virtualFile?.path ?: element.tomlFile.name
+                    DefaultMiseTaskGraphable, null -> "mise-task-graph"
+                }
 
             override fun resolveElementByFQN(
                 element: String,
