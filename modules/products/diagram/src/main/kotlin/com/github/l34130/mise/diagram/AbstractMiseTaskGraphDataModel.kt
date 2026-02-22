@@ -1,5 +1,7 @@
 package com.github.l34130.mise.diagram
 
+import com.github.l34130.mise.core.cache.MiseProjectEvent
+import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.intellij.diagram.DiagramDataModel
 import com.intellij.diagram.DiagramEdge
 import com.intellij.diagram.DiagramNode
@@ -30,6 +32,15 @@ abstract class AbstractMiseTaskGraphDataModel(
 
     init {
         ApplicationManager.getApplication().invokeLater { reloadAsync() }
+        MiseProjectEventListener.subscribe(project, this) { event ->
+            when (event.kind) {
+                MiseProjectEvent.Kind.TASK_CACHE_REFRESHED -> {
+                    refreshDataModel()
+                }
+
+                else -> {}
+            }
+        }
     }
 
     override fun getNodes(): Collection<DiagramNode<MiseTaskGraphable>?> = nodes
@@ -58,12 +69,13 @@ abstract class AbstractMiseTaskGraphDataModel(
      * Unresolvable dependency names (no node with that name) are ignored.
      */
     override fun getEdges(): Collection<DiagramEdge<MiseTaskGraphable>> {
-        val nodeByTaskName = buildMap {
-            for (n in nodes) {
-                val name = (n.identifyingElement as MiseTaskGraphableTaskWrapper<*>).task.name
-                putIfAbsent(name, n) // preserves first occurrence, matching the original `find` logic
+        val nodeByTaskName =
+            buildMap {
+                for (n in nodes) {
+                    val name = (n.identifyingElement as MiseTaskGraphableTaskWrapper<*>).task.name
+                    putIfAbsent(name, n) // preserves first occurrence, matching the original `find` logic
+                }
             }
-        }
 
         return buildList {
             for (taskGraphNode in nodes) {

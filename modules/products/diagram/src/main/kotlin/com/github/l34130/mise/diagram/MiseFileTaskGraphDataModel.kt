@@ -7,14 +7,12 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ModificationTracker
 import com.intellij.psi.PsiManager
-import kotlinx.coroutines.runBlocking
 
 class MiseFileTaskGraphDataModel(
     project: Project,
     private val tomlFile: MiseTaskGraphableTomlFile,
     provider: MiseTaskGraphProvider,
 ) : AbstractMiseTaskGraphDataModel(project, provider) {
-
     override fun getModificationTracker(): ModificationTracker = PsiManager.getInstance(project).modificationTracker
 
     override fun getNodeName(node: DiagramNode<MiseTaskGraphable>): String =
@@ -26,8 +24,11 @@ class MiseFileTaskGraphDataModel(
     override fun computeNodesBlocking(): List<MiseTaskGraphNode> =
         mutableListOf<MiseTaskGraphNode>()
             .apply {
-                val myTasks = MiseTomlTableTask.resolveAllFromTomlFile(tomlFile.tomlFile)
-                val tasks = runBlocking { project.service<MiseTaskResolver>().getMiseTasks() }
+                val myTasks =
+                    com.intellij.openapi.application.runReadAction {
+                        MiseTomlTableTask.resolveAllFromTomlFile(tomlFile.tomlFile)
+                    }
+                val tasks = project.service<MiseTaskResolver>().getCachedTasksOrEmptyList()
 
                 for (myTask in myTasks) {
                     myTask.depends?.map { it.first() }?.let { depends ->

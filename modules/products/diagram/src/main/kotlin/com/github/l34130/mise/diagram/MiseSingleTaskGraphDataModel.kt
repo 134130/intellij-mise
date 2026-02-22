@@ -7,14 +7,12 @@ import com.intellij.openapi.graph.GraphLayoutOrientation
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ModificationTracker
 import com.intellij.psi.PsiManager
-import kotlinx.coroutines.runBlocking
 
 class MiseSingleTaskGraphDataModel(
     project: Project,
     private val myTask: MiseTaskGraphableTaskWrapper<*>,
     provider: MiseTaskGraphProvider,
 ) : AbstractMiseTaskGraphDataModel(project, provider) {
-
     override fun getModificationTracker(): ModificationTracker = PsiManager.getInstance(project).modificationTracker
 
     override fun getNodeName(node: DiagramNode<MiseTaskGraphable>): String =
@@ -24,8 +22,7 @@ class MiseSingleTaskGraphDataModel(
 
     override fun computeNodesBlocking(): List<MiseTaskGraphNode> =
         sequence {
-            @Suppress("RunBlockingInSuspendFunction")
-            val tasks = runBlocking { project.service<MiseTaskResolver>().getMiseTasks() }
+            val tasks = project.service<MiseTaskResolver>().getCachedTasksOrEmptyList()
             myTask.task.depends?.let { depends ->
                 yieldAll(
                     tasks

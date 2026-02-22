@@ -6,13 +6,11 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.ModificationTracker
 import com.intellij.psi.PsiManager
-import kotlinx.coroutines.runBlocking
 
 class MiseFullTaskGraphDataModel(
     project: Project,
     provider: MiseTaskGraphProvider,
 ) : AbstractMiseTaskGraphDataModel(project, provider) {
-
     override fun getModificationTracker(): ModificationTracker = PsiManager.getInstance(project).modificationTracker
 
     override fun getNodeName(node: DiagramNode<MiseTaskGraphable>): String =
@@ -22,10 +20,8 @@ class MiseFullTaskGraphDataModel(
     override fun addElement(element: MiseTaskGraphable?): DiagramNode<MiseTaskGraphable>? = null
 
     override fun computeNodesBlocking(): List<MiseTaskGraphNode> =
-        runBlocking {
-            project
-                .service<MiseTaskResolver>()
-                .getMiseTasks()
-                .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) }
-        }
+        project
+            .service<MiseTaskResolver>()
+            .getCachedTasksOrEmptyList()
+            .map { MiseTaskGraphNode(MiseTaskGraphableTaskWrapper(it), provider) }
 }
