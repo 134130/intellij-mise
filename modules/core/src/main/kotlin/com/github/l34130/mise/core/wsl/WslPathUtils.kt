@@ -271,7 +271,7 @@ object WslPathUtils {
      *         or if the converted UNC path is not accessible
      */
     fun convertToolPathForWsl(tool: MiseDevTool): String {
-        return convertUnixPathForWsl(tool.shimsInstallPath())
+        return convertUnixPathForWsl(tool.resolvedInstallPath())
     }
 
     fun resolveUserHomeAbbreviations(
