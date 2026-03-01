@@ -233,7 +233,7 @@ class MiseCommandCache(
         return try {
             if (!latch.await(STUCK_COMMAND_TIMEOUT_SECS, TimeUnit.SECONDS)) {
                 deferred.cancel()
-                logger.warn("getCachedWithProgress timed out in ${STUCK_COMMAND_TIMEOUT_SECS}s for key: ${cacheKey.key}")
+                logger.warn("awaitDeferredOrCancel timed out in ${STUCK_COMMAND_TIMEOUT_SECS}s for key: ${cacheKey.key}")
                 throw ProcessCanceledException()
             }
             completionResult!!.getOrThrow()

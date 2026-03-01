@@ -7,7 +7,7 @@ import com.intellij.openapi.components.Storage
 
 @Service(Service.Level.PROJECT)
 @State(name = "com.github.l34130.mise.settings.MiseProjectSettings", storages = [Storage("mise.xml")])
-class MiseProjectSettings() : PersistentStateComponent<MiseProjectSettings.MyState> {
+class MiseProjectSettings : PersistentStateComponent<MiseProjectSettings.MyState> {
     private var myState = MyState()
 
     override fun getState() = myState

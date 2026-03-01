@@ -4,6 +4,7 @@ import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.model.psiLocation
 import com.github.l34130.mise.core.toolwindow.nodes.MiseTaskNode
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionUiKind
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -38,14 +39,13 @@ class MiseStartupActivity :
                                         .build()
 
                                 val newEvent =
-                                    AnActionEvent(
-                                        e.inputEvent,
-                                        dataContext,
-                                        e.place,
+                                    AnActionEvent(dataContext,
                                         e.presentation,
-                                        e.actionManager,
+                                        e.place,
+                                        ActionUiKind.NONE,
+                                        e.inputEvent,
                                         e.modifiers,
-                                    )
+                                        e.actionManager)
                                 super.actionPerformed(newEvent)
                             }
                         },

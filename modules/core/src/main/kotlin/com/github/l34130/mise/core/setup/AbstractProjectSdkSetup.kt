@@ -125,8 +125,7 @@ abstract class AbstractProjectSdkSetup :
             }
 
             try {
-                val status = checkSdkStatus(tool, project)
-                when (status) {
+                when (val status = checkSdkStatus(tool, project)) {
                     is SdkStatus.NeedsUpdate -> {
                         val title =
                             if (status.currentSdkVersion == null) {

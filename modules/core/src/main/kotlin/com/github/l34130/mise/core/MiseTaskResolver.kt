@@ -120,7 +120,7 @@ class MiseTaskResolver(
                         ?: true // assume file is executable if we can't get its path
                 if (!isExecutable) continue
 
-                val task: MiseShellScriptTask = MiseShellScriptTask.resolveOrNull(fileTaskDir, file) ?: continue
+                val task: MiseShellScriptTask = MiseShellScriptTask.resolve(fileTaskDir, file)
                 result.add(task)
             }
         }

@@ -27,8 +27,8 @@ object MiseTomlPsiPatterns {
             VirtualFilePattern().ofType(TomlFileType),
         )
 
-    val miseTomlStringLiteral = tomlPsiElement<TomlLiteral>().with("stringLiteral") { e, _ -> e.kind is TomlLiteralKind.String }
-    val miseTomlLeafPsiElement = tomlPsiElement<LeafPsiElement>().with("leafPsiElement") { e, _ -> e.elementType is TomlTokenType }
+    val miseTomlStringLiteral: PsiElementPattern.Capture<TomlLiteral> = tomlPsiElement<TomlLiteral>().with("stringLiteral") { e, _ -> e.kind is TomlLiteralKind.String }
+    val miseTomlLeafPsiElement: PsiElementPattern.Capture<LeafPsiElement> = tomlPsiElement<LeafPsiElement>().with("leafPsiElement") { e, _ -> e.elementType is TomlTokenType }
 
     // [tasks.foo]
     private val onTaskSpecificTable =
@@ -84,11 +84,11 @@ object MiseTomlPsiPatterns {
     val onTaskDependsArray =
         psiElement<TomlArray>().withParent(onTaskProperty("depends")) or
             psiElement<TomlArray>().withParent(onTaskProperty("depends_post"))
-    val inTaskDependsArray = tomlPsiElement<PsiElement>().inside(onTaskDependsArray)
+    val inTaskDependsArray: PsiElementPattern.Capture<PsiElement> = tomlPsiElement<PsiElement>().inside(onTaskDependsArray)
 
-    val onTaskWaitForArray =
+    val onTaskWaitForArray: PsiElementPattern.Capture<TomlArray> =
         psiElement<TomlArray>().withParent(onTaskProperty("wait_for"))
-    val inTaskWaitForArray = tomlPsiElement<PsiElement>().inside(onTaskWaitForArray)
+    val inTaskWaitForArray: PsiElementPattern.Capture<PsiElement> = tomlPsiElement<PsiElement>().inside(onTaskWaitForArray)
 
     /**
      * ```
@@ -106,16 +106,16 @@ object MiseTomlPsiPatterns {
     val onTaskDependsString =
         miseTomlStringLiteral.withParent(onTaskProperty("depends")) or
             miseTomlStringLiteral.withParent(onTaskProperty("depends_post"))
-    val inTaskDependsString = tomlPsiElement<PsiElement>().inside(onTaskDependsString)
+    val inTaskDependsString: PsiElementPattern.Capture<PsiElement> = tomlPsiElement<PsiElement>().inside(onTaskDependsString)
 
     val onTaskWaitForString =
         miseTomlStringLiteral.withParent(onTaskProperty("wait_for"))
-    val inTaskWaitForString = tomlPsiElement<PsiElement>().inside(onTaskWaitForString)
+    val inTaskWaitForString: PsiElementPattern.Capture<PsiElement> = tomlPsiElement<PsiElement>().inside(onTaskWaitForString)
 
     val onTaskRunString = miseTomlStringLiteral.withParent(onTaskProperty("run"))
     val onTaskRunStringArray = psiElement<TomlArray>().withParent(onTaskProperty("run"))
     val onTaskRunStringOrArray = onTaskRunString or onTaskRunStringArray
-    val inTaskRunStringOrArray = tomlPsiElement<PsiElement>().inside(onTaskRunStringOrArray)
+    val inTaskRunStringOrArray: PsiElementPattern.Capture<PsiElement> = tomlPsiElement<PsiElement>().inside(onTaskRunStringOrArray)
 
     fun <T : Any, Self : ObjectPattern<T, Self>> ObjectPattern<T, Self>.with(
         name: String,
