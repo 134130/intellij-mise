@@ -181,6 +181,7 @@ class MiseTomlTableTask internal constructor(
          *   ```toml
          *   [tasks]
          *   <foo> = { run = "echo foo" }
+         *   <bar> = "echo bar"
          *   ```
          */
         fun resolveFromInlineTableInTaskTable(psiElement: PsiElement): MiseTomlTableTask? {
@@ -199,9 +200,12 @@ class MiseTomlTableTask internal constructor(
                 return null
             }
 
-            val table = (tomlKey.parent as? TomlKeyValue)?.value as? TomlInlineTable ?: return null
+            val keyValue = tomlKey.parent as? TomlKeyValue ?: return null
             val keySegment = tomlKey.segments.singleOrNull() ?: return null
-            return from(keySegment, table)
+            return when (keyValue.value) {
+                is TomlInlineTable -> from(keySegment, keyValue.value as TomlInlineTable)
+                else -> if (keyValue.value != null) fromStringValue(keySegment) else null
+            }
         }
 
         /**
@@ -234,6 +238,14 @@ class MiseTomlTableTask internal constructor(
                 waitFor = table.getValueWithKey("wait_for")?.stringArray?.map { it.split(' ', ignoreCase = false) },
                 dependsPost = table.getValueWithKey("depends_post")?.stringArray?.map { it.split(' ', ignoreCase = false) },
                 aliases = table.getValueWithKey("alias")?.stringArray,
+                source = keySegment.containingFile.viewProvider.virtualFile.path,
+                keySegment = keySegment,
+            )
+        }
+
+        private fun fromStringValue(keySegment: TomlKeySegment): MiseTomlTableTask? {
+            return MiseTomlTableTask(
+                name = keySegment.name ?: return null,
                 source = keySegment.containingFile.viewProvider.virtualFile.path,
                 keySegment = keySegment,
             )
