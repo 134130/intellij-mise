@@ -4,12 +4,15 @@ import com.github.l34130.mise.core.setting.MiseApplicationSettings
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.execution.wsl.WSLDistribution
 import com.intellij.execution.wsl.WslDistributionManager
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.ModificationTracker
@@ -35,6 +38,30 @@ private data class ProjectInfo(
 
 private val PROJECT_INFO_KEY = Key.create<CachedValue<ProjectInfo>>("mise.project.info")
 private val PROJECT_CACHE_LATCH_KEY = Key.create<CountDownLatch>("mise.project.cache.latch")
+internal const val PROJECT_CACHE_WAIT_TIMEOUT: Long = 10
+
+/**
+ * Resolves the project for a given virtual file in a coroutine-friendly way.
+ *
+ * - Single open project: no read action needed
+ * - Multi-project: uses suspend [readAction] (thread-safe, deadlock-free)
+ *
+ * @param vf the virtual file to resolve the project for
+ * @return the project that owns [vf], or null if none found
+ */
+suspend fun guessProjectForFile(vf: VirtualFile): Project? {
+    val projectManager = ProjectManager.getInstanceIfCreated() ?: return null
+    val openProjects = projectManager.openProjects
+
+    if (openProjects.size == 1) return openProjects[0]
+
+    return readAction {
+        openProjects.firstOrNull { project ->
+            val fileIndex = ProjectRootManager.getInstance(project).fileIndex
+            fileIndex.isInContent(vf) || fileIndex.isExcluded(vf)
+        }
+    }
+}
 
 /**
  * Gets the canonical path for the Mise project directory.
@@ -208,7 +235,7 @@ private fun <T> runWithProgressIndicator(action: () -> T): T {
 
 fun Project.waitForProjectCache(): Boolean =
     try {
-        getProjectCacheLatch().await(10, TimeUnit.SECONDS)
+        getProjectCacheLatch().await(PROJECT_CACHE_WAIT_TIMEOUT, TimeUnit.SECONDS)
     } catch (_: InterruptedException) {
         Thread.currentThread().interrupt()
         false

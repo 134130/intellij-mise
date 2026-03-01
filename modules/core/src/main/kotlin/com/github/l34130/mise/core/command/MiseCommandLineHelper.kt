@@ -5,7 +5,7 @@ import com.github.l34130.mise.core.wsl.WslPathUtils.maybeConvertWindowsUncToUnix
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectLocator
+import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
 import java.nio.file.Paths
@@ -89,13 +89,30 @@ object MiseCommandLineHelper {
 
     /**
      * Resolves project from GeneralCommandLine working directory.
+     *
+     * Uses fast paths that do not require a read action:
+     * - Single open project: returned immediately
+     * - Multi-project: falls back to basePath prefix matching (sufficient for env customization context)
+     *
+     * This approach is deadlock-safe even when called from a write-action context.
+     *
      * @param commandLine the command line to resolve the project from
      * @return Project or null if not found
      */
     fun resolveProjectFromCommandLine(commandLine: GeneralCommandLine): Project? {
         val workDir = commandLine.workingDirectory?.pathString ?: return null
-        val vf = LocalFileSystem.getInstance().findFileByPath(workDir) ?: return null
-        return ProjectLocator.getInstance().guessProjectForFile(vf)
+        LocalFileSystem.getInstance().findFileByPath(workDir) ?: return null
+
+        val projectManager = ProjectManager.getInstanceIfCreated() ?: return null
+        val openProjects = projectManager.openProjects
+
+        // Fast path: single open project — no read action needed
+        if (openProjects.size == 1) return openProjects[0]
+
+        // Multi-project: basePath prefix matching — no read action needed, sufficient for env customization
+        return openProjects.firstOrNull { project ->
+            project.basePath?.let { workDir.startsWith(it) } == true
+        }
     }
 
     /**

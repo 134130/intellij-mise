@@ -4,6 +4,7 @@ import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.util.waitForProjectCache
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CancellationException
@@ -48,18 +49,18 @@ interface MiseEnvCustomizer {
         workDir: String,
         environment: MutableMap<out String?, out String?>
     ): Boolean {
-        val settings = project.service<MiseProjectSettings>().state
-        if (!shouldCustomizeForSettings(settings)) return false
-        if (!project.waitForProjectCache()) return false
-
-        // 3. Customize with error handling
         try {
+            val settings = project.service<MiseProjectSettings>().state
+            if (!shouldCustomizeForSettings(settings)) return false
+            if (!project.waitForProjectCache()) return false
+
             val envVars = MiseHelper.getMiseEnvVarsOrNotify(project, workDir, settings.miseConfigEnvironment)
             @Suppress("UNCHECKED_CAST")
             (environment as MutableMap<String?, String?>).putAll(envVars)
             return true
         } catch (e: Exception) {
-            if (e is CancellationException) throw e
+            if (e is CancellationException || e is ControlFlowException) throw e
+
             logger.error("Failed to customize mise environment", e)
             MiseCommandLineHelper.environmentCustomizationFailed(environment)
             return false
