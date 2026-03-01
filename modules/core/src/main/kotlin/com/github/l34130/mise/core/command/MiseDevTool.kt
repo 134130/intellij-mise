@@ -1,6 +1,7 @@
 package com.github.l34130.mise.core.command
 
 import java.io.File
+import java.io.IOException
 
 data class MiseDevTool(
     val version: String,
@@ -50,7 +51,9 @@ data class MiseDevTool(
                         }
                     }
                 }
-            } catch (_: Exception) {
+            } catch (_: IOException) {
+                // If resolution fails (e.g., file not readable), fall back to the original path
+            } catch (_: SecurityException) {
                 // If resolution fails (e.g., file not accessible), fall back to the original path
             }
             return path
