@@ -33,7 +33,7 @@ private val logger = Logger.getInstance("com.github.l34130.mise.core.util.Projec
 private data class ProjectInfo(
     val wslDistribution: WSLDistribution?,
     val userHome: String,
-    val shellPath: String?
+    val shellPath: String?,
 )
 
 private val PROJECT_INFO_KEY = Key.create<CachedValue<ProjectInfo>>("mise.project.info")
@@ -92,7 +92,8 @@ fun Project.guessMiseProjectDir(): VirtualFile {
     if (projectDir != null) return projectDir
 
     val userHome = SystemProperties.getUserHome()
-    val userHomeDir = LocalFileSystem.getInstance().refreshAndFindFileByPath(userHome)
+    // Avoid VFS refresh on startup to prevent LoadingState violations
+    val userHomeDir = LocalFileSystem.getInstance().findFileByPath(userHome)
     checkNotNull(userHomeDir) {
         "Project has no base directory and user home is unavailable. project=${this.name}, userHome=$userHome"
     }
@@ -110,9 +111,7 @@ fun Project.guessMiseProjectDir(): VirtualFile {
  *
  * @return Shell path for the project environment, or null if unavailable
  */
-fun Project.getProjectShell(): String? {
-    return getProjectInfo().shellPath
-}
+fun Project.getProjectShell(): String? = getProjectInfo().shellPath
 
 /**
  * Gets the user home directory path appropriate for the project's execution environment.
@@ -123,13 +122,9 @@ fun Project.getProjectShell(): String? {
  *
  * @return User home path for the project environment
  */
-fun Project.getUserHomeForProject(): String {
-    return getProjectInfo().userHome
-}
+fun Project.getUserHomeForProject(): String = getProjectInfo().userHome
 
-fun Project.getWslDistribution(): WSLDistribution? {
-    return getProjectInfo().wslDistribution
-}
+fun Project.getWslDistribution(): WSLDistribution? = getProjectInfo().wslDistribution
 
 fun Project.prewarmProjectInfo() {
     getProjectInfo()
@@ -166,7 +161,7 @@ private fun Project.computeProjectInfo(): ProjectInfo {
         return ProjectInfo(
             wslDistribution = null,
             userHome = SystemProperties.getUserHome(),
-            shellPath = EnvironmentUtil.getValue("SHELL")
+            shellPath = EnvironmentUtil.getValue("SHELL"),
         )
     }
 
@@ -189,11 +184,12 @@ private fun Project.computeProjectInfo(): ProjectInfo {
             "cmd"
         }
 
-    val info = ProjectInfo(
-        wslDistribution = distribution,
-        userHome = resolvedUserHome,
-        shellPath = resolvedShellPath
-    )
+    val info =
+        ProjectInfo(
+            wslDistribution = distribution,
+            userHome = resolvedUserHome,
+            shellPath = resolvedShellPath,
+        )
     val distroId = distribution?.msId ?: "null"
     logger.debug("Project info cached: distro=$distroId userHome=$resolvedUserHome shellPath=${resolvedShellPath ?: "null"}")
     return info
@@ -217,13 +213,12 @@ private fun Project.resolveWslDistribution(): WSLDistribution? {
         ?: manager.installedDistributions.firstOrNull { it.msId.equals(distributionId, ignoreCase = true) }
 }
 
-private fun Project.getProjectCacheLatch(): CountDownLatch {
-    return synchronized(this) {
+private fun Project.getProjectCacheLatch(): CountDownLatch =
+    synchronized(this) {
         getUserData(PROJECT_CACHE_LATCH_KEY) ?: CountDownLatch(1).also { latch ->
             putUserData(PROJECT_CACHE_LATCH_KEY, latch)
         }
     }
-}
 
 private fun <T> runWithProgressIndicator(action: () -> T): T {
     val progressManager = ProgressManager.getInstance()
@@ -233,16 +228,15 @@ private fun <T> runWithProgressIndicator(action: () -> T): T {
     } else {
         progressManager.runProcess(
             Computable<T> { action() },
-            EmptyProgressIndicator()
+            EmptyProgressIndicator(),
         )
     }
 }
 
-fun Project.waitForProjectCache(): Boolean {
-    return try {
+fun Project.waitForProjectCache(): Boolean =
+    try {
         getProjectCacheLatch().await(PROJECT_CACHE_WAIT_TIMEOUT, TimeUnit.SECONDS)
     } catch (_: InterruptedException) {
         Thread.currentThread().interrupt()
         false
     }
-}
