@@ -256,4 +256,47 @@ object MiseCommandLineHelper {
         val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
         return miseCommandLine.runCommandLine(commandLineArgs)
     }
+
+    // mise registry
+    fun getRegistry(
+        project: Project,
+        workDir: String = project.guessMiseProjectPath(),
+        configEnvironment: String? = null,
+    ): Result<List<String>> {
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.Registry(workDir, configEnvironment)
+        return cache.getCachedWithProgress(cacheKey) {
+            val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
+            miseCommandLine
+                .runRawCommandLine(listOf("registry"))
+                .map { output ->
+                    output.lines()
+                        .filter { it.isNotBlank() }
+                        .mapNotNull { line -> line.trim().split("\\s+".toRegex()).firstOrNull() }
+                        .filter { it.isNotBlank() }
+                }
+        }
+    }
+
+    // mise ls-remote <tool>
+    fun getToolVersions(
+        project: Project,
+        toolName: String,
+        workDir: String = project.guessMiseProjectPath(),
+        configEnvironment: String? = null,
+    ): Result<List<String>> {
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.ToolVersions(toolName, workDir, configEnvironment)
+        return cache.getCachedWithProgress(cacheKey) {
+            val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
+            miseCommandLine
+                .runRawCommandLine(listOf("ls-remote", toolName))
+                .map { output ->
+                    output.lines()
+                        .filter { it.isNotBlank() }
+                        .map { it.trim() }
+                        .reversed()
+                }
+        }
+    }
 }
