@@ -12,7 +12,7 @@
 
 ### Fixed
 
-- Environment variable injection is not following .env file changes 
+- Environment variable injection is not following .env file changes
 
 ## [5.15.0] - 2026-02-01
 
