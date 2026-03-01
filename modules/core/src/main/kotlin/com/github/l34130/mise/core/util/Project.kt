@@ -10,7 +10,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectCoreUtil
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.roots.ProjectRootManager
@@ -44,8 +43,6 @@ internal const val PROJECT_CACHE_WAIT_TIMEOUT: Long = 10
 /**
  * Resolves the project for a given virtual file in a coroutine-friendly way.
  *
- * Mirrors the fast paths of [com.intellij.openapi.project.impl.ProjectLocatorImpl.guessProjectForFile]:
- * - Single global project: no read action needed
  * - Single open project: no read action needed
  * - Multi-project: uses suspend [readAction] (thread-safe, deadlock-free)
  *
@@ -53,8 +50,6 @@ internal const val PROJECT_CACHE_WAIT_TIMEOUT: Long = 10
  * @return the project that owns [vf], or null if none found
  */
 suspend fun guessProjectForFile(vf: VirtualFile): Project? {
-    ProjectCoreUtil.theOnlyOpenProject()?.takeIf { !it.isDisposed }?.let { return it }
-
     val projectManager = ProjectManager.getInstanceIfCreated() ?: return null
     val openProjects = projectManager.openProjects
 
