@@ -16,13 +16,15 @@ import com.intellij.openapi.project.Project
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.util.application
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import java.util.concurrent.CancellationException as FutureCancellationException
-import java.util.concurrent.ExecutionException as FutureExecutionException
-import java.util.concurrent.Future
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 
 /**
  * Smart cache for mise commands with broadcast-based invalidation and proactive warming.
@@ -167,8 +169,8 @@ class MiseCommandCache(
      * Get cached value with automatic fast-path optimization and threading protection.
      *
      * - Fast path (cache hit): Returns cached result synchronously (instant, no thread switching)
-     * - Slow path (cache miss): Computes on a pooled thread, blocking for up to [STUCK_COMMAND_TIMEOUT_SECS] seconds,
-     *                              throws ProcessCanceledException if computation can’t complete within the timeout.
+     * - Slow path (cache miss): Computes via coroutine on IO dispatcher, blocking for up to [STUCK_COMMAND_TIMEOUT_SECS] seconds,
+     *                              throws ProcessCanceledException if computation can't complete within the timeout.
      *
      * Thread-safe: Can be called from EDT, background thread, or read-action thread.
      * Type-safe: Uses sealed class MiseCacheKey to guarantee key→type mapping at compile time.
@@ -190,41 +192,56 @@ class MiseCommandCache(
 
         logger.trace { "getCachedWithProgress miss for key: ${cacheKey.key}" }
 
-        // Compute on pooled thread to avoid deadlocks/re-entrancy when called from env customization / read-action contexts.
+        // Compute on IO dispatcher to avoid deadlocks/re-entrancy when called from env customization / read-action contexts.
         // EDT callers are allowed to block, but only to *wait* (with modal progress), never to *compute*.
-        val future: Future<T> = application.executeOnPooledThread<T> {
-            getCached(cacheKey, compute)
-        }
-
         return if (application.isDispatchThread) {
             logger.trace { "getCachedWithProgress EDT detected, using modal progress to wait for pooled computation" }
             runWithModalProgressBlocking(project, cacheKey.progressTitle) {
-                awaitFutureOrCancel(cacheKey, future)
+                try {
+                    withTimeout(STUCK_COMMAND_TIMEOUT_SECS * 1000L) {
+                        withContext(Dispatchers.IO) {
+                            getCached(cacheKey, compute)
+                        }
+                    }
+                } catch (_: TimeoutCancellationException) {
+                    logger.warn("getCachedWithProgress timed out in ${STUCK_COMMAND_TIMEOUT_SECS}s for key: ${cacheKey.key}")
+                    throw ProcessCanceledException()
+                }
             }
         } else {
-            awaitFutureOrCancel(cacheKey, future)
+            val deferred: Deferred<T> = cs.async(Dispatchers.IO) { getCached(cacheKey, compute) }
+            awaitDeferredOrCancel(cacheKey, deferred)
         }
     }
 
     /**
-     * Waits for a pooled computation and normalizes timeout/interrupt/cancellation to ProcessCanceledException.
+     * Waits for a deferred computation and normalizes timeout/interrupt/cancellation to ProcessCanceledException.
      */
-    private fun <T> awaitFutureOrCancel(cacheKey: MiseCacheKey<T>, future: Future<T>): T {
+    private fun <T> awaitDeferredOrCancel(cacheKey: MiseCacheKey<T>, deferred: Deferred<T>): T {
+        val latch = CountDownLatch(1)
+        var completionResult: Result<T>? = null
+
+        deferred.invokeOnCompletion { throwable ->
+            completionResult = if (throwable == null) {
+                Result.success(deferred.getCompleted())
+            } else {
+                Result.failure(throwable)
+            }
+            latch.countDown()
+        }
+
         return try {
-            future.get(STUCK_COMMAND_TIMEOUT_SECS, TimeUnit.SECONDS)
-        } catch (_: TimeoutException) {
-            future.cancel(true)
-            logger.warn("getCachedWithProgress compute timed out in ${STUCK_COMMAND_TIMEOUT_SECS}s for key: ${cacheKey.key}")
-            throw ProcessCanceledException()
+            if (!latch.await(STUCK_COMMAND_TIMEOUT_SECS, TimeUnit.SECONDS)) {
+                deferred.cancel()
+                logger.warn("getCachedWithProgress timed out in ${STUCK_COMMAND_TIMEOUT_SECS}s for key: ${cacheKey.key}")
+                throw ProcessCanceledException()
+            }
+            completionResult!!.getOrThrow()
+            // CancellationException (project closed, etc.) → rethrown as-is for MiseEnvCustomizer to handle
         } catch (_: InterruptedException) {
             Thread.currentThread().interrupt()
-            future.cancel(true)
+            deferred.cancel()
             throw ProcessCanceledException()
-        } catch (_: FutureCancellationException) {
-            throw ProcessCanceledException()
-        } catch (e: FutureExecutionException) {
-            val cause = e.cause ?: e
-            throw cause
         }
     }
 }

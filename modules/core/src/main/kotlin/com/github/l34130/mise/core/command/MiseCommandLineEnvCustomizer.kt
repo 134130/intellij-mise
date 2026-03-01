@@ -47,7 +47,7 @@ open class MiseCommandLineEnvCustomizer : CommandLineEnvCustomizer, MiseEnvCusto
 
         val project = MiseCommandLineHelper.resolveProjectFromCommandLine(commandLine)
 
-        if (project == null ) {
+        if (project == null) {
             logger.trace(logMessage("Skipping environment customization, could not resolve project.", commandLine))
             return
         }

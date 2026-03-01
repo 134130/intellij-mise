@@ -28,7 +28,7 @@ class MiseCommandLineEnvCustomizerTest : BasePlatformTestCase() {
                 try {
                     // This calls resolveProjectFromCommandLine under the hood.
                     // OLD CODE: Blocks forever waiting for a Read Action.
-                    // NEW CODE: tryComputeReadAction returns null, customization bails out safely.
+                    // NEW CODE: fast-path basePath matching avoids read action entirely, customization bails out safely.
                     customizer.customizeEnv(commandLine, env)
 
                     backgroundThreadCompleted = true
