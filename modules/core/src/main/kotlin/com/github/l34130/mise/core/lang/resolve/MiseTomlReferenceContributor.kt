@@ -11,8 +11,10 @@ class MiseTomlReferenceContributor : PsiReferenceContributor() {
             PlatformPatterns.or(
                 MiseTomlPsiPatterns.miseTomlStringLiteral.withParent(MiseTomlPsiPatterns.onTaskDependsArray),
                 MiseTomlPsiPatterns.onTaskDependsString,
+                MiseTomlPsiPatterns.miseTomlStringLiteral.withParent(MiseTomlPsiPatterns.onTaskWaitForArray),
+                MiseTomlPsiPatterns.onTaskWaitForString,
             ),
-            MiseTomlTaskDependsReferenceProvider(),
+            MiseTomlTaskDependencyReferenceProvider(),
         )
     }
 }

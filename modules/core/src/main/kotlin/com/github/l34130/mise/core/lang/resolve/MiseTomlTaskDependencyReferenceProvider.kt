@@ -14,7 +14,6 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
 import com.intellij.psi.ResolveResult
 import com.intellij.util.ProcessingContext
-import kotlinx.coroutines.runBlocking
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlLiteral
 
@@ -30,7 +29,7 @@ import org.toml.lang.psi.TomlLiteral
  *             #^ Provides a reference for "foo"
  * ```
  */
-class MiseTomlTaskDependsReferenceProvider : PsiReferenceProvider() {
+class MiseTomlTaskDependencyReferenceProvider : PsiReferenceProvider() {
     override fun getReferencesByElement(
         element: PsiElement,
         context: ProcessingContext,
@@ -46,12 +45,12 @@ class MiseTomlTaskDependsReferenceProvider : PsiReferenceProvider() {
             val literalValue = element.stringValue ?: return ResolveResult.EMPTY_ARRAY
             if (element.containingFile !is TomlFile) return ResolveResult.EMPTY_ARRAY
 
-            var value = literalValue.split(' ', ignoreCase = false, limit = 2).firstOrNull() ?: return ResolveResult.EMPTY_ARRAY
+            val value = literalValue.split(' ', ignoreCase = false, limit = 2).firstOrNull() ?: return ResolveResult.EMPTY_ARRAY
             val isWildcard = value.endsWith(":*")
 
             val project = element.project
-            val tasks = runBlocking { project.service<MiseTaskResolver>().getMiseTasks() }
-
+            val resolver = project.service<MiseTaskResolver>()
+            val tasks = resolver.getCachedTasksOrEmptyList()
             val result =
                 if (isWildcard) {
                     // FIXME: IDK why this is not working

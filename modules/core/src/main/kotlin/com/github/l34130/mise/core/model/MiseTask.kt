@@ -42,7 +42,7 @@ sealed interface MiseTask {
     val source: String
 
     companion object {
-        val DATA_KEY = DataKey.create<MiseTask>(javaClass.simpleName)
+        val DATA_KEY = DataKey.create<MiseTask>(MiseTask::class.java.simpleName)
     }
 }
 
@@ -54,7 +54,11 @@ fun MiseTask.psiLocation(project: Project): PsiLocation<*>? =
             val psiFile = runReadAction { this.file.findPsiFile(project) } ?: return null
             PsiLocation(psiFile)
         }
-        is MiseTomlTableTask -> PsiLocation(project, this.keySegment)
+
+        is MiseTomlTableTask -> {
+            PsiLocation(project, this.keySegment)
+        }
+
         is MiseUnknownTask -> {
             val source = this.source
             val file = LocalFileSystem.getInstance().findFileByPath(source) ?: return null
@@ -133,6 +137,7 @@ class MiseTomlTableTask internal constructor(
                             }
                         }
                     }
+
                     2 -> {
                         // [tasks.foo]
                         val (first, second) = keySegments
@@ -140,7 +145,10 @@ class MiseTomlTableTask internal constructor(
                             result.addIfNotNull(resolveFromTaskChainedTable(second))
                         }
                     }
-                    else -> continue
+
+                    else -> {
+                        continue
+                    }
                 }
             }
 
@@ -240,3 +248,84 @@ class MiseTomlTableTask internal constructor(
         }
     }
 }
+
+/**
+ * Stable snapshot for comparing task content that affects UI rendering.
+ *
+ * This avoids comparing PSI/VFS instances directly by capturing relevant fields.
+ */
+data class MiseTaskUiFingerprint(
+    val type: String,
+    val name: String,
+    @AbsolutePath
+    val source: String,
+    val aliases: List<String>,
+    val description: String?,
+    val depends: List<List<String>>,
+    val waitFor: List<List<String>>,
+    val dependsPost: List<List<String>>,
+    val fileStamp: Long?,
+) : Comparable<MiseTaskUiFingerprint> {
+    override fun compareTo(other: MiseTaskUiFingerprint): Int =
+        compareValuesBy(
+            this,
+            other,
+            { it.type },
+            { it.name },
+            { it.source },
+            { it.fileStamp ?: -1L },
+        )
+}
+
+private fun normalizeDependencyList(value: List<List<String>>?): List<List<String>> = value?.map { it.toList() } ?: emptyList()
+
+fun MiseTask.uiFingerprint(): MiseTaskUiFingerprint =
+    when (this) {
+        is MiseTomlTableTask -> {
+            MiseTaskUiFingerprint(
+                type = "toml",
+                name = name,
+                source = source,
+                aliases = aliases.orEmpty(),
+                description = description,
+                depends = normalizeDependencyList(depends),
+                waitFor = normalizeDependencyList(waitFor),
+                dependsPost = normalizeDependencyList(dependsPost),
+                fileStamp = null,
+            )
+        }
+
+        is MiseShellScriptTask -> {
+            MiseTaskUiFingerprint(
+                type = "shell",
+                name = name,
+                source = source,
+                aliases = aliases.orEmpty(),
+                description = description,
+                depends = normalizeDependencyList(depends),
+                waitFor = normalizeDependencyList(waitFor),
+                dependsPost = normalizeDependencyList(dependsPost),
+                fileStamp = file.timeStamp,
+            )
+        }
+
+        is MiseUnknownTask -> {
+            MiseTaskUiFingerprint(
+                type = "unknown",
+                name = name,
+                source = source,
+                aliases = aliases.orEmpty(),
+                description = description,
+                depends = normalizeDependencyList(depends),
+                waitFor = normalizeDependencyList(waitFor),
+                dependsPost = normalizeDependencyList(dependsPost),
+                fileStamp = null,
+            )
+        }
+    }
+
+/**
+ * Compare two task lists by their UI-relevant fingerprints.
+ */
+fun List<MiseTask>.hasDifferentUiContentFrom(other: List<MiseTask>): Boolean =
+    map { it.uiFingerprint() }.sorted() != other.map { it.uiFingerprint() }.sorted()

@@ -13,10 +13,8 @@ import com.intellij.openapi.vfs.VirtualFileContentsChangedAdapter
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.VirtualFilePropertyEvent
 import com.intellij.openapi.vfs.impl.BulkVirtualFileListenerAdapter
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiTreeAnyChangeAbstractAdapter
 import com.intellij.util.Alarm
+import com.intellij.util.application
 import com.intellij.util.messages.MessageBusConnection
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -33,7 +31,8 @@ class MiseTomlFileListener(
     init {
         // Register the VFS listener once for the entire project
         val connection = project.messageBus.connect(this)
-        FileListener.startListening(project, this, connection)
+        val debouncerFactory = project.service<MiseEventDebouncerFactory>()
+        FileListener.startListening(project, this, connection, debouncerFactory)
     }
 
     override fun dispose() {
@@ -45,66 +44,47 @@ class MiseTomlFileListener(
         updater: MiseLocalIndexUpdater,
     ) : BulkVirtualFileListenerAdapter(
             object : VirtualFileContentsChangedAdapter() {
-            override fun onFileChange(fileOrDirectory: VirtualFile) {
-                updater.onVfsChange(fileOrDirectory)
-            }
+                override fun onFileChange(fileOrDirectory: VirtualFile) = updater.onVfsChange(fileOrDirectory)
 
-            override fun onBeforeFileChange(fileOrDirectory: VirtualFile) {
-                updater.onVfsChange(fileOrDirectory)
-            }
+                override fun onBeforeFileChange(fileOrDirectory: VirtualFile) = updater.onVfsChange(fileOrDirectory)
 
-            // Called BEFORE property change - file still has OLD value
-            override fun beforePropertyChange(event: VirtualFilePropertyEvent) {
-                updater.onVfsChange(event.file)
-            }
+                // Called BEFORE property change - file still has OLD value
+                override fun beforePropertyChange(event: VirtualFilePropertyEvent) = updater.onVfsChange(event.file)
 
-            // Called AFTER property change - file now has NEW value
-            override fun propertyChanged(event: VirtualFilePropertyEvent) {
-                updater.onVfsChange(event.file)
-            }
-        }
-    ) {
+                // Called AFTER property change - file now has NEW value
+                override fun propertyChanged(event: VirtualFilePropertyEvent) = updater.onVfsChange(event.file)
+            },
+        ) {
         companion object {
-            fun startListening(project: Project, disposable: Disposable, connection: MessageBusConnection) {
-                val updater = MiseLocalIndexUpdater(project, disposable)
+            fun startListening(
+                project: Project,
+                disposable: Disposable,
+                connection: MessageBusConnection,
+                debouncerFactory: MiseEventDebouncerFactory,
+            ) {
+                val debouncer = debouncerFactory.create(disposable)
+                val updater = MiseLocalIndexUpdater(project, debouncer)
                 connection.subscribe(VirtualFileManager.VFS_CHANGES, FileListener(updater))
-                PsiManager.getInstance(project).addPsiTreeChangeListener(
-                    object : PsiTreeAnyChangeAbstractAdapter() {
-                        override fun onChange(file: PsiFile?) {
-                            if (file != null) {
-                                updater.onPsiChange(file.viewProvider.virtualFile)
-                            }
-                        }
-                    },
-                    disposable,
-                )
+                // PSI changes are intentionally ignored; we only refresh on VFS changes to avoid
+                // frequent cache refresh while editing unsaved buffers.
             }
         }
 
         class MiseLocalIndexUpdater(
             val project: Project,
-            disposable: Disposable,
+            private val debouncer: MiseEventDebouncer,
         ) {
-            private val updater = ZipperUpdater(200, Alarm.ThreadToUse.POOLED_THREAD, disposable)
             private val dirtyTomlFiles: MutableSet<VirtualFile> = ConcurrentHashMap.newKeySet()
             private val vfsChanged = AtomicBoolean(false)
-            private val psiChanged = AtomicBoolean(false)
             private val runnable =
                 Runnable {
                     if (project.isDisposed) return@Runnable
                     val scope = HashSet(dirtyTomlFiles)
                     val shouldNotifyVfs = vfsChanged.getAndSet(false)
-                    val shouldNotifyPsi = psiChanged.getAndSet(false)
                     if (shouldNotifyVfs) {
                         MiseProjectEventListener.broadcast(
                             project,
-                            MiseProjectEvent(MiseProjectEvent.Kind.TOML_CHANGED, "mise toml changed (vfs)")
-                        )
-                    }
-                    if (shouldNotifyPsi) {
-                        MiseProjectEventListener.broadcast(
-                            project,
-                            MiseProjectEvent(MiseProjectEvent.Kind.TOML_PSI_CHANGED, "mise toml changed (psi)")
+                            MiseProjectEvent(MiseProjectEvent.Kind.TOML_CHANGED, "mise toml changed (vfs)"),
                         )
                     }
                     dirtyTomlFiles.removeAll(scope)
@@ -114,15 +94,7 @@ class MiseTomlFileListener(
                 if (isTrackedMiseInput(file)) {
                     dirtyTomlFiles.add(file)
                     vfsChanged.set(true)
-                    updater.queue(runnable)
-                }
-            }
-
-            fun onPsiChange(file: VirtualFile) {
-                if (MiseTomlFile.isMiseTomlFile(project, file)) {
-                    dirtyTomlFiles.add(file)
-                    psiChanged.set(true)
-                    updater.queue(runnable)
+                    debouncer.queue(runnable)
                 }
             }
 
@@ -142,5 +114,44 @@ class MiseTomlFileListener(
                 return false
             }
         }
+    }
+}
+
+/**
+ * Debounces rapid-fire events into batched operations.
+ *
+ * Production: Uses 1000ms debounce to prevent refresh storms during bulk file changes
+ * (e.g., git checkout, IDE project reloads, multi-file refactorings).
+ *
+ * Tests: Runs immediately for deterministic assertions without timing dependencies.
+ */
+fun interface MiseEventDebouncer {
+    fun queue(runnable: Runnable)
+}
+
+@Service(Service.Level.PROJECT)
+class MiseEventDebouncerFactory {
+    fun create(disposable: Disposable): MiseEventDebouncer =
+        if (application.isUnitTestMode) {
+            ImmediateMiseEventDebouncer()
+        } else {
+            ZipperUpdaterDebouncer(1000, disposable)
+        }
+}
+
+private class ZipperUpdaterDebouncer(
+    delayMs: Int,
+    disposable: Disposable,
+) : MiseEventDebouncer {
+    private val updater = ZipperUpdater(delayMs, Alarm.ThreadToUse.POOLED_THREAD, disposable)
+
+    override fun queue(runnable: Runnable) {
+        updater.queue(runnable)
+    }
+}
+
+private class ImmediateMiseEventDebouncer : MiseEventDebouncer {
+    override fun queue(runnable: Runnable) {
+        runnable.run()
     }
 }
