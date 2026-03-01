@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
+import com.intellij.util.containers.CollectionFactory
 import java.nio.file.Paths
 import kotlin.io.path.pathString
 
@@ -15,53 +16,48 @@ object MiseCommandLineHelper {
     /**
      * Marker added to environment variables to prevent double-injection in the case where
      * multiple env customizers are called.
-     * This marker is checked by all customizers to skip injection if already done.
+     *
+     * NOTE: We intentionally do NOT store this marker in the environment map anymore because it leaks into child
+     * processes and can show up in run configurations. Instead we track marker state by env map identity.
      */
-    const val INJECTION_MARKER_KEY = "_MISE_PLUGIN_ENV_VARS_CUSTOMIZATION"
-    const val INJECTION_MARKER_VALUE_DONE = "done"
-    const val INJECTION_MARKER_VALUE_SKIP = "skipped"
+    private enum class EnvCustomizationState { DONE, SKIP }
+
+    /**
+     * Tracks customization state by env-map identity.
+     *
+     * Weak keys ensure we don't retain per-command maps longer than necessary.
+     */
+    private val envCustomizationStateByMap =
+        CollectionFactory.createConcurrentWeakIdentityMap<MutableMap<String, String>, EnvCustomizationState>()
 
     /**
      * Check if the mise plugin needs to customize environment variables.
      * @return true if customization is required, false otherwise
      */
-    fun <K, V> environmentNeedsCustomization(environment: MutableMap<K, V>): Boolean
-            where K : String?, V : String? {
-        @Suppress("UNCHECKED_CAST")
-        return !environment.containsKey(INJECTION_MARKER_KEY as K) ||
-                (
-                        environment[INJECTION_MARKER_KEY as K] != INJECTION_MARKER_VALUE_DONE
-                                && environment[INJECTION_MARKER_KEY as K] != INJECTION_MARKER_VALUE_SKIP
-                        )
+    fun environmentNeedsCustomization(environment: MutableMap<String, String>): Boolean =
+        envCustomizationStateByMap[environment] == null
+
+    /**
+     * Mark env as customized to prevent double-injection for this env-map instance.
+     */
+    fun environmentHasBeenCustomized(environment: MutableMap<String, String>) {
+        envCustomizationStateByMap[environment] = EnvCustomizationState.DONE
+    }
+
+
+    /**
+     * Mark env customization as intentionally skipped for this env-map instance.
+     * Used to prevent recursion when executing mise itself.
+     */
+    fun environmentSkipCustomization(environment: MutableMap<String, String>) {
+        envCustomizationStateByMap[environment] = EnvCustomizationState.SKIP
     }
 
     /**
-     * Add injection marker to environment to prevent double-injection.
-     * This marker is checked by all customizers to skip injection if already done.
-     * Supports both nullable and non-nullable map types.
+     * Clear marker when customization fails, allowing retry.
      */
-    fun <K, V> environmentHasBeenCustomized(environment: MutableMap<K, V>)
-            where K : String?, V : String? {
-        @Suppress("UNCHECKED_CAST")
-        environment[INJECTION_MARKER_KEY as K] = INJECTION_MARKER_VALUE_DONE as V
-    }
-
-    /**
-     * Add injection marker to environment to prevent double-injection.
-     * This marker is checked by all customizers to skip injection if already done.
-     */
-    fun environmentSkipCustomization(environment: MutableMap<String?, String?>) {
-        environment[INJECTION_MARKER_KEY] = INJECTION_MARKER_VALUE_SKIP
-    }
-
-    /**
-     * Remove injection marker when customization fails, allowing retry.
-     * Supports both nullable and non-nullable map types.
-     */
-    fun <K, V> environmentCustomizationFailed(environment: MutableMap<K, V>)
-            where K : String?, V : String? {
-        @Suppress("UNCHECKED_CAST")
-        environment.remove(INJECTION_MARKER_KEY as K)
+    fun environmentCustomizationFailed(environment: MutableMap<String, String>) {
+        envCustomizationStateByMap.remove(environment)
     }
 
     /**
