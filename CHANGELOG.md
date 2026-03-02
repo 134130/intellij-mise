@@ -16,7 +16,6 @@
 - Refactor cache threading to prevent deadlocks and handle command timeouts
 - Replace environment injection marker with identity-based state tracking
 
-
 ### Fixes
 
 - null handling for workingDirectory Python Console
