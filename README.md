@@ -23,7 +23,7 @@
   - For `python`, only `uv` is supported.
   - **WSL Support**: IntelliJ on Windows can automatically detect and use mise installed in WSL distributions.
 - **VCS Integration**: Inject mise environment variables into Git operations (push, pull, commit hooks, etc.).
-  - Can be toggled on/off in <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Mise</kbd>.
+  - Can be toggled on/off in <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Mise Settings</kbd>.
 - **Task Execution**: Run tasks from `mise.toml` files.
   - Show the task list on the right side tool window.
   - Execute tasks defined in the configuration files of the project or subdirectory.
