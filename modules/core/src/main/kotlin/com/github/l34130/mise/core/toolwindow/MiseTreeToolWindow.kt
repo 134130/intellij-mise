@@ -1,5 +1,6 @@
 package com.github.l34130.mise.core.toolwindow
 
+import com.github.l34130.mise.core.MiseCoroutineService
 import com.github.l34130.mise.core.MiseTaskResolver
 import com.github.l34130.mise.core.cache.MiseCacheService
 import com.github.l34130.mise.core.cache.MiseProjectEvent
@@ -17,6 +18,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -24,6 +26,7 @@ import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.actionSystem.ex.CustomComponentAction
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.ShowSettingsUtil
@@ -48,19 +51,33 @@ import java.awt.event.MouseEvent
 import javax.swing.JComponent
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MiseTreeToolWindow(
     private val project: Project,
     treeStructure: MiseTreeStructure,
 ) : SimpleToolWindowPanel(true, true),
     Disposable {
-    private val toolWindowState = project.service<MiseToolWindowState>()
+    // Disposable.dispose() is not contractually bound to the EDT, so tag with @Volatile
+    @Volatile
+    private var isDisposed = false
+
+    private val cs = project.service<MiseCoroutineService>().supervisedChildScope(javaClass.simpleName)
+    private var stateLoaded = false
+    // Default/empty state until the persisted state is loaded asynchronously.
+    private var state: MiseToolWindowState.MyState = MiseToolWindowState.MyState()
+    private var envTextField: JBTextField? = null
+    private var actionToolbar: ActionToolbar
     private val treeModel =
         StructureTreeModel(treeStructure, null, Invoker.forBackgroundPoolWithoutReadAction(this), this)
     private val myTree = Tree(AsyncTreeModel(treeModel, true, this))
 
     init {
-        initializeEnvFromProjectSettingsIfNeeded()
+        // Avoid initializing @State services on the EDT; load in background and apply on EDT.
+        loadToolWindowStateAsync()
 
         val actionManager = ActionManager.getInstance()
         val actionGroup = DefaultActionGroup()
@@ -82,14 +99,16 @@ class MiseTreeToolWindow(
                     presentation: Presentation,
                     place: String,
                 ): JComponent {
-                    val textField = JBTextField(toolWindowState.state.envOverride)
+                    val textField = JBTextField()
                     textField.columns = 6
                     textField.toolTipText = "Mise Environment"
+                    envTextField = textField
+                    updateEnvTextFieldState()
 
                     fun applyEnvValue(raw: String) {
                         val value = raw.trim()
-                        toolWindowState.state.envOverride = value
-                        toolWindowState.state.envInitialized = true
+                        state.envOverride = value
+                        state.envInitialized = true
                         scheduleRefresh()
                     }
                     textField.addActionListener {
@@ -119,9 +138,11 @@ class MiseTreeToolWindow(
             },
         )
 
-        val actionToolbar = actionManager.createActionToolbar("Mise View Toolbar", actionGroup, true)
-        actionToolbar.targetComponent = this
-        toolbar = actionToolbar.component
+        actionToolbar = actionManager.createActionToolbar("Mise View Toolbar", actionGroup, true).also {
+            it.targetComponent = this
+            toolbar = it.component
+        }
+
         setContent(ScrollPaneFactory.createScrollPane(myTree))
 
         background = UIUtil.getTreeBackground()
@@ -211,6 +232,8 @@ class MiseTreeToolWindow(
     }
 
     override fun dispose() {
+        isDisposed = true
+        cs.cancel()
     }
 
     private inline fun <reified T : AbstractTreeNode<*>> getSelectedNodesSameType(): List<T>? {
@@ -276,13 +299,17 @@ class MiseTreeToolWindow(
             object : ToggleAction("Config Path", "Group nodes by source config path", AllIcons.Nodes.ConfigFolder) {
                 override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
-                override fun isSelected(e: AnActionEvent): Boolean = toolWindowState.state.groupByConfigPath
+                override fun isSelected(e: AnActionEvent): Boolean = state.groupByConfigPath
+
+                override fun update(e: AnActionEvent) {
+                    e.presentation.isEnabled = stateLoaded
+                }
 
                 override fun setSelected(
                     e: AnActionEvent,
                     state: Boolean,
                 ) {
-                    toolWindowState.state.groupByConfigPath = state
+                    this@MiseTreeToolWindow.state.groupByConfigPath = state
                     scheduleRefresh()
                 }
             },
@@ -292,14 +319,18 @@ class MiseTreeToolWindow(
             object : ToggleAction("Relative", "Show non-project paths relative to project path", AllIcons.Actions.Show) {
                 override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
-                override fun isSelected(e: AnActionEvent): Boolean = toolWindowState.state.nonProjectPathDisplay == RELATIVE
+                override fun isSelected(e: AnActionEvent): Boolean = state.nonProjectPathDisplay == RELATIVE
+
+                override fun update(e: AnActionEvent) {
+                    e.presentation.isEnabled = stateLoaded
+                }
 
                 override fun setSelected(
                     e: AnActionEvent,
                     state: Boolean,
                 ) {
                     if (!state) return
-                    toolWindowState.state.nonProjectPathDisplay = RELATIVE
+                    this@MiseTreeToolWindow.state.nonProjectPathDisplay = RELATIVE
                     scheduleRefresh()
                 }
             },
@@ -308,14 +339,18 @@ class MiseTreeToolWindow(
             object : ToggleAction("Absolute", "Show non-project paths as absolute", AllIcons.Actions.ShowWriteAccess) {
                 override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
-                override fun isSelected(e: AnActionEvent): Boolean = toolWindowState.state.nonProjectPathDisplay == ABSOLUTE
+                override fun isSelected(e: AnActionEvent): Boolean = state.nonProjectPathDisplay == ABSOLUTE
+
+                override fun update(e: AnActionEvent) {
+                    e.presentation.isEnabled = stateLoaded
+                }
 
                 override fun setSelected(
                     e: AnActionEvent,
                     state: Boolean,
                 ) {
                     if (!state) return
-                    toolWindowState.state.nonProjectPathDisplay = ABSOLUTE
+                    this@MiseTreeToolWindow.state.nonProjectPathDisplay = ABSOLUTE
                     scheduleRefresh()
                 }
             },
@@ -324,9 +359,56 @@ class MiseTreeToolWindow(
     }
 
     private fun initializeEnvFromProjectSettingsIfNeeded() {
-        val state = toolWindowState.state
+        if (!stateLoaded) return
         if (state.envInitialized) return
-        state.envOverride = project.service<MiseProjectSettings>().state.miseConfigEnvironment
-        state.envInitialized = true
+        if (project.isDisposed) return
+        // MiseProjectSettings may trigger path macro expansion; keep it off the EDT.
+        cs.launch {
+            val env = withContext(Dispatchers.IO) {
+                project.service<MiseProjectSettings>().state.miseConfigEnvironment
+            }
+            withContext(Dispatchers.EDT) {
+                if (project.isDisposed || isDisposed) return@withContext
+                if (state.envInitialized) return@withContext
+                state.envOverride = env
+                state.envInitialized = true
+                updateEnvTextFieldState()
+                scheduleRefresh()
+            }
+        }
+    }
+
+    private fun loadToolWindowStateAsync() {
+        if (project.isDisposed) return
+        cs.launch {
+            val loadedState = withContext(Dispatchers.IO) {
+                project.service<MiseToolWindowState>().state
+            }
+            withContext(Dispatchers.EDT) {
+                if (project.isDisposed || isDisposed) return@withContext
+                // Apply loaded state on EDT to avoid races with UI components.
+                state = loadedState
+                stateLoaded = true
+                updateEnvTextFieldState()
+
+                actionToolbar.updateActionsAsync()
+                initializeEnvFromProjectSettingsIfNeeded()
+                scheduleRefresh()
+            }
+        }
+    }
+
+    /** Must be called on the EDT. Syncs [envTextField] with the current [stateLoaded]/[state]. */
+    private fun updateEnvTextFieldState() {
+        val field = envTextField ?: return
+        if (!stateLoaded || !state.envInitialized) {
+            field.text = ""
+            field.isEnabled = false
+            field.emptyText.text = "Loading..."
+        } else {
+            field.text = state.envOverride
+            field.isEnabled = true
+            field.emptyText.text = ""
+        }
     }
 }
