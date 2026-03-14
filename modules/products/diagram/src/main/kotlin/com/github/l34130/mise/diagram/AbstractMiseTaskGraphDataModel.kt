@@ -1,20 +1,26 @@
 package com.github.l34130.mise.diagram
 
+import com.github.l34130.mise.core.MiseCoroutineService
 import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.intellij.diagram.DiagramDataModel
 import com.intellij.diagram.DiagramEdge
 import com.intellij.diagram.DiagramNode
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Shared async data model for Mise task graph diagrams.
  *
- * This prevents EDT hangs by computing nodes on a pooled thread, and standardizes refresh/update behavior.
+ * This prevents EDT hangs by computing nodes on [Dispatchers.IO], and standardizes refresh/update behavior.
  * Diagrams open empty and refresh once computation finishes.
  */
 abstract class AbstractMiseTaskGraphDataModel(
@@ -24,14 +30,17 @@ abstract class AbstractMiseTaskGraphDataModel(
     @Volatile
     protected var nodes: List<MiseTaskGraphNode> = emptyList()
 
-    private val isDisposed = AtomicBoolean(false)
+    @Volatile
+    private var isDisposed = false
+
     private val generation = AtomicInteger(0)
-    private val registeredWithBuilder = AtomicBoolean(false)
+    private var registeredWithBuilder = false
+    private val scope: CoroutineScope = project.service<MiseCoroutineService>().supervisedChildScope(javaClass.simpleName)
 
     private enum class EdgeDirection { INTO_NODE, OUT_OF_NODE }
 
     init {
-        ApplicationManager.getApplication().invokeLater { reloadAsync() }
+        reloadAsync()
         MiseProjectEventListener.subscribe(project, this) { event ->
             when (event.kind) {
                 MiseProjectEvent.Kind.TASK_CACHE_REFRESHED -> {
@@ -108,7 +117,8 @@ abstract class AbstractMiseTaskGraphDataModel(
     }
 
     override fun dispose() {
-        isDisposed.set(true)
+        isDisposed = true
+        scope.cancel()
     }
 
     protected abstract fun computeNodesBlocking(): List<MiseTaskGraphNode>
@@ -118,22 +128,26 @@ abstract class AbstractMiseTaskGraphDataModel(
     }
 
     private fun reloadAsync() {
-        if (isDisposed.get() || project.isDisposed) return
+        if (isDisposed || project.isDisposed) return
         val currentGeneration = generation.incrementAndGet()
-        val app = ApplicationManager.getApplication()
-        app.executeOnPooledThread {
-            if (isDisposed.get() || project.isDisposed) return@executeOnPooledThread
+        scope.launch(Dispatchers.IO) {
+            if (isDisposed || project.isDisposed) return@launch
             val computedNodes = computeNodesBlocking()
-            app.invokeLater {
-                if (isDisposed.get() || project.isDisposed) return@invokeLater
-                if (generation.get() != currentGeneration) return@invokeLater
+            withContext(Dispatchers.EDT) {
+                if (isDisposed || project.isDisposed) return@withContext
+                if (generation.get() != currentGeneration) return@withContext
                 nodes = computedNodes
 
-                val currentBuilder = runCatching { builder }.getOrNull() ?: return@invokeLater
+                val currentBuilder = runCatching { builder }.getOrNull() ?: return@withContext
 
-                if (registeredWithBuilder.compareAndSet(false, true)) {
+                if (!registeredWithBuilder) {
                     // Ensure our model is disposed when the diagram builder is disposed.
-                    Disposer.register(currentBuilder, this)
+                    // tryRegister (not register) avoids IncorrectOperationException if currentBuilder
+                    // was concurrently disposed on a non-EDT thread (e.g. during project close).
+                    if (!Disposer.tryRegister(currentBuilder, this@AbstractMiseTaskGraphDataModel)) {
+                        return@withContext // builder already disposed; skip the update
+                    }
+                    registeredWithBuilder = true
                 }
 
                 configurePresentationBeforeRefresh()
