@@ -22,7 +22,7 @@ class MiseVcsEnvCustomizer : VcsEnvCustomizer(), MiseEnvCustomizer {
 
     override fun customizeCommandAndEnvironment(
         project: Project?,
-        envs: MutableMap<String?, String?>,
+        envs: MutableMap<String, String>,
         context: VcsExecutableContext,
     ) {
         if (project == null) return
