@@ -18,7 +18,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.ProcessingContext
-import kotlinx.coroutines.runBlocking
 import org.toml.lang.psi.TomlArray
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlInlineTable
@@ -90,43 +89,46 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
         }
         if (currentTaskSegment == null) return
 
-        runBlocking {
-            val resolver = project.service<MiseTaskResolver>()
-            val tasks = resolver.getMiseTasks()
+        for (task in project.service<MiseTaskResolver>().getCachedTasksOrEmptyList()) {
+            if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
+            if (task.name == currentTaskSegment.name) continue
 
-            for (task in tasks) {
-                if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
-                if (task.name == currentTaskSegment.name) continue
-
-                val psiElement =
-                    when (task) {
-                        is MiseShellScriptTask -> task.file.findPsiFile(project)!!
-                        is MiseTomlTableTask -> task.keySegment
-                        is MiseUnknownTask -> {
-                            result.addElement(
-                                LookupElementBuilder.create(task.name)
-                                    .withInsertHandler(StringLiteralInsertionHandler())
-                                    .withTypeText(presentablePath(project, task.source)),
-                            )
-                            continue
-                        }
+            val psiElement =
+                when (task) {
+                    is MiseShellScriptTask -> {
+                        if (!task.file.isValid) continue
+                        task.file.findPsiFile(project) ?: continue
                     }
 
-                val path =
-                    when {
-                        task is MiseTomlTableTask && task.keySegment.containingFile.virtualFile == originalFile -> "current file"
-                        else -> presentablePath(project, psiElement.containingFile.viewProvider.virtualFile.path)
+                    is MiseTomlTableTask -> {
+                        if (!task.keySegment.isValid) continue
+                        task.keySegment
                     }
 
-                result.addElement(
-                    LookupElementBuilder
-                        .createWithSmartPointer(task.name, psiElement)
-                        .withInsertHandler(StringLiteralInsertionHandler())
-                        .withIcon(psiElement.getIcon(Iconable.ICON_FLAG_VISIBILITY))
-                        .withTypeText(path)
-                        .withPriority(-path.length - 100.0),
-                )
-            }
+                    is MiseUnknownTask -> {
+                        result.addElement(
+                            LookupElementBuilder.create(task.name)
+                                .withInsertHandler(StringLiteralInsertionHandler())
+                                .withTypeText(presentablePath(project, task.source)),
+                        )
+                        continue
+                    }
+                }
+
+            val path =
+                when {
+                    task is MiseTomlTableTask && task.keySegment.containingFile.virtualFile == originalFile -> "current file"
+                    else -> presentablePath(project, psiElement.containingFile.viewProvider.virtualFile.path)
+                }
+
+            result.addElement(
+                LookupElementBuilder
+                    .createWithSmartPointer(task.name, psiElement)
+                    .withInsertHandler(StringLiteralInsertionHandler())
+                    .withIcon(psiElement.getIcon(Iconable.ICON_FLAG_VISIBILITY))
+                    .withTypeText(path)
+                    .withPriority(-path.length - 100.0),
+            )
         }
     }
 

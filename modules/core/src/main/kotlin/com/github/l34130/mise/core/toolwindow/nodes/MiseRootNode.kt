@@ -8,8 +8,8 @@ import com.github.l34130.mise.core.model.MiseTask
 import com.github.l34130.mise.core.notification.MiseNotificationServiceUtils
 import com.github.l34130.mise.core.toolwindow.MiseToolWindowContext
 import com.github.l34130.mise.core.toolwindow.MiseToolWindowContextResolver
-import com.github.l34130.mise.core.toolwindow.NonProjectPathDisplay
 import com.github.l34130.mise.core.toolwindow.MiseToolWindowState
+import com.github.l34130.mise.core.toolwindow.NonProjectPathDisplay
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
@@ -17,7 +17,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.PathUtil
-import kotlinx.coroutines.runBlocking
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -141,21 +140,22 @@ class MiseRootNode(
             }
         }
 
-        val envNodes = envs.map { (key, value) ->
-            MiseEnvironmentNode(
-                project = project,
-                key = key,
-                value =
-                    if (value.redacted) {
-                        "[redacted]"
-                    } else {
-                        value.value
-                    },
-                nonProjectPathDisplay = nonProjectPathDisplay,
-                source = value.source,
-                tool = value.tool,
-            )
-        }
+        val envNodes =
+            envs.map { (key, value) ->
+                MiseEnvironmentNode(
+                    project = project,
+                    key = key,
+                    value =
+                        if (value.redacted) {
+                            "[redacted]"
+                        } else {
+                            value.value
+                        },
+                    nonProjectPathDisplay = nonProjectPathDisplay,
+                    source = value.source,
+                    tool = value.tool,
+                )
+            }
 
         return envNodes
             .groupBy { normalizeEnvSourceLabel(envs[it.key]?.source) }
@@ -194,7 +194,7 @@ class MiseRootNode(
                 tasks = mutableListOf(),
             )
 
-        val projectTasks: List<MiseTask> = runBlocking { taskResolver.getMiseTasks(false, configEnvironment) }.sortedBy { it.name }
+        val projectTasks: List<MiseTask> = taskResolver.getCachedTasksOrEmptyList(configEnvironment).sortedBy { it.name }
         val trackedConfigs =
             MiseCommandLineHelper
                 .getTrackedConfigs(project, configEnvironment, projectBaseDir)
@@ -301,8 +301,7 @@ class MiseRootNode(
 
     private fun sortGroupName(source: String): String = source.lowercase()
 
-    private fun isPathLike(source: String): Boolean =
-        source.contains("/") || source.contains("\\")
+    private fun isPathLike(source: String): Boolean = source.contains("/") || source.contains("\\")
 
     companion object {
         private const val MISE_SYSTEM_ENV_SOURCE_LABEL = "Mise System"

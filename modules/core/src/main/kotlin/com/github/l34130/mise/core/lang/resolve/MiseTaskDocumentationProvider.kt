@@ -11,7 +11,6 @@ import com.intellij.openapi.components.service
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.containers.nullize
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.annotations.Nls
 import org.toml.lang.psi.TomlKeySegment
 
@@ -26,14 +25,18 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
             when (element) {
                 is PsiFile -> {
                     if (element.language.id != "Shell Script") return null
-                    val service = element.project.service<MiseTaskResolver>()
-                    val tasks = runBlocking { service.getMiseTasks() }
+                    val tasks = element.project.service<MiseTaskResolver>().getCachedTasksOrEmptyList()
                     tasks.firstOrNull { it is MiseShellScriptTask && it.file == element.virtualFile } as MiseShellScriptTask?
                 }
-                is TomlKeySegment ->
+
+                is TomlKeySegment -> {
                     MiseTomlTableTask.resolveFromTaskChainedTable(element)
                         ?: MiseTomlTableTask.resolveFromInlineTableInTaskTable(element)
-                else -> return null
+                }
+
+                else -> {
+                    return null
+                }
             } ?: return null
 
         return buildString {
@@ -51,14 +54,21 @@ class MiseTaskDocumentationProvider : AbstractDocumentationProvider() {
             appendKeyValueSection(
                 "File:",
                 when (task) {
-                    is MiseShellScriptTask ->
+                    is MiseShellScriptTask -> {
                         presentablePath(
                             element.project,
                             (element as PsiFile)
                                 .containingFile.viewProvider.virtualFile.path,
                         )
-                    is MiseTomlTableTask -> presentablePath(element.project, task.keySegment.containingFile.viewProvider.virtualFile.path)
-                    is MiseUnknownTask -> presentablePath(element.project, task.source)
+                    }
+
+                    is MiseTomlTableTask -> {
+                        presentablePath(element.project, task.keySegment.containingFile.viewProvider.virtualFile.path)
+                    }
+
+                    is MiseUnknownTask -> {
+                        presentablePath(element.project, task.source)
+                    }
                 },
             )
             append(DocumentationMarkup.SECTIONS_END)

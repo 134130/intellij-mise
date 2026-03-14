@@ -3,6 +3,7 @@ package com.github.l34130.mise.core
 import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.util.prewarmProjectInfo
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
@@ -14,6 +15,8 @@ internal class MiseStartupActivity :
     ProjectActivity,
     DumbAware {
     override suspend fun execute(project: Project) {
+        // Ensure the daemon refresh listener is registered early; light services are lazy.
+        project.service<MiseDaemonRefreshService>()
         // Pre-warm project environment info for early callers.
         var warmed = false
         try {
