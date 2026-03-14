@@ -93,6 +93,10 @@ class MiseCacheService(private val project: Project) {
      *
      * EDT Safety: If called from EDT and cache is cold, runs computation on background thread
      * with modal progress dialog to avoid blocking the UI.
+     *
+     * Read-lock constraint: Must NOT be called from a non-EDT thread that holds a read lock.
+     * The compute lambda executes external processes and must not block while holding the lock.
+     * EDT callers are safe because [runWithModalProgressBlocking] dispatches to a background coroutine.
      */
     fun getOrComputeExecutable(key: String, compute: () -> MiseExecutableInfo): MiseExecutableInfo {
         return executableCache.get(key) {
@@ -105,7 +109,11 @@ class MiseCacheService(private val project: Project) {
                     compute()
                 }
             } else {
-                // Not on EDT - run directly
+                // Not on EDT - must not hold a read lock (compute spawns an external process)
+                check(!ApplicationManager.getApplication().isReadAccessAllowed) {
+                    "getOrComputeExecutable must not be called under a read lock from a background thread. " +
+                    "Wrap the call site in a coroutine launched on Dispatchers.IO instead."
+                }
                 compute()
             }
 
