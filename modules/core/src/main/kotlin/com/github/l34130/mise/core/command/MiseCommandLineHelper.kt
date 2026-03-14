@@ -1,9 +1,11 @@
 package com.github.l34130.mise.core.command
 
 import com.github.l34130.mise.core.util.guessMiseProjectPath
+import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.github.l34130.mise.core.wsl.WslPathUtils.maybeConvertWindowsUncToUnixPath
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -12,6 +14,8 @@ import java.nio.file.Paths
 import kotlin.io.path.pathString
 
 object MiseCommandLineHelper {
+    private val logger = Logger.getInstance(MiseCommandLineHelper::class.java)
+
     /**
      * Marker added to environment variables to prevent double-injection in the case where
      * multiple env customizers are called.
@@ -100,19 +104,41 @@ object MiseCommandLineHelper {
      * @return Project or null if not found
      */
     fun resolveProjectFromCommandLine(commandLine: GeneralCommandLine): Project? {
-        val workDir = commandLine.workingDirectory?.pathString ?: return null
-        LocalFileSystem.getInstance().findFileByPath(workDir) ?: return null
+        val workDir = commandLine.workingDirectory?.pathString
+        if (workDir == null) {
+            logger.trace("Project resolve failed: workingDirectory is null (cmd=$commandLine)")
+            return null
+        }
+        if (LocalFileSystem.getInstance().findFileByPath(workDir) == null) {
+            logger.trace("Project resolve failed: workingDirectory not found in LocalFileSystem (workDir=$workDir)")
+            return null
+        }
 
-        val projectManager = ProjectManager.getInstanceIfCreated() ?: return null
+        val projectManager = ProjectManager.getInstanceIfCreated()
+        if (projectManager == null) {
+            logger.trace("Project resolve failed: ProjectManager not created yet (workDir=$workDir)")
+            return null
+        }
         val openProjects = projectManager.openProjects
+        if (openProjects.isEmpty()) {
+            logger.trace("Project resolve failed: no open projects (workDir=$workDir)")
+            return null
+        }
 
         // Fast path: single open project — no read action needed
         if (openProjects.size == 1) return openProjects[0]
 
-        // Multi-project: basePath prefix matching — no read action needed, sufficient for env customization
-        return openProjects.firstOrNull { project ->
-            project.basePath?.let { workDir.startsWith(it) } == true
+        // Multi-project: basePath prefix matching — normalize paths for WSL/UNC consistency
+        val resolvedProject = openProjects.firstOrNull { project ->
+            project.basePath?.let { basePath ->
+                WslPathUtils.isAncestor(basePath, workDir, false)
+            } == true
         }
+        if (resolvedProject == null && logger.isTraceEnabled) {
+            val basePaths = openProjects.mapNotNull { it.basePath }
+            logger.trace("Project resolve failed: no basePath match (workDir=$workDir, openProjectBasePaths=$basePaths)")
+        }
+        return resolvedProject
     }
 
     /**

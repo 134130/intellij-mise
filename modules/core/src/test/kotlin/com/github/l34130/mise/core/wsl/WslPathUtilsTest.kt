@@ -231,6 +231,38 @@ class WslPathUtilsTest : LightPlatformTestCase() {
     }
 
     // ========================
+    // isAncestor() Tests
+    // ========================
+    fun `test isAncestor handles legacy and modern UNC prefixes`() {
+        assumeTrue("WSL path functions require Windows", SystemInfo.isWindows)
+        val ancestor = "\\\\wsl.localhost\\Ubuntu\\home\\user"
+        val child = "\\\\wsl\$\\Ubuntu\\home\\user\\project"
+
+        assertTrue(WslPathUtils.isAncestor(ancestor, child, false))
+    }
+    fun `test isAncestor rejects UNC and POSIX paths`() {
+        assumeTrue("WSL path functions require Windows", SystemInfo.isWindows)
+        val ancestor = "\\\\wsl.localhost\\Ubuntu\\home\\user"
+        val child = "/home/user/project"
+
+        assertFalse(WslPathUtils.isAncestor(ancestor, child, false))
+    }
+    fun `test isAncestor rejects different WSL distributions`() {
+        assumeTrue("WSL path functions require Windows", SystemInfo.isWindows)
+        val ancestor = "\\\\wsl.localhost\\Ubuntu\\home\\user"
+        val child = "\\\\wsl.localhost\\Debian\\home\\user\\project"
+
+        assertFalse(WslPathUtils.isAncestor(ancestor, child, false))
+    }
+    fun `test isAncestor matches WSL distributions even with different normalization`() {
+        assumeTrue("WSL path functions require Windows", SystemInfo.isWindows)
+        val ancestor = "//wsl.localhost/Ubuntu/home/user"
+        val child = "\\\\wsl.localhost\\Ubuntu\\home\\user\\project"
+
+        assertTrue(WslPathUtils.isAncestor(ancestor, child, false))
+    }
+
+    // ========================
     // Note: convertWindowsToWslMountPath() now uses IntelliJ's WSLDistribution.getWslPath() API
     // and requires a distribution parameter. Testing is delegated to IntelliJ Platform.
     // ========================
