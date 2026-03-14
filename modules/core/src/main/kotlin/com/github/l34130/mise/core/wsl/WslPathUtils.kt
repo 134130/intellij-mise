@@ -10,11 +10,13 @@ import com.intellij.execution.wsl.WslPath
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.application
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.Locale
 import kotlin.io.path.Path
 
 /**
@@ -187,6 +189,37 @@ object WslPathUtils {
     }
 
     fun maybeConvertWindowsUncToUnixPath(maybeUncPath: String): String = convertWindowsUncToUnixPath(maybeUncPath) ?: maybeUncPath
+
+    private data class NormalizedPath(
+        val distroId: String?,
+        val path: String,
+    )
+
+    private fun normalizeForComparison(path: String): NormalizedPath {
+        val wsl = WslPath.parseWindowsUncPath(path)
+        if (wsl != null) {
+            return NormalizedPath(wsl.distributionId.uppercase(Locale.ROOT), FileUtil.toSystemIndependentName(wsl.linuxPath))
+        }
+
+        return NormalizedPath(null, FileUtil.toSystemIndependentName(path))
+    }
+
+    /**
+     * WSL-aware variant of [FileUtil.isAncestor] that normalizes UNC and POSIX paths for comparison.
+     *
+     * - Normalizes UNC paths (\\wsl$\\, \\wsl.localhost\\ and forward-slash variants)
+     * - Normalizes POSIX paths (system-independent separators)
+     * - Preserves WSL distribution identity when both paths are UNC
+     */
+    fun isAncestor(ancestorPath: String?, filePath: String?, strict: Boolean): Boolean {
+        if (ancestorPath.isNullOrBlank() || filePath.isNullOrBlank()) return false
+
+        val ancestor = normalizeForComparison(ancestorPath)
+        val candidateChild = normalizeForComparison(filePath)
+
+        return ancestor.distroId == candidateChild.distroId &&
+            FileUtil.isAncestor(ancestor.path, candidateChild.path, strict)
+    }
 
     /**
      * Validates that a UNC path exists and is accessible.

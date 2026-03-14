@@ -4,6 +4,24 @@
 
 ## [Unreleased]
 
+## [5.17.0] - 2026-03-02
+
+### Features
+
+- Support mise environment caching
+- Support inline string/array tasks in [tasks] TOML table
+
+### Refactorings
+
+- Refactor cache threading to prevent deadlocks and handle command timeouts
+- Replace environment injection marker with identity-based state tracking
+
+### Fixes
+
+- null handling for workingDirectory Python Console
+- Avoid VFS refresh during startup prewarm
+- Shortcut path resolution for Windows in ShimUtils for correct NodeJS SDK resolution
+
 ## [5.16.0] - 2026-02-17
 
 ### Refactored
@@ -520,7 +538,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.16.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.17.0...HEAD
+[5.17.0]: https://github.com/134130/intellij-mise/compare/v5.16.0...v5.17.0
 [5.16.0]: https://github.com/134130/intellij-mise/compare/v5.15.0...v5.16.0
 [5.15.0]: https://github.com/134130/intellij-mise/compare/v5.14.0...v5.15.0
 [5.14.0]: https://github.com/134130/intellij-mise/compare/v5.13.0...v5.14.0
