@@ -15,13 +15,15 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ShowSettingsUtil
+import com.intellij.openapi.progress.currentThreadCoroutineScope
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.util.application
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.reflect.KClass
 
 abstract class AbstractProjectSdkSetup :
@@ -29,7 +31,12 @@ abstract class AbstractProjectSdkSetup :
     ProjectActivity,
     DumbAware {
     final override fun actionPerformed(e: AnActionEvent) {
-        e.project?.let { configureSdk(it, true) }
+        val project = e.project ?: return
+        // Stable since 2025.2 https://github.com/JetBrains/intellij-community/commit/a498525e60e27a92d67c803569037e33cdfc2ce1
+        @Suppress("UnstableApiUsage")
+        currentThreadCoroutineScope().launch {
+            configureSdk(project, true)
+        }
     }
 
     override suspend fun execute(project: Project) {
@@ -51,11 +58,10 @@ abstract class AbstractProjectSdkSetup :
     abstract fun <T : Configurable> getConfigurableClass(): KClass<out T>?
 
     @Suppress("ktlint:max-line-length")
-    private fun configureSdk(
+    private suspend fun configureSdk(
         project: Project,
         isUserInteraction: Boolean,
-    ) {
-        application.executeOnPooledThread {
+    ) = withContext(Dispatchers.IO) {
             val devToolName = getDevToolName(project)
             val miseNotificationService = project.service<MiseNotificationService>()
 
@@ -64,7 +70,7 @@ abstract class AbstractProjectSdkSetup :
             // Skip automatic SDK configuration if the project doesn't have mise config files
             // or if the specific tool is not configured in mise
             if (!isUserInteraction && !hasToolConfigured(project, configEnvironment, devToolName)) {
-                return@executeOnPooledThread
+                return@withContext
             }
             val toolsResult =
                 MiseCommandLineHelper.getDevTools(project = project, workDir = project.guessMiseProjectPath(), configEnvironment = configEnvironment)
@@ -80,7 +86,7 @@ abstract class AbstractProjectSdkSetup :
                 )
 
             if (tools.isNullOrEmpty() || tools.size > 1) {
-                if (!isUserInteraction) return@executeOnPooledThread
+                if (!isUserInteraction) return@withContext
 
                 val noOrMultiple =
                     if (tools.isNullOrEmpty()) {
@@ -103,7 +109,7 @@ abstract class AbstractProjectSdkSetup :
                     }
                 }
 
-                return@executeOnPooledThread
+                return@withContext
             }
 
             val tool = tools.first()
@@ -121,7 +127,7 @@ abstract class AbstractProjectSdkSetup :
                         )
                     }
                 }
-                return@executeOnPooledThread
+                return@withContext
             }
 
             try {
@@ -176,7 +182,7 @@ abstract class AbstractProjectSdkSetup :
                         }
                     }
                     SdkStatus.UpToDate -> {
-                        if (!isUserInteraction) return@executeOnPooledThread
+                        if (!isUserInteraction) return@withContext
 
                         miseNotificationService.info(
                             "${devToolName.canonicalName()} is up to date",
@@ -190,10 +196,9 @@ abstract class AbstractProjectSdkSetup :
                     e.message ?: e.javaClass.simpleName,
                 )
             }
-        }
     }
 
-    private fun hasToolConfigured(
+    private suspend fun hasToolConfigured(
         project: Project,
         configEnvironment: String?,
         devToolName: MiseDevToolName,
@@ -203,33 +208,20 @@ abstract class AbstractProjectSdkSetup :
             ?: return false
 
         // First check if any mise config files exist
-        val hasConfigFiles = runBlocking {
-            val configFiles = project.service<MiseConfigFileResolver>()
-                .resolveConfigFiles(baseDir, refresh = false, configEnvironment = configEnvironment)
-            configFiles.isNotEmpty()
-        }
-
-        if (!hasConfigFiles) {
-            return false
-        }
+        val configFiles = project.service<MiseConfigFileResolver>()
+            .resolveConfigFiles(baseDir, refresh = false, configEnvironment = configEnvironment)
+        if (configFiles.isEmpty()) return false
 
         // Then check if the specific tool is configured in mise
-        // Using runBlocking here is acceptable because:
-        // 1. We're already on a background thread (via executeOnPooledThread)
-        // 2. The operation is fast (just checking if tool is configured)
-        // 3. We need to call a suspend function from a non-suspend context
         val toolsResult = MiseCommandLineHelper.getDevTools(
             project = project,
             workDir = basePath,
-            configEnvironment = configEnvironment
+            configEnvironment = configEnvironment,
         )
 
         return toolsResult.fold(
-            onSuccess = { tools ->
-                val configuredTools = tools[devToolName]
-                !configuredTools.isNullOrEmpty()
-            },
-            onFailure = { false }
+            onSuccess = { tools -> !tools[devToolName].isNullOrEmpty() },
+            onFailure = { false },
         )
     }
 
