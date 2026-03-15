@@ -348,30 +348,17 @@ class MiseExecutableManager(
      * @param workDir Working directory for the command
      * @return Detected mise executable path and version, or null if not found
      */
+    @RequiresBackgroundThread
     private fun runVersionCommand(
         executable: String,
         interactiveShellCommandList: List<String>,
         workDir: String
     ): VersionCommandResult? {
-        // Avoid running external processes under read actions; hop to pooled thread when needed.
-        return if (application.isReadAccessAllowed) {
-            runCatching {
-                application.executeOnPooledThread<VersionCommandResult?> {
-                    runVersionCommandInternal(executable, interactiveShellCommandList, workDir)
-                }.get()
-            }.getOrNull()
-        } else {
-            runVersionCommandInternal(executable, interactiveShellCommandList, workDir)
-        }
-    }
-
-    @RequiresBackgroundThread
-    private fun runVersionCommandInternal(
-        executable: String,
-        interactiveShellCommand: List<String>,
-        workDir: String
-    ): VersionCommandResult? {
         assertBackgroundThread()
+        check(!application.isReadAccessAllowed) {
+            "runVersionCommand must not be called while holding a read lock; " +
+            "all callers must go through getOrComputeExecutable which dispatches off the EDT/read-lock."
+        }
 
         try {
             // Build the full command. Use the shell if the executable is just a bare command so that shell magic can do its work
@@ -381,7 +368,7 @@ class MiseExecutableManager(
                 val nativeExecutable = maybeConvertWindowsUncToUnixPath(executable)
                 val shellVersionCommand = (listOf(nativeExecutable) + MISE_VERSION_COMMAND).joinToString(" ")
                 // i.e. [`/bin/bash`, `-lc`, `mise version -vv`]
-                interactiveShellCommand + shellVersionCommand
+                interactiveShellCommandList + shellVersionCommand
             } else {
                 // i.e. [`mise`, `version`, `-vv`] or [`/usr/local/bin/mise`, `version`, `-vv`]
                 listOf(executable) + MISE_VERSION_COMMAND
