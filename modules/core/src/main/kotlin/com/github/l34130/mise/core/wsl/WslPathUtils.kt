@@ -128,6 +128,11 @@ object WslPathUtils {
         }
     }
 
+    fun maybeConvertPathToWindowsUncPath(path: String, distributionMsId: String?): String =
+        distributionMsId
+            ?.let { WslPathUtils.convertWslToWindowsUncPath(path, it) }
+            ?: path
+
     /**
      * Converts a Unix path (from WSL) to a Windows UNC path.
      *
@@ -138,32 +143,25 @@ object WslPathUtils {
      * - "/usr/bin/node" → "\\wsl.localhost\Debian\usr\bin\node"
      *
      * @param unixPath The Unix-style path to convert
-     * @param distribution The WSL distribution name
+     * @param distributionMsId The WSL distribution MS ID
      * @return The converted Windows UNC path
-     * @throws IllegalArgumentException if unixPath doesn't start with /, distribution is blank, or distribution is not installed
      */
-    fun convertWslToWindowsUncPath(unixPath: String, distribution: String): String {
+    fun convertWslToWindowsUncPath(unixPath: String, distributionMsId: String): String {
         // Only makes sense on Windows
         if (!SystemInfo.isWindows) return unixPath
 
         require(unixPath.startsWith("/")) {
             "Unix path must start with /: $unixPath"
         }
-        require(distribution.isNotBlank()) {
-            "Distribution name cannot be blank"
+        require(distributionMsId.isNotBlank()) {
+            "Distribution MS ID cannot be blank"
         }
 
         // Get the WSL distribution object to use its actual UNC root path
         // This ensures we use \\wsl.localhost\ (modern) instead of \\wsl$\ (legacy)
-        val wslDistribution = WslDistributionManager.getInstance().installedDistributions
-            .find { it.msId.equals(distribution, ignoreCase = true) }
-            ?: throw IllegalArgumentException(
-                "WSL distribution '$distribution' not found. " +
-                        "Available distributions: ${WslDistributionManager.getInstance().installedDistributions.joinToString { it.msId }}"
-            )
+        val wslDistribution = WslDistributionManager.getInstance().getOrCreateDistributionByMsId(distributionMsId)
 
         // Use the distribution's method which respects the system's WSL version
-        // Convert Path to string and remove any trailing separator to avoid double slashes
         return wslDistribution.getWindowsPath(unixPath)
     }
 

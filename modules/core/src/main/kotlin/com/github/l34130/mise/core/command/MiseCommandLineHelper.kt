@@ -1,5 +1,6 @@
 package com.github.l34130.mise.core.command
 
+import com.github.l34130.mise.core.util.getWslDistribution
 import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.github.l34130.mise.core.wsl.WslPathUtils.maybeConvertWindowsUncToUnixPath
@@ -197,7 +198,6 @@ object MiseCommandLineHelper {
         }
     }
 
-
     // mise ls
     fun getDevTools(
         project: Project,
@@ -208,12 +208,20 @@ object MiseCommandLineHelper {
         val cacheKey = MiseCacheKey.DevTools(workDir, configEnvironment)
         return cache.getCachedWithProgress(cacheKey) {
             val commandLineArgs = mutableListOf("ls", "--local", "--json")
+            val wslDistributionMsId = project.getWslDistribution()?.msId
 
             val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
             miseCommandLine
                 .runCommandLine<Map<String, List<MiseDevTool>>>(commandLineArgs)
-                .map { devTools ->
-                    devTools.mapKeys { (toolName, _) -> MiseDevToolName(toolName) }
+                .map { rawDevTools ->
+                    // mise ls returns {"node": [...], "python": [...]} — keys are plain strings.
+                    // Wrap each key in a MiseDevToolName value object and stamp every tool with
+                    // the WSL distribution it was fetched from in a single pass, so that
+                    // resolvedInstallPath can later convert Unix paths to Windows UNC paths.
+                    // copy() produces a new immutable instance; the original is not mutated.
+                    rawDevTools.entries.associate { (rawName, toolVersions) ->
+                        MiseDevToolName(rawName) to toolVersions.map { tool -> tool.copy(wslDistributionMsId = wslDistributionMsId) }
+                    }
                 }
         }
     }
