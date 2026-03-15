@@ -14,5 +14,5 @@ class MiseTaskGraphNode(
 
     override fun getTooltip(): @Nls String? = miseTask.task.description
 
-    override fun getIcon(): Icon? = MiseIcons.DEFAULT
+    override fun getIcon(): Icon = MiseIcons.DEFAULT
 }

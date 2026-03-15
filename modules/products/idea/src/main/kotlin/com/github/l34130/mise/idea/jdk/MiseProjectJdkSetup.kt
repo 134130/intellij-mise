@@ -5,7 +5,6 @@ import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
@@ -64,7 +63,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
             .replace("Azul Zulu", "", ignoreCase = true)
             .replace("java version", "", ignoreCase = true)
             .replace("\"", "")
-            .replace(Regex("\\s*[-]?\\s*(aarch64|x86_64|x64|amd64)"), "")
+            .replace(Regex("\\s*-?\\s*(aarch64|x86_64|x64|amd64)"), "")
             .trim()
     }
 
@@ -106,8 +105,4 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
     }
 
     private fun MiseDevTool.jdkName(): String = "${this.shimsVersion()} (mise)"
-
-    companion object {
-        private val logger = logger<MiseProjectJdkSetup>()
-    }
 }

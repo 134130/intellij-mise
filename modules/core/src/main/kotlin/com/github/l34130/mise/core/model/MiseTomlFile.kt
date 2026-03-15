@@ -15,8 +15,11 @@ import org.toml.lang.psi.TomlTable
 class MiseTomlFile {
     class TaskConfig(
         origin: TomlTable,
-    ) : TomlTable by origin {
-        val includes: List<String>? = (getValueWithKey("includes") as? TomlArray)?.elements?.mapNotNull { it.stringValue }
+    ) {
+        val includes: List<String>? =
+            (origin.getValueWithKey("includes") as? TomlArray)
+                ?.elements
+                ?.mapNotNull { it.stringValue }
 
         companion object {
             fun resolveOrNull(file: TomlFile): TaskConfig? {

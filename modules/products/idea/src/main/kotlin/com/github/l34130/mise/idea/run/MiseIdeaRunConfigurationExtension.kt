@@ -44,7 +44,7 @@ class MiseIdeaRunConfigurationExtension : RunConfigurationExtension() {
         params: JavaParameters,
         runnerSettings: RunnerSettings?,
     ) {
-        val envVars = MiseHelper.getMiseEnvVarsOrNotify(configuration, params.getWorkingDirectory())
+        val envVars = MiseHelper.getMiseEnvVarsOrNotify(configuration, params.workingDirectory)
         params.env = params.env + envVars
 
         // Gradle support (and external system configuration)
