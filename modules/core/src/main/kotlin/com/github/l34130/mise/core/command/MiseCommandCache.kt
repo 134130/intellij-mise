@@ -18,6 +18,7 @@ import com.intellij.util.application
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -219,6 +220,7 @@ class MiseCommandCache(
     /**
      * Waits for a deferred computation and normalizes timeout/interrupt/cancellation to ProcessCanceledException.
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun <T> awaitDeferredOrCancel(cacheKey: MiseCacheKey<T>, deferred: Deferred<T>): T {
         val latch = CountDownLatch(1)
         var completionResult: Result<T>? = null
