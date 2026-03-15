@@ -25,6 +25,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Smart cache for mise commands with broadcast-based invalidation and proactive warming.
@@ -199,7 +200,7 @@ class MiseCommandCache(
             logger.trace { "getCachedWithProgress EDT detected, using modal progress to wait for pooled computation" }
             runWithModalProgressBlocking(project, cacheKey.progressTitle) {
                 try {
-                    withTimeout(STUCK_COMMAND_TIMEOUT_SECS * 1000L) {
+                    withTimeout(STUCK_COMMAND_TIMEOUT_SECS.seconds) {
                         withContext(Dispatchers.IO) {
                             getCached(cacheKey, compute)
                         }
