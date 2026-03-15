@@ -103,4 +103,21 @@ sealed class MiseCacheKey<out T> {
         override val key = "tasks:$workDir:$configEnvironment"
         override val progressTitle = "Loading Mise Tasks"
     }
+
+    /**
+     * Cache key for mise which command.
+     *
+     * Key format: `which:{commonBinName}:{workDir}:{configEnvironment}`
+     * Result type: `Result<String>`
+     *
+     * Example: `which:python:/home/user/project:production`
+     */
+    data class WhichBin(
+        val commonBinName: String,
+        val workDir: String,
+        val configEnvironment: String?
+    ) : MiseCacheKey<Result<String>>() {
+        override val key = "which:$commonBinName:$workDir:$configEnvironment"
+        override val progressTitle = "Finding $commonBinName"
+    }
 }

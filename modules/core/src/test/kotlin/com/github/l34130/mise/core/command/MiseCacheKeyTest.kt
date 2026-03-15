@@ -37,4 +37,16 @@ class MiseCacheKeyTest : LightPlatformTestCase() {
         val combined = MiseCacheKey.DevTools("/project", null, null).key
         assertEquals(3, setOf(local, global, combined).size)
     }
+
+    @Test
+    fun `WhichBin key includes binary name workDir and environment`() {
+        assertEquals("which:python:/project:production", MiseCacheKey.WhichBin("python", "/project", "production").key)
+    }
+
+    @Test
+    fun `WhichBin keys for different binary names are distinct`() {
+        val python = MiseCacheKey.WhichBin("python", "/project", null).key
+        val node = MiseCacheKey.WhichBin("node", "/project", null).key
+        assertFalse("Keys for different binaries must differ", python == node)
+    }
 }

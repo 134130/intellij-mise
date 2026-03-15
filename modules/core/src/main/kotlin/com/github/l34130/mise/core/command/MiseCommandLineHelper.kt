@@ -261,6 +261,23 @@ object MiseCommandLineHelper {
         global: Map<MiseDevToolName, List<MiseDevTool>>,
     ): Map<MiseDevToolName, List<MiseDevTool>> = global + local
 
+    // mise which
+    fun getBinPath(
+        commonBinName: String,
+        project: Project,
+        workDir: String = project.guessMiseProjectPath(),
+        configEnvironment: String? = null
+    ): Result<String> {
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.WhichBin(commonBinName, workDir, configEnvironment)
+        return cache.getCachedWithProgress(cacheKey) {
+            val commandLineArgs = mutableListOf("which", commonBinName)
+            val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
+            miseCommandLine.runRawCommandLine(commandLineArgs)
+                .map { WslPathUtils.maybeConvertPathToWindowsUncPath(it.trim(), project.getWslDistribution()?.msId) }
+        }
+    }
+
     // mise config get
     @RequiresBackgroundThread
     fun getConfig(
