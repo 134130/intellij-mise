@@ -3,6 +3,7 @@ package com.github.l34130.mise.nodejs.node
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreter
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterManager
@@ -31,7 +32,7 @@ class MiseProjectInterpreterSetup : AbstractProjectSdkSetup() {
             ReadAction.compute<NodeJsInterpreter?, Throwable> {
                 nodeJsInterpreterManager.interpreter
             }
-        val newInterpreter = tool.asNodeJsLocalInterpreter()
+        val newInterpreter = tool.asNodeJsLocalInterpreter(project.guessMiseProjectPath())
 
         if (currentInterpreter == null || !currentInterpreter.deepEquals(newInterpreter)) {
             return SdkStatus.NeedsUpdate(
@@ -48,7 +49,7 @@ class MiseProjectInterpreterSetup : AbstractProjectSdkSetup() {
         project: Project,
     ): ApplySdkResult {
         val nodeJsInterpreterManager = NodeJsInterpreterManager.getInstance(project)
-        val newInterpreter = tool.asNodeJsLocalInterpreter()
+        val newInterpreter = tool.asNodeJsLocalInterpreter(project.guessMiseProjectPath())
 
         return WriteAction.computeAndWait<ApplySdkResult, Throwable> {
             nodeJsInterpreterManager.setInterpreterRef(newInterpreter.toRef())
@@ -63,8 +64,8 @@ class MiseProjectInterpreterSetup : AbstractProjectSdkSetup() {
     @Suppress("UNCHECKED_CAST")
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = NodeSettingsConfigurable::class as KClass<out T>
 
-    private fun MiseDevTool.asNodeJsLocalInterpreter(): NodeJsLocalInterpreter {
-        val basePath = WslPathUtils.convertToolPathForWsl(this)
+    private fun MiseDevTool.asNodeJsLocalInterpreter(projectPath: String): NodeJsLocalInterpreter {
+        val basePath = WslPathUtils.convertToolPathForWsl(this, projectPath)
 
         val interpreterPath =
             if (SystemInfo.isWindows) {

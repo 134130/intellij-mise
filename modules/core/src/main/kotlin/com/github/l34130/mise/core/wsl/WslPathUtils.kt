@@ -1,18 +1,15 @@
 package com.github.l34130.mise.core.wsl
 
 import com.github.l34130.mise.core.command.MiseDevTool
-import com.github.l34130.mise.core.setting.MiseApplicationSettings
 import com.github.l34130.mise.core.util.getUserHomeForProject
 import com.github.l34130.mise.core.util.getWslDistribution
 import com.github.l34130.mise.core.wsl.WslPathUtils.convertUnixPathForWsl
 import com.intellij.execution.wsl.WslDistributionManager
 import com.intellij.execution.wsl.WslPath
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.SystemInfo
-import com.intellij.util.application
+import com.intellij.openapi.util.io.FileUtil
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -248,26 +245,15 @@ object WslPathUtils {
      * On Windows, attempts to detect WSL context from the executable path and convert accordingly.
      *
      * @param unixPath The Unix path to convert
-     * @param executablePath The executable path to infer distribution from (optional)
+     * @param basePath A path within the project to infer distribution from (e.g., the path to the tool's executable or a project path)
      * @return The converted path (Windows UNC path for WSL, original path otherwise)
      * @throws IllegalStateException if distribution cannot be detected or path is not accessible
      */
-    fun convertUnixPathForWsl(unixPath: String, executablePath: String? = null): String {
+    fun convertUnixPathForWsl(unixPath: String, basePath: String): String {
         if (!SystemInfo.isWindows) return unixPath
 
-        // Try to detect distribution from executable path
-        val distribution = executablePath?.let { extractDistribution(it) }
-            ?: run {
-                // Fallback: check application settings
-                val settings = application.service<MiseApplicationSettings>()
-                val configuredPath = settings.state.executablePath
-                if (configuredPath.isNotEmpty()) {
-                    extractDistribution(configuredPath)
-                } else {
-                    null
-                }
-            }
-
+        // Detect distribution from provided path
+        val distribution = extractDistribution(basePath)
         if (distribution == null) {
             // Not in WSL context, return original path
             logger.debug("Not in WSL context, returning original path: $unixPath")
@@ -299,12 +285,13 @@ object WslPathUtils {
      * the path from a MiseDevTool object.
      *
      * @param tool The MiseDevTool containing the install path to convert
+     * @param basePath A path within the project to infer distribution from
      * @return The converted path (Windows UNC path for WSL, original path otherwise)
      * @throws IllegalStateException if WSL mode is enabled but distribution is not configured,
      *         or if the converted UNC path is not accessible
      */
-    fun convertToolPathForWsl(tool: MiseDevTool): String {
-        return convertUnixPathForWsl(tool.shimsInstallPath())
+    fun convertToolPathForWsl(tool: MiseDevTool, basePath: String): String {
+        return convertUnixPathForWsl(tool.shimsInstallPath(), basePath)
     }
 
     fun resolveUserHomeAbbreviations(

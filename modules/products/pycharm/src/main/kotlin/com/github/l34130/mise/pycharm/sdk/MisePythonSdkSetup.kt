@@ -93,7 +93,7 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
                 .trim()
 
         // Convert to Windows UNC path if in WSL mode using the shared utility
-        val pythonPath = WslPathUtils.convertUnixPathForWsl(pythonUnixPath)
+        val pythonPath = WslPathUtils.convertUnixPathForWsl(pythonUnixPath, project.guessMiseProjectPath())
 
         // Get Python version
         val pythonVersion =

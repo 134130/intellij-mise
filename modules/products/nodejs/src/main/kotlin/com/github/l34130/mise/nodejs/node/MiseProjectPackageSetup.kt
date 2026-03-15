@@ -93,7 +93,7 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
 
     private fun MiseDevTool.asPackage(project: Project): NodePackage {
         val devToolName = getDevToolName(project).value
-        val basePath = WslPathUtils.convertToolPathForWsl(this)
+        val basePath = WslPathUtils.convertToolPathForWsl(this, project.guessMiseProjectPath())
         val path = ShimUtils.findExecutable(basePath, devToolName).path
         val nodePackage = NpmUtil.DESCRIPTOR.createPackage(path)
         check(nodePackage.isValid(project, null)) {

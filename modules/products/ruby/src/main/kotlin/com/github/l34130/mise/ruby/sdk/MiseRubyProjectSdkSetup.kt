@@ -3,6 +3,7 @@ package com.github.l34130.mise.ruby.sdk
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
@@ -27,7 +28,7 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
             ReadAction.compute<Sdk?, Throwable> {
                 ProjectRootManager.getInstance(project).projectSdk
             }
-        val newSdk = tool.asRubySdk()
+        val newSdk = tool.asRubySdk(project.guessMiseProjectPath())
 
         if (currentSdk == null || currentSdk.name != newSdk.name && currentSdk.homePath != newSdk.homePath) {
             return SdkStatus.NeedsUpdate(
@@ -45,7 +46,7 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
     ): ApplySdkResult =
         WriteAction.computeAndWait<ApplySdkResult, Throwable> {
             val sdk =
-                tool.asRubySdk().also { sdk ->
+                tool.asRubySdk(project.guessMiseProjectPath()).also { sdk ->
                     val exists = RubySdkType.getAllValidRubySdks().firstOrNull { it.name == sdk.name }
                     if (exists == null) {
                         ProjectJdkTable.getInstance().addJdk(sdk)
@@ -66,8 +67,8 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
     // RubyDefaultProjectSdkGemsConfigurable::class as KClass<out T>
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null
 
-    private fun MiseDevTool.asRubySdk(): Sdk {
-        val sdkPath = WslPathUtils.convertToolPathForWsl(this)
+    private fun MiseDevTool.asRubySdk(projectPath: String): Sdk {
+        val sdkPath = WslPathUtils.convertToolPathForWsl(this, projectPath)
         return ProjectJdkImpl(
             "mise: ${this.shimsVersion()}",
             RubySdkType.getInstance(),

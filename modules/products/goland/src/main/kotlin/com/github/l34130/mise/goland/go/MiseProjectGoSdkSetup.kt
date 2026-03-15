@@ -3,6 +3,7 @@ package com.github.l34130.mise.goland.go
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.goide.configuration.GoSdkConfigurable
 import com.goide.sdk.GoSdk
@@ -30,7 +31,7 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
             ReadAction.compute<GoSdk, Throwable> {
                 sdkService.getSdk(null)
             }
-        val newSdk = tool.asGoSdk()
+        val newSdk = tool.asGoSdk(project.guessMiseProjectPath())
 
         if (currentSdk == GoSdk.NULL) {
             return SdkStatus.NeedsUpdate(
@@ -62,7 +63,7 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
         val sdkService = GoSdkService.getInstance(project)
 
         return WriteAction.computeAndWait<ApplySdkResult, Throwable> {
-            val sdk = tool.asGoSdk()
+            val sdk = tool.asGoSdk(project.guessMiseProjectPath())
             if (sdk == GoSdk.NULL) {
                 throw IllegalStateException("Failed to create Go SDK from path: ${tool.shimsInstallPath()}")
             }
@@ -78,8 +79,8 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
     @Suppress("UNCHECKED_CAST")
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = GoSdkConfigurable::class as KClass<out T>
 
-    private fun MiseDevTool.asGoSdk(): GoSdk {
-        val basePath = WslPathUtils.convertToolPathForWsl(this)
+    private fun MiseDevTool.asGoSdk(projectPath: String): GoSdk {
+        val basePath = WslPathUtils.convertToolPathForWsl(this, projectPath)
         var sdk = GoSdk.fromHomePath(basePath)
         if (sdk == GoSdk.NULL) {
             // Go 1.25+ - try with /go subdirectory

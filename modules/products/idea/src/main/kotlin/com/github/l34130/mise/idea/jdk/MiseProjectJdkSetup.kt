@@ -3,6 +3,7 @@ package com.github.l34130.mise.idea.jdk
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.logger
@@ -24,7 +25,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
         project: Project,
     ): SdkStatus {
         val currentSdk = ProjectRootManager.getInstance(project).projectSdk
-        val newSdk = tool.asJavaSdk()
+        val newSdk = tool.asJavaSdk(project.guessMiseProjectPath())
 
         if (currentSdk == null) {
             return SdkStatus.NeedsUpdate(
@@ -76,7 +77,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
             val projectJdkTable = ProjectJdkTable.getInstance()
 
             val sdk =
-                tool.asJavaSdk().also { sdk ->
+                tool.asJavaSdk(project.guessMiseProjectPath()).also { sdk ->
                     val oldJdk = projectJdkTable.findJdk(tool.jdkName())
                     if (oldJdk != null) {
                         projectJdkTable.updateJdk(oldJdk, sdk)
@@ -100,8 +101,8 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
 
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null
 
-    private fun MiseDevTool.asJavaSdk(): Sdk {
-        val sdkPath = WslPathUtils.convertToolPathForWsl(this)
+    private fun MiseDevTool.asJavaSdk(projectPath: String): Sdk {
+        val sdkPath = WslPathUtils.convertToolPathForWsl(this, projectPath)
         return JavaSdk.getInstance().createJdk(this.jdkName(), sdkPath, false)
     }
 
