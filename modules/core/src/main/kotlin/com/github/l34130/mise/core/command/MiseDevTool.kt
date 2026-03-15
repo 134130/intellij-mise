@@ -1,6 +1,5 @@
 package com.github.l34130.mise.core.command
 
-import com.github.l34130.mise.core.ShimUtils
 import com.github.l34130.mise.core.wsl.WslPathUtils
 
 data class MiseDevTool(
@@ -36,21 +35,4 @@ data class MiseDevTool(
      */
     val resolvedInstallPath: String
         get() = WslPathUtils.maybeConvertPathToWindowsUncPath(installPath, wslDistributionMsId)
-
-    fun shimsVersion(): String = requestedVersion ?: version
-
-    fun shimsInstallPath(): String =
-        if (requestedVersion == null) {
-            installPath
-        } else {
-            // replace the version part of the install path with the requested version
-            val sanitizedPath = installPath.removeSuffix("/")
-            if (sanitizedPath.endsWith(version)) {
-                ShimUtils.resolveShortcutPath(sanitizedPath.dropLast(version.length) + requestedVersion)
-            } else {
-                // Silently returning the original path is a bug.
-                // Throw an exception if the path format is unexpected to avoid silent misconfiguration.
-                throw IllegalStateException("Could not determine version from install path: $installPath")
-            }
-        }
 }

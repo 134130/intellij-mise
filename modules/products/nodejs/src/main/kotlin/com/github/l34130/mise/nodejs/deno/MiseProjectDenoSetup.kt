@@ -1,10 +1,8 @@
 package com.github.l34130.mise.nodejs.deno
 
-import com.github.l34130.mise.core.ShimUtils
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.deno.DenoConfigurable
 import com.intellij.deno.DenoSettings
 import com.intellij.openapi.application.ReadAction
@@ -27,7 +25,7 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
             ReadAction.compute<String?, Throwable> {
                 settings.getDenoPath()
             }
-        val newDenoPath = tool.asDenoPath()
+        val newDenoPath = tool.asDenoPath(project)
 
         return if (currentDenoPath == newDenoPath) {
             SdkStatus.UpToDate
@@ -44,13 +42,13 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
         project: Project,
     ): ApplySdkResult {
         val settings = DenoSettings.getService(project)
-        val newDenoPath = tool.asDenoPath()
+        val newDenoPath = tool.asDenoPath(project)
 
         return WriteAction.computeAndWait<ApplySdkResult, Throwable> {
             settings.setDenoPath(newDenoPath)
             ApplySdkResult(
                 sdkName = "deno",
-                sdkVersion = tool.shimsVersion(),
+                sdkVersion = tool.displayVersion,
                 sdkPath = newDenoPath,
             )
         }
@@ -59,10 +57,9 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
     @Suppress("UNCHECKED_CAST")
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = DenoConfigurable::class as KClass<out T>
 
-    private fun MiseDevTool.asDenoPath(): String {
-        val basePath = WslPathUtils.convertToolPathForWsl(this)
-        return ShimUtils.findExecutable(basePath, "deno").path
-    }
+    private fun MiseDevTool.asDenoPath(project: Project): String =
+        getToolBinPath(project)
+            .getOrElse { e -> throw IllegalStateException("Failed to find bin path for ${getDevToolName(project).value}", e) }
 
     companion object {
         private val logger = logger<MiseProjectDenoSetup>()

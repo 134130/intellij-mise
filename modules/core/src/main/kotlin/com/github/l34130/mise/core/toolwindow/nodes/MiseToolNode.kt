@@ -56,7 +56,7 @@ class MiseToolNode(
         toolInfo,
         AllIcons.General.Gear,
 ) {
-    override fun displayName(): String = "${toolName.value}@${toolInfo.shimsVersion()}"
+    override fun displayName(): String = "${toolName.value}@${toolInfo.displayVersion}"
 
     override fun appendInplaceComments(appender: InplaceCommentAppender) {
         val sourcePath = toolInfo.source?.absolutePath ?: return

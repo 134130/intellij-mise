@@ -1,18 +1,13 @@
 package com.github.l34130.mise.core.wsl
 
-import com.github.l34130.mise.core.command.MiseDevTool
-import com.github.l34130.mise.core.setting.MiseApplicationSettings
 import com.github.l34130.mise.core.util.getUserHomeForProject
 import com.github.l34130.mise.core.util.getWslDistribution
-import com.github.l34130.mise.core.wsl.WslPathUtils.convertUnixPathForWsl
 import com.intellij.execution.wsl.WslDistributionManager
 import com.intellij.execution.wsl.WslPath
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.SystemInfo
-import com.intellij.util.application
+import com.intellij.openapi.util.io.FileUtil
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -130,7 +125,7 @@ object WslPathUtils {
 
     fun maybeConvertPathToWindowsUncPath(path: String, distributionMsId: String?): String =
         distributionMsId
-            ?.let { WslPathUtils.convertWslToWindowsUncPath(path, it) }
+            ?.let { convertWslToWindowsUncPath(path, it) }
             ?: path
 
     /**
@@ -237,72 +232,6 @@ object WslPathUtils {
             logger.warn("Failed to validate UNC path: $uncPath", e)
             false
         }
-    }
-
-    /**
-     * Converts a Unix path to a Windows UNC path for WSL compatibility.
-     *
-     * On non-Windows systems, returns the original path unchanged.
-     * On Windows, attempts to detect WSL context from the executable path and convert accordingly.
-     *
-     * @param unixPath The Unix path to convert
-     * @param executablePath The executable path to infer distribution from (optional)
-     * @return The converted path (Windows UNC path for WSL, original path otherwise)
-     * @throws IllegalStateException if distribution cannot be detected or path is not accessible
-     */
-    fun convertUnixPathForWsl(unixPath: String, executablePath: String? = null): String {
-        if (!SystemInfo.isWindows) return unixPath
-
-        // Try to detect distribution from executable path
-        val distribution = executablePath?.let { extractDistribution(it) }
-            ?: run {
-                // Fallback: check application settings
-                val settings = application.service<MiseApplicationSettings>()
-                val configuredPath = settings.state.executablePath
-                if (configuredPath.isNotEmpty()) {
-                    extractDistribution(configuredPath)
-                } else {
-                    null
-                }
-            }
-
-        if (distribution == null) {
-            // Not in WSL context, return original path
-            logger.debug("Not in WSL context, returning original path: $unixPath")
-            return unixPath
-        }
-
-        return try {
-            val uncPath = convertWslToWindowsUncPath(unixPath, distribution)
-            if (!validateUncPath(uncPath)) {
-                logger.warn("Converted UNC path is not currently accessible (WSL may be cold): $uncPath; proceeding")
-            } else {
-                logger.info("Converted WSL path: $unixPath -> $uncPath")
-            }
-            uncPath
-        } catch (e: Exception) {
-            logger.error("Failed to convert WSL path: $unixPath", e)
-            throw IllegalStateException(
-                "Cannot access path at $unixPath in WSL. " +
-                        "Ensure WSL is running and distribution '$distribution' is accessible.",
-                e,
-            )
-        }
-    }
-
-    /**
-     * Converts a mise tool's install path for WSL compatibility.
-     *
-     * This is a convenience wrapper around [convertUnixPathForWsl] that extracts
-     * the path from a MiseDevTool object.
-     *
-     * @param tool The MiseDevTool containing the install path to convert
-     * @return The converted path (Windows UNC path for WSL, original path otherwise)
-     * @throws IllegalStateException if WSL mode is enabled but distribution is not configured,
-     *         or if the converted UNC path is not accessible
-     */
-    fun convertToolPathForWsl(tool: MiseDevTool): String {
-        return convertUnixPathForWsl(tool.shimsInstallPath())
     }
 
     fun resolveUserHomeAbbreviations(
