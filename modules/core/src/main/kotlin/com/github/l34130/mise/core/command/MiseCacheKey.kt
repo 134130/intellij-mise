@@ -69,17 +69,23 @@ sealed class MiseCacheKey<out T> {
     /**
      * Cache key for mise ls command.
      *
-     * Key format: `ls:{workDir}:{configEnvironment}`
+     * Key format: `ls:{scope}:{workDir}:{configEnvironment}`
      * Result type: `Result<Map<MiseDevToolName, List<MiseDevTool>>>`
      *
-     * Example: `ls:/home/user/project:production`
+     * Example: `ls:combined:/home/user/project:production`
      */
     data class DevTools(
         val workDir: String,
-        val configEnvironment: String?
+        val configEnvironment: String?,
+        val scope: MiseDevToolsScope? = null, // null = combined (local + global merged)
     ) : MiseCacheKey<Result<Map<MiseDevToolName, List<MiseDevTool>>>>() {
-        override val key = "ls:$workDir:$configEnvironment"
-        override val progressTitle = "Loading Mise Dev Tools"
+        override val key = "ls:${scope?.cacheKeySegment ?: "combined"}:$workDir:$configEnvironment"
+        override val progressTitle =
+            when (scope) {
+                MiseDevToolsScope.LOCAL -> "Loading Mise Dev Tools (Local)"
+                MiseDevToolsScope.GLOBAL -> "Loading Mise Dev Tools (Global)"
+                null -> "Loading Mise Dev Tools"
+            }
     }
 
     /**

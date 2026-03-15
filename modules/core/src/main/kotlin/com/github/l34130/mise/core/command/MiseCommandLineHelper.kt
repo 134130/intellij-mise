@@ -198,7 +198,18 @@ object MiseCommandLineHelper {
         }
     }
 
-    // mise ls
+    /**
+     * `mise ls`
+     * Returns all dev tools visible to the project — both locally-pinned tools (from the project's
+     * own `mise.toml`) and globally-installed tools (from `~/.config/mise/config.toml`).
+     *
+     * Results are fetched with two separate `mise ls` calls (`--local` and `--global`) and then
+     * merged: locally-pinned tools take precedence over global ones, so if a tool is defined in
+     * both places the project's version is used.
+     *
+     * Results are cached; call [getDevTools] with an explicit [MiseDevToolsScope] if you need only
+     * local or only global tools.
+     */
     fun getDevTools(
         project: Project,
         workDir: String = project.guessMiseProjectPath(),
@@ -207,7 +218,26 @@ object MiseCommandLineHelper {
         val cache = project.service<MiseCommandCache>()
         val cacheKey = MiseCacheKey.DevTools(workDir, configEnvironment)
         return cache.getCachedWithProgress(cacheKey) {
-            val commandLineArgs = mutableListOf("ls", "--local", "--json")
+            val localResult = getDevTools(project, workDir, configEnvironment, MiseDevToolsScope.LOCAL)
+            val globalResult = getDevTools(project, workDir, configEnvironment, MiseDevToolsScope.GLOBAL)
+
+            val local = localResult.getOrElse { return@getCachedWithProgress Result.failure(it) }
+            val global = globalResult.getOrElse { return@getCachedWithProgress Result.failure(it) }
+
+            Result.success(mergeDevTools(local, global))
+        }
+    }
+
+    fun getDevTools(
+        project: Project,
+        workDir: String = project.guessMiseProjectPath(),
+        configEnvironment: String? = null,
+        scope: MiseDevToolsScope,
+    ): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.DevTools(workDir, configEnvironment, scope)
+        return cache.getCachedWithProgress(cacheKey) {
+            val commandLineArgs = mutableListOf("ls", scope.commandFlag, "--json")
             val wslDistributionMsId = project.getWslDistribution()?.msId
 
             val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
@@ -225,6 +255,11 @@ object MiseCommandLineHelper {
                 }
         }
     }
+
+    internal fun mergeDevTools(
+        local: Map<MiseDevToolName, List<MiseDevTool>>,
+        global: Map<MiseDevToolName, List<MiseDevTool>>,
+    ): Map<MiseDevToolName, List<MiseDevTool>> = global + local
 
     // mise config get
     @RequiresBackgroundThread
