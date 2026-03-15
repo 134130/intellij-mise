@@ -12,6 +12,7 @@ import com.intellij.util.ProcessingContext
 import org.toml.lang.psi.TomlArray
 import org.toml.lang.psi.TomlFileType
 import org.toml.lang.psi.TomlInlineTable
+import org.toml.lang.psi.TomlKey
 import org.toml.lang.psi.TomlKeyValue
 import org.toml.lang.psi.TomlLiteral
 import org.toml.lang.psi.TomlTable
@@ -116,6 +117,96 @@ object MiseTomlPsiPatterns {
     val onTaskRunStringArray = psiElement<TomlArray>().withParent(onTaskProperty("run"))
     val onTaskRunStringOrArray = onTaskRunString or onTaskRunStringArray
     val inTaskRunStringOrArray = tomlPsiElement<PsiElement>().inside(onTaskRunStringOrArray)
+
+    // [tools]
+    val onToolsTable =
+        tomlPsiElement<TomlTable>()
+            .with("toolsCondition") { table: TomlTable, _ ->
+                val headerKeySegments = table.header.key?.segments
+                headerKeySegments?.singleOrNull()?.name == "tools"
+            }
+
+    // [tools.python]
+    private val onToolSpecificTable =
+        tomlPsiElement<TomlTable>()
+            .withChild(
+                psiElement<TomlTableHeader>()
+                    .with("toolSpecificCondition") { header: TomlTableHeader, _ ->
+                        val headerKeySegments = header.key?.segments
+                        headerKeySegments?.size == 2 && headerKeySegments[0].name == "tools"
+                    },
+            )
+
+    /**
+     * Matches string literal values in `[tools]` section for version completion.
+     *
+     * ```toml
+     * [tools]
+     * nodejs = "22.12.0"
+     *          #^
+     * ```
+     */
+    val onToolsValueString =
+        miseTomlStringLiteral.withParent(psiElement<TomlKeyValue>().withParent(onToolsTable))
+
+    /**
+     * ```toml
+     * [tools]
+     * python = ["3.11", "3.12"]
+     *           #^
+     * ```
+     */
+    val onToolsValueArray =
+        psiElement<TomlArray>().withParent(psiElement<TomlKeyValue>().withParent(onToolsTable))
+
+    /**
+     * ```toml
+     * [tools]
+     * go = {version = "1.21"}
+     *                  #^
+     * ```
+     */
+    val onToolsInlineTableVersionString =
+        miseTomlStringLiteral.withParent(
+            psiElement<TomlKeyValue>()
+                .with("name") { e, _ -> e.key.name == "version" }
+                .withParent(psiElement<TomlInlineTable>().withSuperParent(2, onToolsTable)),
+        )
+
+    /**
+     * ```toml
+     * [tools.python]
+     * version = "3.11"
+     *           #^
+     * ```
+     */
+    val onToolSpecificTableVersionString =
+        miseTomlStringLiteral.withParent(
+            psiElement<TomlKeyValue>()
+                .with("name") { e, _ -> e.key.name == "version" }
+                .withParent(onToolSpecificTable),
+        )
+
+    val inToolsVersionValue =
+        tomlPsiElement<PsiElement>().inside(
+            onToolsValueString or onToolsInlineTableVersionString or onToolSpecificTableVersionString,
+        ) or tomlPsiElement<PsiElement>().inside(onToolsValueArray)
+
+    /**
+     * Matches key names in `[tools]` section for tool name completion.
+     *
+     * ```toml
+     * [tools]
+     * nodejs = "22.12.0"
+     * #^
+     * ```
+     */
+    val inToolsTableKey =
+        miseTomlLeafPsiElement.inside(
+            psiElement<TomlKey>().withParent(
+                psiElement<TomlKeyValue>().withParent(onToolsTable),
+            ),
+        )
 
     fun <T : Any, Self : ObjectPattern<T, Self>> ObjectPattern<T, Self>.with(
         name: String,
