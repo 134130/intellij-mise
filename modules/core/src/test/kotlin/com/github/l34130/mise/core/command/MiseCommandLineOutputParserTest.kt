@@ -127,6 +127,7 @@ class MiseCommandLineOutputParserTest {
                     fileName = "mise.toml",
                     absolutePath = "/Users/user/project/mise.toml"
                 ),
+                wslDistributionMsId = null,
             )
 
         assert(actual == expected)
@@ -153,6 +154,7 @@ class MiseCommandLineOutputParserTest {
                 installed = true,
                 active = true,
                 source = null,
+                wslDistributionMsId = null,
             )
 
         assert(actual == expected)
@@ -192,6 +194,7 @@ class MiseCommandLineOutputParserTest {
                         fileName = "mise.toml",
                         absolutePath = "/Users/user/project/mise.toml"
                     ),
+                    wslDistributionMsId = null,
                 )
             )
         )

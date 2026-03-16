@@ -3,7 +3,6 @@ package com.github.l34130.mise.ruby.sdk
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.logger
@@ -27,12 +26,12 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
             ReadAction.compute<Sdk?, Throwable> {
                 ProjectRootManager.getInstance(project).projectSdk
             }
-        val newSdk = tool.asRubySdk()
+        val newSdk = tool.asRubySdk(project)
 
         if (currentSdk == null || currentSdk.name != newSdk.name && currentSdk.homePath != newSdk.homePath) {
             return SdkStatus.NeedsUpdate(
                 currentSdkVersion = currentSdk?.versionString,
-                requestedInstallPath = newSdk.homePath ?: tool.shimsInstallPath(),
+                requestedInstallPath = newSdk.homePath ?: tool.resolvedInstallPath,
             )
         }
 
@@ -45,7 +44,7 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
     ): ApplySdkResult =
         WriteAction.computeAndWait<ApplySdkResult, Throwable> {
             val sdk =
-                tool.asRubySdk().also { sdk ->
+                tool.asRubySdk(project).also { sdk ->
                     val exists = RubySdkType.getAllValidRubySdks().firstOrNull { it.name == sdk.name }
                     if (exists == null) {
                         ProjectJdkTable.getInstance().addJdk(sdk)
@@ -57,8 +56,8 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
             ProjectRootManager.getInstance(project).projectSdk = sdk
             ApplySdkResult(
                 sdkName = sdk.name,
-                sdkVersion = sdk.versionString ?: tool.shimsVersion(),
-                sdkPath = sdk.homePath ?: tool.shimsInstallPath(),
+                sdkVersion = sdk.versionString ?: tool.displayVersion,
+                sdkPath = sdk.homePath ?: tool.resolvedInstallPath,
             )
         }
 
@@ -66,13 +65,14 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
     // RubyDefaultProjectSdkGemsConfigurable::class as KClass<out T>
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null
 
-    private fun MiseDevTool.asRubySdk(): Sdk {
-        val sdkPath = WslPathUtils.convertToolPathForWsl(this)
+    private fun MiseDevTool.asRubySdk(project: Project): Sdk {
+        val rubyBinPath = getToolBinPath(project)
+            .getOrElse { e -> throw IllegalStateException("Failed to create SDK for ${getDevToolName(project).value}", e) }
         return ProjectJdkImpl(
-            "mise: ${this.shimsVersion()}",
+            "mise: $displayVersion",
             RubySdkType.getInstance(),
-            sdkPath,
-            this.shimsVersion(),
+            rubyBinPath,
+            this.resolvedVersion,
         )
     }
 

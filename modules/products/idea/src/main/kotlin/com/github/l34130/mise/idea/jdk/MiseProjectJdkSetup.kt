@@ -3,7 +3,6 @@ package com.github.l34130.mise.idea.jdk
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
@@ -29,7 +28,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
         if (currentSdk == null) {
             return SdkStatus.NeedsUpdate(
                 currentSdkVersion = null,
-                requestedInstallPath = newSdk.homePath ?: tool.shimsInstallPath(),
+                requestedInstallPath = newSdk.homePath ?: tool.resolvedInstallPath,
             )
         }
 
@@ -53,7 +52,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
 
         return SdkStatus.NeedsUpdate(
             currentSdkVersion = displayVersion,
-            requestedInstallPath = newSdk.homePath ?: tool.shimsInstallPath(),
+            requestedInstallPath = newSdk.homePath ?: tool.resolvedInstallPath,
         )
     }
 
@@ -88,8 +87,8 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
             ProjectRootManager.getInstance(project).projectSdk = sdk
             ApplySdkResult(
                 sdkName = sdk.name,
-                sdkVersion = sdk.versionString ?: tool.shimsVersion(),
-                sdkPath = sdk.homePath ?: tool.shimsInstallPath(),
+                sdkVersion = sdk.versionString ?: tool.displayVersion,
+                sdkPath = sdk.homePath ?: tool.resolvedInstallPath,
             )
         }
 
@@ -101,11 +100,10 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null
 
     private fun MiseDevTool.asJavaSdk(): Sdk {
-        val sdkPath = WslPathUtils.convertToolPathForWsl(this)
-        return JavaSdk.getInstance().createJdk(this.jdkName(), sdkPath, false)
+        return JavaSdk.getInstance().createJdk(this.jdkName(), resolvedInstallPath, false)
     }
 
-    private fun MiseDevTool.jdkName(): String = "${this.shimsVersion()} (mise)"
+    private fun MiseDevTool.jdkName(): String = "${this.displayVersion} (mise)"
 
     companion object {
         private val logger = logger<MiseProjectJdkSetup>()

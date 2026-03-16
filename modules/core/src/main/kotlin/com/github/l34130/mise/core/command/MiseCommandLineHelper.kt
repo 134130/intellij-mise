@@ -1,5 +1,6 @@
 package com.github.l34130.mise.core.command
 
+import com.github.l34130.mise.core.util.getWslDistribution
 import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.github.l34130.mise.core.wsl.WslPathUtils.maybeConvertWindowsUncToUnixPath
@@ -197,8 +198,18 @@ object MiseCommandLineHelper {
         }
     }
 
-
-    // mise ls
+    /**
+     * `mise ls`
+     * Returns all dev tools visible to the project — both locally-pinned tools (from the project's
+     * own `mise.toml`) and globally-installed tools (from `~/.config/mise/config.toml`).
+     *
+     * Results are fetched with two separate `mise ls` calls (`--local` and `--global`) and then
+     * merged: locally-pinned tools take precedence over global ones, so if a tool is defined in
+     * both places the project's version is used.
+     *
+     * Results are cached; call [getDevTools] with an explicit [MiseDevToolsScope] if you need only
+     * local or only global tools.
+     */
     fun getDevTools(
         project: Project,
         workDir: String = project.guessMiseProjectPath(),
@@ -207,14 +218,63 @@ object MiseCommandLineHelper {
         val cache = project.service<MiseCommandCache>()
         val cacheKey = MiseCacheKey.DevTools(workDir, configEnvironment)
         return cache.getCachedWithProgress(cacheKey) {
-            val commandLineArgs = mutableListOf("ls", "--local", "--json")
+            val localResult = getDevTools(project, workDir, configEnvironment, MiseDevToolsScope.LOCAL)
+            val globalResult = getDevTools(project, workDir, configEnvironment, MiseDevToolsScope.GLOBAL)
+
+            val local = localResult.getOrElse { return@getCachedWithProgress Result.failure(it) }
+            val global = globalResult.getOrElse { return@getCachedWithProgress Result.failure(it) }
+
+            Result.success(mergeDevTools(local, global))
+        }
+    }
+
+    fun getDevTools(
+        project: Project,
+        workDir: String = project.guessMiseProjectPath(),
+        configEnvironment: String? = null,
+        scope: MiseDevToolsScope,
+    ): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.DevTools(workDir, configEnvironment, scope)
+        return cache.getCachedWithProgress(cacheKey) {
+            val commandLineArgs = mutableListOf("ls", scope.commandFlag, "--json")
+            val wslDistributionMsId = project.getWslDistribution()?.msId
 
             val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
             miseCommandLine
                 .runCommandLine<Map<String, List<MiseDevTool>>>(commandLineArgs)
-                .map { devTools ->
-                    devTools.mapKeys { (toolName, _) -> MiseDevToolName(toolName) }
+                .map { rawDevTools ->
+                    // mise ls returns {"node": [...], "python": [...]} — keys are plain strings.
+                    // Wrap each key in a MiseDevToolName value object and stamp every tool with
+                    // the WSL distribution it was fetched from in a single pass, so that
+                    // resolvedInstallPath can later convert Unix paths to Windows UNC paths.
+                    // copy() produces a new immutable instance; the original is not mutated.
+                    rawDevTools.entries.associate { (rawName, toolVersions) ->
+                        MiseDevToolName(rawName) to toolVersions.map { tool -> tool.copy(wslDistributionMsId = wslDistributionMsId) }
+                    }
                 }
+        }
+    }
+
+    internal fun mergeDevTools(
+        local: Map<MiseDevToolName, List<MiseDevTool>>,
+        global: Map<MiseDevToolName, List<MiseDevTool>>,
+    ): Map<MiseDevToolName, List<MiseDevTool>> = global + local
+
+    // mise which
+    fun getBinPath(
+        commonBinName: String,
+        project: Project,
+        workDir: String = project.guessMiseProjectPath(),
+        configEnvironment: String? = null
+    ): Result<String> {
+        val cache = project.service<MiseCommandCache>()
+        val cacheKey = MiseCacheKey.WhichBin(commonBinName, workDir, configEnvironment)
+        return cache.getCachedWithProgress(cacheKey) {
+            val commandLineArgs = mutableListOf("which", commonBinName)
+            val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
+            miseCommandLine.runRawCommandLine(commandLineArgs)
+                .map { WslPathUtils.maybeConvertPathToWindowsUncPath(it.trim(), project.getWslDistribution()?.msId) }
         }
     }
 
