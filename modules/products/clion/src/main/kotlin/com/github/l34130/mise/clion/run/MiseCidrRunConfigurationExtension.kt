@@ -23,7 +23,7 @@ class MiseCidrRunConfigurationExtension : CidrRunConfigurationExtensionBase() {
 
     override fun getSerializationId(): String = MiseRunConfigurationSettingsEditor.SERIALIZATION_ID
 
-    override fun getEditorTitle(): @NlsContexts.TabTitle String? = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
+    override fun getEditorTitle(): @NlsContexts.TabTitle String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
     // NOTE: C/C++, CMake, Makefile doesn't allow extending the run configuration editor
     override fun <P : OCRunConfiguration<*, *>> createEditor(configuration: P): SettingsEditor<P> = MiseRunConfigurationSettingsEditor()
@@ -51,7 +51,7 @@ class MiseCidrRunConfigurationExtension : CidrRunConfigurationExtensionBase() {
         context: ConfigurationExtensionContext,
     ) {
         MiseHelper
-            .getMiseEnvVarsOrNotify(configuration, configuration.getWorkingDirectory())
+            .getMiseEnvVarsOrNotify(configuration, configuration.workingDirectory)
             .forEach { (k, v) -> cmdLine.withEnvironment(k, v) }
     }
 }

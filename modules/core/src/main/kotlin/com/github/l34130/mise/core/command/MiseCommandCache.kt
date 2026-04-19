@@ -18,6 +18,7 @@ import com.intellij.util.application
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -25,6 +26,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Smart cache for mise commands with broadcast-based invalidation and proactive warming.
@@ -199,7 +201,7 @@ class MiseCommandCache(
             logger.trace { "getCachedWithProgress EDT detected, using modal progress to wait for pooled computation" }
             runWithModalProgressBlocking(project, cacheKey.progressTitle) {
                 try {
-                    withTimeout(STUCK_COMMAND_TIMEOUT_SECS * 1000L) {
+                    withTimeout(STUCK_COMMAND_TIMEOUT_SECS.seconds) {
                         withContext(Dispatchers.IO) {
                             getCached(cacheKey, compute)
                         }
@@ -218,6 +220,7 @@ class MiseCommandCache(
     /**
      * Waits for a deferred computation and normalizes timeout/interrupt/cancellation to ProcessCanceledException.
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun <T> awaitDeferredOrCancel(cacheKey: MiseCacheKey<T>, deferred: Deferred<T>): T {
         val latch = CountDownLatch(1)
         var completionResult: Result<T>? = null
@@ -234,7 +237,7 @@ class MiseCommandCache(
         return try {
             if (!latch.await(STUCK_COMMAND_TIMEOUT_SECS, TimeUnit.SECONDS)) {
                 deferred.cancel()
-                logger.warn("getCachedWithProgress timed out in ${STUCK_COMMAND_TIMEOUT_SECS}s for key: ${cacheKey.key}")
+                logger.warn("awaitDeferredOrCancel timed out in ${STUCK_COMMAND_TIMEOUT_SECS}s for key: ${cacheKey.key}")
                 throw ProcessCanceledException()
             }
             completionResult!!.getOrThrow()

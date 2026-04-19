@@ -89,22 +89,6 @@ sealed class MiseCacheKey<out T> {
     }
 
     /**
-     * Cache key for mise task ls command.
-     *
-     * Key format: `tasks:{workDir}:{configEnvironment}`
-     * Result type: `Result<List<MiseTask>>`
-     *
-     * Example: `tasks:/home/user/project:production`
-     */
-    data class Tasks(
-        val workDir: String,
-        val configEnvironment: String?
-    ) : MiseCacheKey<Result<List<MiseTask>>>() {
-        override val key = "tasks:$workDir:$configEnvironment"
-        override val progressTitle = "Loading Mise Tasks"
-    }
-
-    /**
      * Cache key for mise which command.
      *
      * Key format: `which:{commonBinName}:{workDir}:{configEnvironment}`

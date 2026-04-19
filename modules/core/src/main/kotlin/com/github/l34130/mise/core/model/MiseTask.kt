@@ -92,12 +92,14 @@ class MiseShellScriptTask internal constructor(
         fun resolveOrNull(
             baseDir: VirtualFile,
             file: VirtualFile,
-        ): MiseShellScriptTask? =
-            MiseShellScriptTask(
-                name = FileUtil.splitPath(getRelativePath(baseDir, file)!!.substringBeforeLast('.')).joinToString(":"),
+        ): MiseShellScriptTask? {
+            val relativePath = getRelativePath(baseDir, file) ?: return null
+            return MiseShellScriptTask(
+                name = FileUtil.splitPath(relativePath.substringBeforeLast('.')).joinToString(":"),
                 file = file,
                 source = file.path,
             )
+        }
     }
 }
 

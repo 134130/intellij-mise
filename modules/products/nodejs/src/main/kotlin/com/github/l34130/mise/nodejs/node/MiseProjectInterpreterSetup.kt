@@ -9,7 +9,6 @@ import com.intellij.javascript.nodejs.interpreter.local.NodeJsLocalInterpreter
 import com.intellij.javascript.nodejs.settings.NodeSettingsConfigurable
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import kotlin.reflect.KClass
@@ -61,10 +60,6 @@ class MiseProjectInterpreterSetup : AbstractProjectSdkSetup() {
 
     private fun MiseDevTool.asNodeJsLocalInterpreter(project: Project): NodeJsLocalInterpreter =
         getToolBinPath(project)
-        .getOrElse { e -> throw IllegalStateException("Failed to create NodePackage for ${getDevToolName(project).value}", e) }
-        .let { NodeJsLocalInterpreter(it) }
-
-    companion object {
-        private val logger = logger<MiseProjectInterpreterSetup>()
-    }
+            .getOrElse { e -> throw IllegalStateException("Failed to create NodePackage for ${getDevToolName(project).value}", e) }
+            .let { NodeJsLocalInterpreter(it) }
 }
