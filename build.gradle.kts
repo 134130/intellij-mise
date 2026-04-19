@@ -25,14 +25,24 @@ kotlin {
     jvmToolchain(21)
 }
 
+// The IntelliJ Platform bundles kotlin-stdlib; bundling another copy in the plugin ZIP
+// causes LinkageError / loader constraint violations when sharing the classloader
+// with other plugins (see PR #475).
+listOf(
+    configurations.runtimeClasspath,
+    configurations.testRuntimeClasspath,
+).forEach { cfg ->
+    cfg.configure {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
+    }
+}
+
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     testImplementation(libs.junit)
-    implementation(libs.jackson.module.kotlin) {
-        exclude(group = "org.jetbrains.kotlin")
-    }
-
-
 
     intellijPlatform {
         create(

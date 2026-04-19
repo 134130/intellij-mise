@@ -1,6 +1,5 @@
 package com.github.l34130.mise.core.command
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.github.l34130.mise.core.command.MiseCommandLineHelper.environmentSkipCustomization
 import com.github.l34130.mise.core.command.MiseEnvCacheKeyService.Companion.MISE_ENV_CACHE_KEY
 import com.github.l34130.mise.core.util.guessMiseProjectPath
@@ -31,24 +30,14 @@ internal class MiseCommandLine(
         params: List<String>,
         noinline parser: ((String) -> T)? = null,
     ): Result<T> {
-        val typeReference = object : TypeReference<T>() {}
-        return runCommandLine(params, typeReference, parser)
-    }
-
-    @RequiresBackgroundThread
-    inline fun <reified T> runCommandLine(
-        params: List<String>,
-        typeReference: TypeReference<T>,
-        noinline parser: ((String) -> T)? = null,
-    ): Result<T> {
         val rawResult = runRawCommandLine(params)
         return rawResult.fold(
             onSuccess = { output ->
                 if (T::class == Unit::class) {
+                    @Suppress("UNCHECKED_CAST")
                     Result.success(Unit as T)
                 } else {
-                    val parsed = parser?.invoke(output)
-                        ?: MiseCommandLineOutputParser.parse(output, typeReference)
+                    val parsed = parser?.invoke(output) ?: MiseCommandLineOutputParser.parse<T>(output)
                     Result.success(parsed)
                 }
             },

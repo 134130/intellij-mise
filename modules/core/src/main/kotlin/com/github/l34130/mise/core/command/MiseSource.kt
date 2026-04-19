@@ -1,10 +1,12 @@
 package com.github.l34130.mise.core.command
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class MiseSource(
-    @field:JsonProperty("type")
+    @SerialName("type")
     val fileName: String, // .mise.toml, .mise.config, etc.
-    @field:JsonProperty("path")
+    @SerialName("path")
     val absolutePath: String, // absolute path to the source file
 )
