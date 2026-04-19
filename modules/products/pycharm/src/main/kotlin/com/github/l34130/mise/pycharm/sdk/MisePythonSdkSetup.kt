@@ -63,16 +63,22 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
 
     private fun checkUvEnabled(project: Project) {
         val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
-        val useUv =
-            // Check if the 'settings.python.uv_venv_auto' is set to true
+        val rawValue =
             MiseCommandLineHelper
                 .getConfig(project, project.guessMiseProjectPath(), configEnvironment, "settings.python.uv_venv_auto")
                 .getOrNull()
                 ?.trim()
-                ?.toBoolean() ?: false
+                ?.lowercase()
+
+        // Mise accepts true / source / create|source in addition to false (#471).
+        // Treat any non-empty, non-"false" value as enabled — Mise handles the variant semantics.
+        val useUv = !rawValue.isNullOrEmpty() && rawValue != "false"
 
         if (!useUv) {
-            throw UnsupportedOperationException("Mise Python SDK setup requires 'settings.python.uv_venv_auto' to be true.")
+            throw UnsupportedOperationException(
+                "Mise Python SDK setup requires 'settings.python.uv_venv_auto' to be enabled " +
+                    "(one of: true, source, create|source).",
+            )
         }
     }
 
