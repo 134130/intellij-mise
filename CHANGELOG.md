@@ -4,6 +4,24 @@
 
 ## [Unreleased]
 
+## [5.18.0] - 2026-04-19
+
+### Fixes
+
+- Use WSL-aware path normalization for project resolution
+- Avoid EDT blocking by shifting task resolution to async cache refreshes
+- tool window: Load environment settings off EDT
+- Tool path resolution with `mise which`
+- Don't bundle kotlin-stdlib with the plugin
+- Accept string values for `python.uv_venv_auto`
+- Replace Jackson with kotlinx.serialization
+
+### Refactorings
+
+- Replace environment injection marker with identity-based state tracking
+- Replace `executeOnPooledThread`/`runBlocking` with structured coroutines; enforce read-lock-absence contract on executable detection
+- Resolve Qodana issues and deprecations
+
 ## [5.17.0] - 2026-03-02
 
 ### Features
@@ -538,7 +556,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.17.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.18.0...HEAD
+[5.18.0]: https://github.com/134130/intellij-mise/compare/v5.17.0...v5.18.0
 [5.17.0]: https://github.com/134130/intellij-mise/compare/v5.16.0...v5.17.0
 [5.16.0]: https://github.com/134130/intellij-mise/compare/v5.15.0...v5.16.0
 [5.15.0]: https://github.com/134130/intellij-mise/compare/v5.14.0...v5.15.0
