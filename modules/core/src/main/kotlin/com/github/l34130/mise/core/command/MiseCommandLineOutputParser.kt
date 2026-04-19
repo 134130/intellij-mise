@@ -1,25 +1,21 @@
 package com.github.l34130.mise.core.command
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
-import com.fasterxml.jackson.module.kotlin.jsonMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
+import kotlinx.serialization.serializer
 
 object MiseCommandLineOutputParser {
-    inline fun <reified T> parse(output: String): T = parse(output, jacksonTypeRef<T>())
+    inline fun <reified T> parse(output: String): T = JSON.decodeFromString(serializer<T>(), output)
 
-    fun <T> parse(
-        output: String,
-        typeReference: TypeReference<T>,
-    ): T = OBJECT_MAPPER.readValue(output, typeReference)
+    fun <T> parse(output: String, deserializer: DeserializationStrategy<T>): T =
+        JSON.decodeFromString(deserializer, output)
 
-    private val OBJECT_MAPPER =
-        jsonMapper {
-            addModule(kotlinModule())
-            configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-        }
+    @OptIn(ExperimentalSerializationApi::class)
+    val JSON = Json {
+        ignoreUnknownKeys = true
+        namingStrategy = JsonNamingStrategy.SnakeCase
+        coerceInputValues = true
+    }
 }

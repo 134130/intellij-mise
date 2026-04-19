@@ -1,15 +1,22 @@
 package com.github.l34130.mise.core.command
 
 import com.github.l34130.mise.core.wsl.WslPathUtils
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
+@Serializable
 data class MiseDevTool(
     val version: String,
+    @SerialName("requested_version")
     val requestedVersion: String? = null,
+    @SerialName("install_path")
     val installPath: String,
     val installed: Boolean,
     val active: Boolean,
     val source: MiseSource? = null,
-    val wslDistributionMsId: String? = null
+    @Transient
+    val wslDistributionMsId: String? = null,
 ) {
     val resolvedVersion: String
         get() = version.takeIf { it.isNotBlank() } ?: requestedVersion?.takeIf { it.isNotBlank() }.orEmpty()

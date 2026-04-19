@@ -6,10 +6,12 @@ fun properties(key: String) = project.findProperty(key).toString()
 plugins {
     id("org.jetbrains.intellij.platform.module")
     alias(libs.plugins.kotlin) // Kotlin support
+    alias(libs.plugins.kotlinSerialization)
 }
 
 dependencies {
     testImplementation(libs.junit)
+    implementation(libs.kotlinx.serialization.json)
 
     intellijPlatform {
         create(
