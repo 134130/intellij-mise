@@ -3,7 +3,6 @@ package com.github.l34130.mise.goland.go
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
-import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.goide.configuration.GoSdkConfigurable
 import com.goide.sdk.GoSdk
 import com.goide.sdk.GoSdkService
@@ -14,6 +13,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VfsUtil
 import java.io.File
+import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
 import kotlin.reflect.KClass
 
 class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
@@ -63,12 +64,12 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
         return WriteAction.computeAndWait<ApplySdkResult, Throwable> {
             val sdk = tool.asGoSdk()
             if (sdk == GoSdk.NULL) {
-                throw IllegalStateException("Failed to create Go SDK from path: ${tool.shimsInstallPath()}")
+                throw IllegalStateException("Failed to create Go SDK from path: ${tool.resolvedInstallPath}")
             }
             sdkService.setSdk(sdk, true)
             ApplySdkResult(
                 sdkName = sdk.name,
-                sdkVersion = sdk.version ?: tool.shimsVersion(),
+                sdkVersion = sdk.version ?: tool.displayVersion,
                 sdkPath = sdk.homeUrl,
             )
         }
@@ -78,11 +79,10 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
     override fun <T : Configurable> getConfigurableClass(): KClass<out T> = GoSdkConfigurable::class as KClass<out T>
 
     private fun MiseDevTool.asGoSdk(): GoSdk {
-        val basePath = WslPathUtils.convertToolPathForWsl(this)
-        var sdk = GoSdk.fromHomePath(basePath)
+        var sdk = GoSdk.fromHomePath(this.resolvedInstallPath)
         if (sdk == GoSdk.NULL) {
             // Go 1.25+ - try with /go subdirectory
-            sdk = GoSdk.fromHomePath(basePath + File.separator + "go")
+            sdk = GoSdk.fromHomePath(Path(this.resolvedInstallPath).resolve("go").absolutePathString())
         }
         return sdk
     }

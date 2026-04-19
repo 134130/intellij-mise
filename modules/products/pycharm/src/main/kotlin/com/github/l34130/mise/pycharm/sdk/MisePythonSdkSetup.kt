@@ -6,7 +6,6 @@ import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.github.l34130.mise.core.util.guessMiseProjectPath
-import com.github.l34130.mise.core.wsl.WslPathUtils
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
@@ -37,7 +36,7 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
         if (currentSdk == null || !currentSdk.homePath.equals(newSdk.homePath)) {
             return SdkStatus.NeedsUpdate(
                 currentSdkVersion = currentSdk?.versionString,
-                requestedInstallPath = newSdk.homePath ?: tool.shimsInstallPath(),
+                requestedInstallPath = newSdk.homePath ?: tool.resolvedInstallPath,
             )
         }
 
@@ -54,8 +53,8 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
             ProjectRootManager.getInstance(project).projectSdk = newSdk
             ApplySdkResult(
                 sdkName = newSdk.name,
-                sdkVersion = newSdk.versionString ?: tool.shimsVersion(),
-                sdkPath = newSdk.homePath ?: tool.shimsInstallPath(),
+                sdkVersion = newSdk.versionString ?: tool.displayVersion,
+                sdkPath = newSdk.homePath ?: tool.resolvedInstallPath,
             )
         }
     }
@@ -85,15 +84,9 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
 
         val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
 
-        // Get Python path from 'which python' command (returns Unix path in WSL)
-        val pythonUnixPath =
-            MiseCommandLineHelper
-                .executeCommand(project, project.guessMiseProjectPath(), configEnvironment, listOf("which", "python"))
+        // Get Python path via `mise which python` — WSL-aware, returns Windows UNC path on WSL
+        val pythonPath = getToolBinPath(project)
                 .getOrElse { throw IllegalStateException("Failed to find Python executable: ${it.message}") }
-                .trim()
-
-        // Convert to Windows UNC path if in WSL mode using the shared utility
-        val pythonPath = WslPathUtils.convertUnixPathForWsl(pythonUnixPath)
 
         // Get Python version
         val pythonVersion =

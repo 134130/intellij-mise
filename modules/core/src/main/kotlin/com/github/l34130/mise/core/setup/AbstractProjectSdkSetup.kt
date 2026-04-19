@@ -116,7 +116,7 @@ abstract class AbstractProjectSdkSetup :
 
             if (!tool.installed) {
                 miseNotificationService.warn(
-                    "$devToolName@${tool.shimsVersion()} is not installed",
+                    "$devToolName@${tool.displayVersionWithResolved} is not installed",
                     "Run `mise install` command to install the tool",
                 ) {
                     NotificationAction.createSimple("Run `mise install`") {
@@ -146,17 +146,14 @@ abstract class AbstractProjectSdkSetup :
                             } else {
                                 buildString {
                                     append("Project: ${status.currentSdkVersion} <br/>")
-                                    append("Mise: <b>${tool.requestedVersion}</b>")
-                                    if (tool.requestedVersion != tool.version) {
-                                        append(" (${tool.version})")
-                                    }
+                                    append("Mise: <b>${tool.displayVersionWithResolved}</b>")
                                 }
                             }
 
                         val applyAction = {
                             applySdkConfiguration(tool, project)
                             miseNotificationService.info(
-                                "${devToolName.canonicalName()} is configured to ${tool.shimsVersion()}",
+                                "${devToolName.canonicalName()} is configured to ${tool.displayVersionWithResolved}",
                                 ""
                             )
                         }
@@ -174,7 +171,7 @@ abstract class AbstractProjectSdkSetup :
                             // unexpectedly changing existing configuration
                             miseNotificationService.info(title, description) {
                                 NotificationAction.createSimpleExpiring(
-                                    "Sync to ${tool.shimsVersion()}",
+                                    "Sync to ${tool.displayVersionWithResolved}",
                                     applyAction,
                                 )
                             }
@@ -185,13 +182,13 @@ abstract class AbstractProjectSdkSetup :
 
                         miseNotificationService.info(
                             "${devToolName.canonicalName()} is up to date",
-                            "Currently using ${devToolName.value}@${tool.shimsVersion()}",
+                            "Currently using ${devToolName.value}@${tool.displayVersionWithResolved}",
                         )
                     }
                 }
             } catch (e: Throwable) {
                 miseNotificationService.error(
-                    "Failed to set ${devToolName.canonicalName()} to ${devToolName.value}@${tool.shimsVersion()}",
+                    "Failed to set ${devToolName.canonicalName()} to ${devToolName.value}@${tool.displayVersionWithResolved}",
                     e.message ?: e.javaClass.simpleName,
                 )
             }
@@ -222,6 +219,12 @@ abstract class AbstractProjectSdkSetup :
             onSuccess = { tools -> !tools[devToolName].isNullOrEmpty() },
             onFailure = { false },
         )
+    }
+
+    protected fun getToolBinPath(project: Project, devToolName: String = getDevToolName(project).value): Result<String> {
+        val settings = project.service<MiseProjectSettings>().state
+        val configEnvironment = settings.miseConfigEnvironment
+        return MiseCommandLineHelper.getBinPath(devToolName, project, project.guessMiseProjectPath(), configEnvironment)
     }
 
     protected sealed interface SdkStatus {
