@@ -5,6 +5,8 @@ package com.github.l34130.mise.core.lang.psi
 import com.github.l34130.mise.core.FileTestBase
 import com.github.l34130.mise.core.lang.psi.MiseTomlPsiPatterns.inTaskDependsArray
 import com.github.l34130.mise.core.lang.psi.MiseTomlPsiPatterns.inTaskDependsString
+import com.github.l34130.mise.core.lang.psi.MiseTomlPsiPatterns.inToolsVersionValue
+import com.github.l34130.mise.core.lang.psi.MiseTomlPsiPatterns.inToolsTableKey
 import com.intellij.patterns.ElementPattern
 import com.intellij.psi.PsiElement
 import com.jetbrains.rd.util.assert
@@ -45,6 +47,42 @@ class MiseTomlPsiPatternsTest : FileTestBase() {
         [tasks.foo]
         depends = ""
                  #^
+    """)
+
+    fun `test inToolsVersionValue with string value`() = testPattern(inToolsVersionValue, """
+        [tools]
+        nodejs = "22"
+                 #^
+    """)
+
+    fun `test inToolsVersionValue with empty string`() = testPattern(inToolsVersionValue, """
+        [tools]
+        nodejs = ""
+                #^
+    """)
+
+    fun `test inToolsVersionValue with array element`() = testPattern(inToolsVersionValue, """
+        [tools]
+        python = ["3.11", ""]
+                          #^
+    """)
+
+    fun `test inToolsVersionValue with inline table version`() = testPattern(inToolsVersionValue, """
+        [tools]
+        go = {version = "1"}
+                        #^
+    """)
+
+    fun `test inToolsVersionValue with tool specific table`() = testPattern(inToolsVersionValue, """
+        [tools.python]
+        version = "3"
+                  #^
+    """)
+
+    fun `test inToolsTableKey`() = testPattern(inToolsTableKey, """
+        [tools]
+        nodejs = "22.12.0"
+        #^
     """)
 
     private inline fun <reified T : PsiElement> testPattern(
