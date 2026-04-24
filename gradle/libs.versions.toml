@@ -8,7 +8,7 @@ changelog = "2.5.0"
 gradleIdeaExt = "1.4.1"
 kotlin = "2.2.21"
 kover = "0.9.7"
-qodana = "2025.2.4"
+qodana = "2025.3.2"
 detekt = "1.23.7"
 
 [libraries]
