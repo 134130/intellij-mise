@@ -10,6 +10,7 @@ import com.intellij.task.ExecuteRunConfigurationTask
 import org.jetbrains.plugins.gradle.execution.build.GradleExecutionEnvironmentProvider
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 import org.jetbrains.plugins.gradle.util.GradleConstants
+import java.io.File
 
 // It seems actually not working; the gradle task environment injection is handling on idea module.
 class MiseGradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
@@ -45,10 +46,17 @@ class MiseGradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
         }
 
         if (environment?.runProfile is GradleRunConfiguration) {
+            val projectPath = runProfile.settings.externalProjectPath?.let { File(it) }
+            val subProjectPath = runProfile.settings
+                .taskNames.firstOrNull() // Support only one task for now.
+                ?.split(':')?.dropLast(1) // Drop the task name itself.
+                ?.joinToString(File.separator)
+                .orEmpty()
+
             val miseEnvVars =
                 MiseHelper.getMiseEnvVarsOrNotify(
                     configuration = runProfile,
-                    workingDirectory = runProfile.projectPathOnTarget,
+                    workingDirectory = projectPath?.resolve(subProjectPath)?.canonicalPath,
                 )
 
             val settings = (environment.runProfile as GradleRunConfiguration).settings
