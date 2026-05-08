@@ -21,7 +21,7 @@ class MiseGradleEnvironmentProvider : GradleExecutionEnvironmentProvider {
         executor: Executor,
     ): ExecutionEnvironment? {
         val runProfile = task.runProfile as? GradleRunConfiguration ?: return null
-        var environment: ExecutionEnvironment? = delegateProvider(task)?.createExecutionEnvironment(project, task, executor)
+        var environment = delegateProvider(task)?.createExecutionEnvironment(project, task, executor)
 
         // No registered environment provider. Gradle Task is in this case.
         if (environment == null) {
