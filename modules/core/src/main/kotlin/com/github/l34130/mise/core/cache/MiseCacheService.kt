@@ -9,6 +9,8 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Centralized caching service for all mise-related data using Caffeine.
@@ -103,10 +105,15 @@ class MiseCacheService(private val project: Project) {
             logger.debug("Executable cache miss: $key")
 
             val result = if (ApplicationManager.getApplication().isDispatchThread) {
-                // On EDT - run with modal progress dialog on background thread
+                // On EDT - run with modal progress dialog on background thread.
+                // The modal coroutine can inherit the EDT's read/write-intent lock on newer platform
+                // versions (e.g. 2026.1+), so we explicitly switch to Dispatchers.IO to drop it before
+                // executing the external process.
                 logger.debug("Cache computation triggered from EDT, showing progress dialog")
                 runWithModalProgressBlocking(project, "Detecting mise Executable") {
-                    compute()
+                    withContext(Dispatchers.IO) {
+                        compute()
+                    }
                 }
             } else {
                 // Not on EDT - must not hold a read lock (compute spawns an external process)
