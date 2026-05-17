@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Fixes
+
+- Use `WslNodeInterpreter` for WSL-resolved Node.js so IntelliJ can address it as `wsl://<distro>@/...` instead of the broken `\\wsl.localhost\<distro>\...` UNC path
+
 ## [5.18.0] - 2026-04-19
 
 ### Fixes

@@ -34,3 +34,9 @@ dependencies {
         testImplementation("org.opentest4j:opentest4j:1.3.0")
     }
 }
+
+tasks.test {
+    if (!System.getProperty("os.name").contains("Windows", ignoreCase = true)) {
+        exclude("**/MiseProjectInterpreterSetupWslTest.class")
+    }
+}
