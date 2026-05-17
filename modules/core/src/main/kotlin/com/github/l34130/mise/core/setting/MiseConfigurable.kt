@@ -19,6 +19,7 @@ import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.layout.ComponentPredicate
 import com.intellij.ui.layout.selected
 import com.intellij.util.application
 import javax.swing.JComponent
@@ -43,6 +44,7 @@ class MiseConfigurable(
     private val myMiseDatabaseCb = JBCheckBox("Use in database authentication")
     private val myMiseNxCb = JBCheckBox("Use in Nx commands")
     private val myMiseAllCommandLinesCb = JBCheckBox("Use in all other command line execution")
+    private val myMiseTerminalCb = JBCheckBox("Use in IDE terminal")
 
     override fun getDisplayName(): String = "Mise Settings"
 
@@ -77,6 +79,7 @@ class MiseConfigurable(
         myMiseDatabaseCb.isSelected = projectSettings.state.useMiseInDatabaseAuthentication
         myMiseNxCb.isSelected = projectSettings.state.useMiseInNxCommands
         myMiseAllCommandLinesCb.isSelected = projectSettings.state.useMiseInAllCommandLines
+        myMiseTerminalCb.isSelected = projectSettings.state.useMiseInTerminal
 
         // Set placeholder text for auto-detected path
         val autoDetectedInfo = executableManager.getAutoDetectedExecutableInfo()
@@ -179,8 +182,26 @@ class MiseConfigurable(
                             row {
                                 cell(myMiseAllCommandLinesCb)
                                     .resizableColumn()
-                                    .comment("Inject into all other command line execution (terminal, external tools, etc.)")
+                                    .comment("Inject into all other command line execution (external tools, build tools, etc.)")
                             }.enabledIf(myMiseDirEnvCb.selected)
+
+                            indent {
+                                row {
+                                    cell(myMiseTerminalCb)
+                                        .resizableColumn()
+                                        .comment("Inject into the IDE built-in terminal. Disable to keep the terminal's environment untouched (e.g. so <code>.ruby-version</code> still controls the active Ruby).")
+                                }.enabledIf(
+                                    object : ComponentPredicate() {
+                                        override fun invoke(): Boolean =
+                                            myMiseDirEnvCb.isSelected && myMiseAllCommandLinesCb.isSelected
+
+                                        override fun addListener(listener: (Boolean) -> Unit) {
+                                            myMiseDirEnvCb.addItemListener { listener(invoke()) }
+                                            myMiseAllCommandLinesCb.addItemListener { listener(invoke()) }
+                                        }
+                                    },
+                                )
+                            }
                         }
                     }
                 }
@@ -212,7 +233,8 @@ class MiseConfigurable(
             myMiseVcsCb.isSelected != projectSettings.state.useMiseVcsIntegration ||
             myMiseDatabaseCb.isSelected != projectSettings.state.useMiseInDatabaseAuthentication ||
             myMiseNxCb.isSelected != projectSettings.state.useMiseInNxCommands ||
-            myMiseAllCommandLinesCb.isSelected != projectSettings.state.useMiseInAllCommandLines
+            myMiseAllCommandLinesCb.isSelected != projectSettings.state.useMiseInAllCommandLines ||
+            myMiseTerminalCb.isSelected != projectSettings.state.useMiseInTerminal
     }
 
     override fun apply() {
@@ -241,6 +263,7 @@ class MiseConfigurable(
             projectSettings.state.useMiseInDatabaseAuthentication = myMiseDatabaseCb.isSelected
             projectSettings.state.useMiseInNxCommands = myMiseNxCb.isSelected
             projectSettings.state.useMiseInAllCommandLines = myMiseAllCommandLinesCb.isSelected
+            projectSettings.state.useMiseInTerminal = myMiseTerminalCb.isSelected
 
             // Notify listeners that settings have changed
             MiseProjectEventListener.broadcast(
