@@ -103,38 +103,44 @@ class MiseCacheService(private val project: Project, private val cs: CoroutineSc
      * EDT callers are safe because [runWithModalProgressBlocking] dispatches to a background coroutine.
      */
     fun getOrComputeExecutable(key: String, compute: () -> MiseExecutableInfo): MiseExecutableInfo {
-        return executableCache.get(key) {
-            logger.debug("Executable cache miss: $key")
+        // Fast path: return cached value without engaging the Caffeine loader.
+        executableCache.getIfPresent(key)?.let { return it }
 
-            val result = if (ApplicationManager.getApplication().isDispatchThread) {
-                // On EDT - run with modal progress dialog on background thread.
-                // The modal coroutine inherits the EDT's read/write-intent lock via coroutine context
-                // on newer platform versions (2026.1+), so switching dispatchers inside the modal block
-                // is not enough to drop it. Launch the work in the service's own coroutine scope, which
-                // has a fresh context with no inherited locks, and await its result from within the
-                // modal progress.
-                logger.debug("Cache computation triggered from EDT, showing progress dialog")
-                val deferred = cs.async(Dispatchers.IO) { compute() }
-                runWithModalProgressBlocking(project, "Detecting mise Executable") {
-                    try {
-                        deferred.await()
-                    } catch (e: CancellationException) {
-                        deferred.cancel()
-                        throw e
-                    }
+        // Compute OUTSIDE the cache loader. Running modal/blocking work inside `cache.get(key) { ... }`
+        // is unsafe: Caffeine holds a per-key lock for the duration of the mapping function, and the
+        // modal event loop on EDT can dispatch events that re-enter this method for the same key,
+        // producing a self-deadlock. `mise --version` is idempotent, so racing computations on
+        // background threads are acceptable; the last write wins.
+        logger.debug("Executable cache miss: $key")
+        val result = if (ApplicationManager.getApplication().isDispatchThread) {
+            // On EDT - run with modal progress dialog on background thread.
+            // The modal coroutine inherits the EDT's read/write-intent lock via coroutine context
+            // on newer platform versions (2026.1+), so switching dispatchers inside the modal block
+            // is not enough to drop it. Launch the work in the service's own coroutine scope, which
+            // has a fresh context with no inherited locks, and await its result from within the
+            // modal progress.
+            logger.debug("Cache computation triggered from EDT, showing progress dialog")
+            val deferred = cs.async(Dispatchers.IO) { compute() }
+            runWithModalProgressBlocking(project, "Detecting mise Executable") {
+                try {
+                    deferred.await()
+                } catch (e: CancellationException) {
+                    deferred.cancel()
+                    throw e
                 }
-            } else {
-                // Not on EDT - must not hold a read lock (compute spawns an external process)
-                check(!ApplicationManager.getApplication().isReadAccessAllowed) {
-                    "getOrComputeExecutable must not be called under a read lock from a background thread. " +
-                    "Wrap the call site in a coroutine launched on Dispatchers.IO instead."
-                }
-                compute()
             }
-
-            logger.debug("Executable cached: $key")
-            result
+        } else {
+            // Not on EDT - must not hold a read lock (compute spawns an external process)
+            check(!ApplicationManager.getApplication().isReadAccessAllowed) {
+                "getOrComputeExecutable must not be called under a read lock from a background thread. " +
+                "Wrap the call site in a coroutine launched on Dispatchers.IO instead."
+            }
+            compute()
         }
+
+        executableCache.put(key, result)
+        logger.debug("Executable cached: $key")
+        return result
     }
 
     fun getCachedExecutable(key: String): MiseExecutableInfo? {
