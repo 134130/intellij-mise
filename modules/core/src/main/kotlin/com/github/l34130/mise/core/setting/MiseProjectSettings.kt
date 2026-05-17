@@ -38,6 +38,7 @@ class MiseProjectSettings : PersistentStateComponent<MiseProjectSettings.MyState
                 it.useMiseInDatabaseAuthentication = myState.useMiseInDatabaseAuthentication
                 it.useMiseInNxCommands = myState.useMiseInNxCommands
                 it.useMiseInAllCommandLines = myState.useMiseInAllCommandLines
+                it.useMiseInTerminal = myState.useMiseInTerminal
             }
     }
 
@@ -52,6 +53,11 @@ class MiseProjectSettings : PersistentStateComponent<MiseProjectSettings.MyState
         var useMiseInDatabaseAuthentication: Boolean = true
         var useMiseInNxCommands: Boolean = true
         var useMiseInAllCommandLines: Boolean = false  // Conservative default
+        // Additional gate that only applies when useMiseInAllCommandLines is enabled.
+        // Defaults to true so existing users with useMiseInAllCommandLines=true keep
+        // current behavior; flipping this to false lets users opt the IDE terminal out
+        // while keeping injection for other command lines (see issue #485).
+        var useMiseInTerminal: Boolean = true
 
         // Deprecated fields - kept for backward compatibility during deserialization
         @Deprecated("Use executablePath instead")
@@ -70,6 +76,7 @@ class MiseProjectSettings : PersistentStateComponent<MiseProjectSettings.MyState
                 it.useMiseInDatabaseAuthentication = useMiseInDatabaseAuthentication
                 it.useMiseInNxCommands = useMiseInNxCommands
                 it.useMiseInAllCommandLines = useMiseInAllCommandLines
+                it.useMiseInTerminal = useMiseInTerminal
             }
     }
 }

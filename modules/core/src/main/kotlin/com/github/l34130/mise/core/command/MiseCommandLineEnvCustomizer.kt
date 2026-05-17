@@ -19,6 +19,7 @@ import kotlin.io.path.Path
  *
  * When used directly, it acts as a catch-all for terminal commands, external tools,
  * build tools, etc. Controlled by the "Use in all other command line execution" setting.
+ * The IDE terminal can additionally be opted out via the "Use in IDE terminal" sub-setting.
  *
  * Double-customization is prevented by checking for the marker added by
  * MiseHelper.getMiseEnvVarsOrNotify().
@@ -54,6 +55,15 @@ open class MiseCommandLineEnvCustomizer : CommandLineEnvCustomizer, MiseEnvCusto
 
         // Perform checks that need the project (can be overridden by subclasses)
         if (!shouldCustomizeForProject(project, commandLine)) return
+
+        // Allow users to opt the IDE terminal out independently of other command lines (issue #485).
+        // Detected via TERMINAL_EMULATOR=JetBrains-JediTerm, which the platform sets before
+        // env customizers run.
+        if (isIdeTerminalCommand(commandLine) &&
+            !project.service<MiseProjectSettings>().state.useMiseInTerminal) {
+            logger.trace(logMessage("Skipping environment customization of IDE terminal.", commandLine))
+            return
+        }
 
         val workDir = MiseCommandLineHelper.resolveWorkingDirectory(commandLine, project)
 
@@ -95,6 +105,17 @@ open class MiseCommandLineEnvCustomizer : CommandLineEnvCustomizer, MiseEnvCusto
      * while the platform is still initializing WSL state.
      */
     private fun isIdeWslExeCommand(commandLine: GeneralCommandLine): Boolean = Path(commandLine.exePath) == WSLDistribution.findWslExe()
+
+    /**
+     * Identify command lines originating from the IDE's built-in terminal (JediTerm).
+     *
+     * The terminal runner stamps `TERMINAL_EMULATOR=JetBrains-JediTerm` into the env map
+     * before any [CommandLineEnvCustomizer] runs, so it survives to this point. This is
+     * preferable to instance-checking [com.intellij.execution.configurations.PtyCommandLine],
+     * which is also used by run configurations (e.g. mise task runners) we still want to customize.
+     */
+    private fun isIdeTerminalCommand(commandLine: GeneralCommandLine): Boolean =
+        commandLine.environment["TERMINAL_EMULATOR"] == "JetBrains-JediTerm"
 
     private fun logMessage(message: String, commandLine: GeneralCommandLine) = "$message (cmd=$commandLine, workingDirectory=${commandLine.workingDirectory})"
 }

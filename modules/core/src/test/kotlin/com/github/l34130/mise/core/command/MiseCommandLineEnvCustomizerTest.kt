@@ -1,12 +1,43 @@
 package com.github.l34130.mise.core.command
 
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.service
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class MiseCommandLineEnvCustomizerTest : BasePlatformTestCase() {
+
+    fun `test IDE terminal command lines are skipped when useMiseInTerminal is disabled`() {
+        val settings = project.service<MiseProjectSettings>().state
+        val originalUseMiseInTerminal = settings.useMiseInTerminal
+        val originalUseMiseInAllCommandLines = settings.useMiseInAllCommandLines
+        try {
+            settings.useMiseInAllCommandLines = true
+            settings.useMiseInTerminal = false
+
+            val customizer = MiseCommandLineEnvCustomizer()
+            val commandLine = GeneralCommandLine("dummy-shell")
+                .withWorkDirectory(project.basePath)
+                .withEnvironment("TERMINAL_EMULATOR", "JetBrains-JediTerm")
+            val env = commandLine.environment
+
+            customizer.customizeEnv(commandLine, env)
+
+            // Nothing from mise should have been injected — the only entry is the JediTerm marker
+            // the test set itself.
+            assertEquals(mapOf("TERMINAL_EMULATOR" to "JetBrains-JediTerm"), env)
+            assertTrue(
+                "Env map identity must NOT be marked as customized when terminal injection is opted out",
+                MiseCommandLineHelper.environmentNeedsCustomization(env),
+            )
+        } finally {
+            settings.useMiseInTerminal = originalUseMiseInTerminal
+            settings.useMiseInAllCommandLines = originalUseMiseInAllCommandLines
+        }
+    }
 
     fun `test environment customization avoids deadlock when write action is active`() {
         val customizer = MiseCommandLineEnvCustomizer()

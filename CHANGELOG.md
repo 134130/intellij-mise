@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Features
+
+- Add "Use in IDE terminal" setting to opt the JediTerm terminal out of mise env injection independently of other command lines (#485)
+
 ## [5.18.0] - 2026-04-19
 
 ### Fixes
