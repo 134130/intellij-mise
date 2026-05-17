@@ -91,8 +91,6 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
 
         // Deduplicate by task name: mise resolves configs from general to specific,
         // so the last task for a given name is the highest-precedence definition.
-        // Deduplicate by task name: mise resolves configs from general to specific,
-        // so the last task for a given name is the highest-precedence definition.
         val allTasks = project.service<MiseTaskResolver>().getCachedTasksOrEmptyList()
             .associateBy { it.name }.values
         for (task in allTasks) {
