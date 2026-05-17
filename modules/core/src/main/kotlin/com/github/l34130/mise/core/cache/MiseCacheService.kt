@@ -9,8 +9,10 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.async
 
 /**
  * Centralized caching service for all mise-related data using Caffeine.
@@ -22,7 +24,7 @@ import kotlinx.coroutines.withContext
  * All mise caching should go through this service for consistent behavior and observability.
  */
 @Service(Service.Level.PROJECT)
-class MiseCacheService(private val project: Project) {
+class MiseCacheService(private val project: Project, private val cs: CoroutineScope) {
     private val logger = logger<MiseCacheService>()
 
     /**
@@ -106,13 +108,19 @@ class MiseCacheService(private val project: Project) {
 
             val result = if (ApplicationManager.getApplication().isDispatchThread) {
                 // On EDT - run with modal progress dialog on background thread.
-                // The modal coroutine can inherit the EDT's read/write-intent lock on newer platform
-                // versions (e.g. 2026.1+), so we explicitly switch to Dispatchers.IO to drop it before
-                // executing the external process.
+                // The modal coroutine inherits the EDT's read/write-intent lock via coroutine context
+                // on newer platform versions (2026.1+), so switching dispatchers inside the modal block
+                // is not enough to drop it. Launch the work in the service's own coroutine scope, which
+                // has a fresh context with no inherited locks, and await its result from within the
+                // modal progress.
                 logger.debug("Cache computation triggered from EDT, showing progress dialog")
+                val deferred = cs.async(Dispatchers.IO) { compute() }
                 runWithModalProgressBlocking(project, "Detecting mise Executable") {
-                    withContext(Dispatchers.IO) {
-                        compute()
+                    try {
+                        deferred.await()
+                    } catch (e: CancellationException) {
+                        deferred.cancel()
+                        throw e
                     }
                 }
             } else {
