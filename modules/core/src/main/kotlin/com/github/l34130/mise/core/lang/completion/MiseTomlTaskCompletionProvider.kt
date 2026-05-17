@@ -89,7 +89,13 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
         }
         if (currentTaskSegment == null) return
 
-        for (task in project.service<MiseTaskResolver>().getCachedTasksOrEmptyList()) {
+        // Deduplicate by task name: mise resolves configs from general to specific,
+        // so the last task for a given name is the highest-precedence definition.
+        // Deduplicate by task name: mise resolves configs from general to specific,
+        // so the last task for a given name is the highest-precedence definition.
+        val allTasks = project.service<MiseTaskResolver>().getCachedTasksOrEmptyList()
+            .associateBy { it.name }.values
+        for (task in allTasks) {
             if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
             if (task.name == currentTaskSegment.name) continue
 

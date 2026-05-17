@@ -51,19 +51,27 @@ class MiseTomlTaskDependencyReferenceProvider : PsiReferenceProvider() {
             val project = element.project
             val resolver = project.service<MiseTaskResolver>()
             val tasks = resolver.getCachedTasksOrEmptyList()
-            val result =
+            // Deduplicate by task name: mise resolves configs from general to specific,
+            // so the last task for a given name is the highest-precedence definition.
+            val matchedTasks =
                 if (isWildcard) {
-                    // FIXME: IDK why this is not working
                     tasks.filter { it.name.startsWith(value.dropLast(1)) }
                 } else {
                     tasks.filter { it.name == value }
-                }.mapNotNull {
-                    when (it) {
-                        is MiseShellScriptTask -> it.file.findPsiFile(project)
-                        is MiseTomlTableTask -> it.keySegment
-                        is MiseUnknownTask -> null
-                    }
+                }.associateBy { it.name }.values
+
+            val currentFilePath = element.containingFile?.virtualFile?.path
+            val result = matchedTasks.mapNotNull { task ->
+                when (task) {
+                    is MiseShellScriptTask -> task.file.takeIf { f -> f.isValid }?.findPsiFile(project)
+                    is MiseTomlTableTask -> task.keySegment.takeIf { seg -> seg.isValid }
+                    is MiseUnknownTask -> null
                 }
+            }.let { elements ->
+                // Prefer the definition from the same file as the reference
+                val sameFile = elements.filter { it.containingFile?.virtualFile?.path == currentFilePath }
+                sameFile.ifEmpty { elements }
+            }
 
             return PsiElementResolveResult.createResults(result)
         }
