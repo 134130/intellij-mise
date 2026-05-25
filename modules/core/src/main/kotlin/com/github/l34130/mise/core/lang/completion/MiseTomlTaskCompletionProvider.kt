@@ -89,20 +89,20 @@ class MiseTomlTaskCompletionProvider : CompletionProvider<CompletionParameters>(
         }
         if (currentTaskSegment == null) return
 
-        for (task in project.service<MiseTaskResolver>().getCachedTasksOrEmptyList()) {
+        val allTasks = project.service<MiseTaskResolver>().getCachedTasksOrEmptyList()
+            .associateBy { it.name }.values
+        for (task in allTasks) {
             if (dependsArray?.elements?.any { it.stringValue == task.name } == true) continue
-            if (task.name == currentTaskSegment.name) continue
+            if (task.name == currentTaskSegment?.name) continue
 
             val psiElement =
                 when (task) {
                     is MiseShellScriptTask -> {
-                        if (!task.file.isValid) continue
-                        task.file.findPsiFile(project) ?: continue
+                        task.file.takeIf { it.isValid }?.findPsiFile(project) ?: continue
                     }
 
                     is MiseTomlTableTask -> {
-                        if (!task.keySegment.isValid) continue
-                        task.keySegment
+                        task.keySegment.takeIf { it.isValid } ?: continue
                     }
 
                     is MiseUnknownTask -> {

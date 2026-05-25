@@ -106,11 +106,11 @@ class MiseConfigFileResolver(
         baseDirVf: VirtualFile,
         configEnvironment: String?,
     ): List<VirtualFile> {
-        val tracked =
-            MiseCommandLineHelper.getTrackedConfigs(project, configEnvironment.orEmpty())
+        val activeConfigs =
+            MiseCommandLineHelper.getProjectTrackedConfigs(project, configEnvironment)
                 .getOrElse { return emptyList() }
         val fs = LocalFileSystem.getInstance()
-        return tracked
+        return activeConfigs
             .asSequence()
             .filter { it.endsWith(".toml", ignoreCase = true) }
             .mapNotNull { fs.refreshAndFindFileByPath(it) }

@@ -192,6 +192,13 @@ class MiseExecutableManager(
 
     fun getAutoDetectedExecutableInfo(): MiseExecutableInfo = getAutoDetectedInfo()
 
+    /**
+     * Returns the cached auto-detected executable info without triggering detection.
+     * Safe to call from EDT or under a read lock. Returns null if the cache is cold.
+     */
+    fun getAutoDetectedExecutableInfoIfCached(): MiseExecutableInfo? =
+        cacheService.getCachedExecutable(AUTO_DETECTED_KEY)
+
     private fun getAutoDetectedInfo(): MiseExecutableInfo {
         return cacheService.getOrComputeExecutable(AUTO_DETECTED_KEY) {
             val projectPath = project.guessMiseProjectPath()

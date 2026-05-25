@@ -292,19 +292,32 @@ object MiseCommandLineHelper {
         return miseCommandLine.runRawCommandLine(commandLineArgs)
     }
 
-    // mise config --tracked-configs
+    // mise config ls --json + mise config --tracked-configs
     @RequiresBackgroundThread
-    fun getTrackedConfigs(
+    fun getProjectTrackedConfigs(
         project: Project,
-        configEnvironment: String,
+        configEnvironment: String?,
         workDir: String = project.guessMiseProjectPath(),
     ): Result<List<String>> {
-        val commandLineArgs = mutableListOf("config", "--tracked-configs")
-
         val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
-        return miseCommandLine
-            .runRawCommandLine(commandLineArgs)
+        
+        val activeConfigs = miseCommandLine
+            .runCommandLine<List<MiseConfigLsOutput>>(listOf("config", "ls", "--json"))
+            .map { list -> list.map { it.path } }
+            .getOrElse { emptyList() }
+            
+        val trackedConfigs = miseCommandLine
+            .runRawCommandLine(listOf("config", "--tracked-configs"))
             .map { it.lines().map { line -> line.trim() }.filter { trimmed -> trimmed.isNotEmpty() } }
+            .getOrElse { emptyList() }
+            
+        val workDirPath = java.nio.file.Paths.get(workDir).normalize().toString().replace('\\', '/')
+        val projectTrackedConfigs = trackedConfigs.filter { 
+            val normalizedPath = java.nio.file.Paths.get(it).normalize().toString().replace('\\', '/')
+            normalizedPath.startsWith(workDirPath) 
+        }
+        
+        return Result.success((activeConfigs.reversed() + projectTrackedConfigs).distinct())
     }
 
     // mise exec
