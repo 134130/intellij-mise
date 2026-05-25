@@ -300,24 +300,40 @@ object MiseCommandLineHelper {
         workDir: String = project.guessMiseProjectPath(),
     ): Result<List<String>> {
         val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
-        
+
         val activeConfigs = miseCommandLine
             .runCommandLine<List<MiseConfigLsOutput>>(listOf("config", "ls", "--json"))
             .map { list -> list.map { it.path } }
             .getOrElse { emptyList() }
-            
+
         val trackedConfigs = miseCommandLine
             .runRawCommandLine(listOf("config", "--tracked-configs"))
             .map { it.lines().map { line -> line.trim() }.filter { trimmed -> trimmed.isNotEmpty() } }
             .getOrElse { emptyList() }
-            
-        val workDirPath = java.nio.file.Paths.get(workDir).normalize().toString().replace('\\', '/')
-        val projectTrackedConfigs = trackedConfigs.filter { 
-            val normalizedPath = java.nio.file.Paths.get(it).normalize().toString().replace('\\', '/')
-            normalizedPath.startsWith(workDirPath) 
+
+        return Result.success(mergeProjectConfigs(activeConfigs, trackedConfigs, workDir))
+    }
+
+    /**
+     * Merges the output of `mise config ls` and `mise config --tracked-configs`
+     * into a single deduplicated list ordered from General (global) to Specific (subdirectory).
+     *
+     * [activeConfigs] is the output of `mise config ls --json` (ordered from specific to general).
+     * [trackedConfigs] is the output of `mise config --tracked-configs` (all configs on the OS).
+     * [workDir] is the project root directory; only tracked configs under this path are included.
+     */
+    internal fun mergeProjectConfigs(
+        activeConfigs: List<String>,
+        trackedConfigs: List<String>,
+        workDir: String,
+    ): List<String> {
+        val normalizedWorkDir = Paths.get(workDir).normalize().toString().replace('\\', '/')
+        val workDirPrefix = if (normalizedWorkDir.endsWith("/")) normalizedWorkDir else "$normalizedWorkDir/"
+        val projectTrackedConfigs = trackedConfigs.filter {
+            val normalizedPath = Paths.get(it).normalize().toString().replace('\\', '/')
+            normalizedPath.startsWith(workDirPrefix) || normalizedPath == normalizedWorkDir
         }
-        
-        return Result.success((activeConfigs.reversed() + projectTrackedConfigs).distinct())
+        return (activeConfigs.reversed() + projectTrackedConfigs).distinct()
     }
 
     // mise exec
