@@ -301,10 +301,14 @@ object MiseCommandLineHelper {
     ): Result<List<String>> {
         val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
 
-        val activeConfigs = miseCommandLine
-            .runCommandLine<List<MiseConfigLsOutput>>(listOf("config", "ls", "--json"))
-            .map { list -> list.map { it.path } }
-            .getOrElse { emptyList() }
+        // 1. Get active configs from current directory (sorted most specific to most general)
+        val activeConfigs = miseCommandLine.runCommandLine(
+            listOf("config", "ls", "--json"),
+            parser = { output ->
+                if (output.isBlank()) emptyList<MiseConfigLsOutput>()
+                else MiseCommandLineOutputParser.parse<List<MiseConfigLsOutput>>(output)
+            }
+        ).getOrDefault(emptyList()).map { it.path }
 
         val trackedConfigs = miseCommandLine
             .runRawCommandLine(listOf("config", "--tracked-configs"))
