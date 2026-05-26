@@ -44,29 +44,22 @@ class MiseProjectConfigsIntegrationTest {
         workDir: Path,
         env: Map<String, String> = emptyMap(),
     ): String {
+        val miseEnv = isolatedMiseEnv(workDir) + env
+
         // Automatically trust the workDir to avoid prompt errors
         val trustProcess = ProcessBuilder(miseBinary.toString(), "trust", ".")
             .directory(workDir.toFile())
             .redirectErrorStream(true)
-            .also { pb ->
-                pb.environment().putAll(env)
-                pb.environment()["MISE_GLOBAL_CONFIG_FILE"] = "/dev/null"
-                pb.environment()["MISE_CONFIG_DIR"] = "/dev/null"
-                pb.environment()["MISE_DATA_DIR"] = workDir.resolve(".mise-data").toString()
-            }.start()
+            .also { pb -> configureMiseEnvironment(pb, miseEnv) }
+            .start()
         trustProcess.waitFor()
 
         val process =
             ProcessBuilder(miseBinary.toString(), *args)
                 .directory(workDir.toFile())
                 .redirectErrorStream(false)
-                .also { pb ->
-                    pb.environment().putAll(env)
-                    // Disable mise's global config to avoid pollution from the host machine
-                    pb.environment()["MISE_GLOBAL_CONFIG_FILE"] = "/dev/null"
-                    pb.environment()["MISE_CONFIG_DIR"] = "/dev/null"
-                    pb.environment()["MISE_DATA_DIR"] = workDir.resolve(".mise-data").toString()
-                }.start()
+                .also { pb -> configureMiseEnvironment(pb, miseEnv) }
+                .start()
 
         val stdout = process.inputStream.bufferedReader().readText()
         val exitCode = process.waitFor()
@@ -75,6 +68,36 @@ class MiseProjectConfigsIntegrationTest {
             "mise ${args.joinToString(" ")} exited with code $exitCode.\nstderr: $stderr\nstdout: $stdout"
         }
         return stdout
+    }
+
+    private fun configureMiseEnvironment(processBuilder: ProcessBuilder, env: Map<String, String>) {
+        val processEnv = processBuilder.environment()
+        processEnv.keys.removeIf { it.startsWith("MISE_") }
+        processEnv.putAll(env)
+    }
+
+    private fun isolatedMiseEnv(workDir: Path): Map<String, String> {
+        val rootDir = workDir.resolve(".mise-test-state").createDirectories()
+        val configDir = rootDir.resolve("config").createDirectories()
+        val dataDir = rootDir.resolve("data").createDirectories()
+        val stateDir = rootDir.resolve("state").createDirectories()
+        val cacheDir = rootDir.resolve("cache").createDirectories()
+        val homeDir = rootDir.resolve("home").createDirectories()
+        val globalConfigFile = configDir.resolve("config.toml")
+        globalConfigFile.writeText("")
+
+        return mapOf(
+            "HOME" to homeDir.toString(),
+            "XDG_CONFIG_HOME" to configDir.toString(),
+            "XDG_DATA_HOME" to dataDir.toString(),
+            "XDG_STATE_HOME" to stateDir.toString(),
+            "XDG_CACHE_HOME" to cacheDir.toString(),
+            "MISE_GLOBAL_CONFIG_FILE" to globalConfigFile.toString(),
+            "MISE_CONFIG_DIR" to configDir.resolve("mise").createDirectories().toString(),
+            "MISE_DATA_DIR" to dataDir.resolve("mise").createDirectories().toString(),
+            "MISE_STATE_DIR" to stateDir.resolve("mise").createDirectories().toString(),
+            "MISE_CACHE_DIR" to cacheDir.resolve("mise").createDirectories().toString(),
+        )
     }
 
     @Test
@@ -106,6 +129,7 @@ class MiseProjectConfigsIntegrationTest {
         val projectDir = rootDir.resolve("my-project").createDirectories()
         projectDir.resolve("mise.toml").writeText("[tools]\nnode = '22'\n")
 
+        runMise("config", "ls", "--json", workDir = projectDir)
         val output = runMise("config", "--tracked-configs", workDir = projectDir)
         val paths = output.lines().map { it.trim() }.filter { it.isNotEmpty() }
 
@@ -133,6 +157,7 @@ class MiseProjectConfigsIntegrationTest {
         val trackedConfigs = trackedOutput.lines().map { it.trim() }.filter { it.isNotEmpty() }
 
         // Now also run tracked-configs from the other project to simulate OS-wide results
+        runMise("config", "ls", "--json", workDir = otherDir)
         val otherTrackedOutput = runMise("config", "--tracked-configs", workDir = otherDir)
         val otherTrackedConfigs = otherTrackedOutput.lines().map { it.trim() }.filter { it.isNotEmpty() }
         val allTrackedConfigs = (trackedConfigs + otherTrackedConfigs).distinct()

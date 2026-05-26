@@ -331,14 +331,17 @@ object MiseCommandLineHelper {
         trackedConfigs: List<String>,
         workDir: String,
     ): List<String> {
-        val normalizedWorkDir = Paths.get(workDir).normalize().toString().replace('\\', '/')
+        val normalizedWorkDir = normalizeConfigPathForComparison(workDir)
         val workDirPrefix = if (normalizedWorkDir.endsWith("/")) normalizedWorkDir else "$normalizedWorkDir/"
         val projectTrackedConfigs = trackedConfigs.filter {
-            val normalizedPath = Paths.get(it).normalize().toString().replace('\\', '/')
+            val normalizedPath = normalizeConfigPathForComparison(it)
             normalizedPath.startsWith(workDirPrefix) || normalizedPath == normalizedWorkDir
         }
         return (activeConfigs.reversed() + projectTrackedConfigs).distinct()
     }
+
+    private fun normalizeConfigPathForComparison(path: String): String =
+        Paths.get(maybeConvertWindowsUncToUnixPath(path)).normalize().toString().replace('\\', '/')
 
     // mise exec
     @RequiresBackgroundThread

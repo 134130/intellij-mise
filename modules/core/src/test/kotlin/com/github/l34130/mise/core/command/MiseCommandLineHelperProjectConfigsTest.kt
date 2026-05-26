@@ -196,4 +196,32 @@ class MiseCommandLineHelperProjectConfigsTest {
             result,
         )
     }
+
+    @Test
+    fun `mergeProjectConfigs keeps WSL tracked configs under UNC workDir`() {
+        val activeConfigs = listOf(
+            "/home/me/app/mise.toml",
+            "/home/me/.config/mise/config.toml",
+        )
+        val trackedConfigs = listOf(
+            "/home/me/app/mise.toml",
+            "/home/me/app/sub/mise.toml",
+            "/home/me/other/mise.toml",
+        )
+
+        val result = MiseCommandLineHelper.mergeProjectConfigs(
+            activeConfigs = activeConfigs,
+            trackedConfigs = trackedConfigs,
+            workDir = "//wsl.localhost/Ubuntu/home/me/app",
+        )
+
+        assertEquals(
+            listOf(
+                "/home/me/.config/mise/config.toml",
+                "/home/me/app/mise.toml",
+                "/home/me/app/sub/mise.toml",
+            ),
+            result,
+        )
+    }
 }
