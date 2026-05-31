@@ -104,4 +104,33 @@ sealed class MiseCacheKey<out T> {
         override val key = "which:$commonBinName:$workDir:$configEnvironment"
         override val progressTitle = "Finding $commonBinName"
     }
+
+    /**
+     * Cache key for mise registry command.
+     *
+     * Key format: `registry:{workDir}:{configEnvironment}`
+     * Result type: `Result<List<String>>`
+     */
+    data class Registry(
+        val workDir: String,
+        val configEnvironment: String?
+    ) : MiseCacheKey<Result<List<String>>>() {
+        override val key = "registry:$workDir:$configEnvironment"
+        override val progressTitle = "Loading Mise Tool Registry"
+    }
+
+    /**
+     * Cache key for mise ls-remote command.
+     *
+     * Key format: `ls-remote:{toolName}:{workDir}:{configEnvironment}`
+     * Result type: `Result<List<String>>`
+     */
+    data class ToolVersions(
+        val toolName: String,
+        val workDir: String,
+        val configEnvironment: String?
+    ) : MiseCacheKey<Result<List<String>>>() {
+        override val key = "ls-remote:$toolName:$workDir:$configEnvironment"
+        override val progressTitle = "Loading Versions for $toolName"
+    }
 }
