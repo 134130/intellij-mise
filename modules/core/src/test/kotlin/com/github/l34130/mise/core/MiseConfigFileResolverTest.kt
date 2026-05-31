@@ -108,15 +108,26 @@ class MiseConfigFileResolverTest : BasePlatformTestCase() {
         val configs =
             withCommandLineExecutor(
                 executor = { commandLine, _ ->
-                    val isTrackedConfigs = commandLine.commandLineString.contains("config --tracked-configs")
-                    if (isTrackedConfigs) {
-                        processOutput(
-                            stdout =
-                                listOf(parentToml, childToml)
-                                    .joinToString("\n") { it.toString().replace('\\', '/') } + "\n",
-                        )
-                    } else {
-                        processOutput()
+                    val cmdStr = commandLine.commandLineString
+                    when {
+                        cmdStr.contains("config ls --json") -> {
+                            // mise config ls --json returns active configs (specific to general)
+                            val json = """
+                                [
+                                  {"path": "${childToml.toString().replace('\\', '/')}"},
+                                  {"path": "${parentToml.toString().replace('\\', '/')}"}
+                                ]
+                            """.trimIndent()
+                            processOutput(stdout = json)
+                        }
+                        cmdStr.contains("config --tracked-configs") -> {
+                            processOutput(
+                                stdout =
+                                    listOf(parentToml, childToml)
+                                        .joinToString("\n") { it.toString().replace('\\', '/') } + "\n",
+                            )
+                        }
+                        else -> processOutput()
                     }
                 },
             ) {

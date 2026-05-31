@@ -195,13 +195,13 @@ class MiseRootNode(
             )
 
         val projectTasks: List<MiseTask> = taskResolver.getCachedTasksOrEmptyList(configEnvironment).sortedBy { it.name }
-        val trackedConfigs =
+        val activeConfigs =
             MiseCommandLineHelper
-                .getTrackedConfigs(project, configEnvironment, projectBaseDir)
-                .onFailure { MiseNotificationServiceUtils.notifyException("Failed to get tracked configs", it, project) }
+                .getProjectTrackedConfigs(project, configEnvironment, projectBaseDir)
+                .onFailure { MiseNotificationServiceUtils.notifyException("Failed to get active configs", it, project) }
                 .getOrElse { emptyList() }
         val allowedConfigDirs =
-            trackedConfigs
+            activeConfigs
                 .filter { it.endsWith(".toml") }
                 .map { PathUtil.getParentPath(it) }
                 .filter { isPathInProjectResolutionChain(projectBaseDir, it) }

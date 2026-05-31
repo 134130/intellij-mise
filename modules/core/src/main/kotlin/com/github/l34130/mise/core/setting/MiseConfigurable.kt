@@ -78,10 +78,11 @@ class MiseConfigurable(
         myMiseNxCb.isSelected = projectSettings.state.useMiseInNxCommands
         myMiseAllCommandLinesCb.isSelected = projectSettings.state.useMiseInAllCommandLines
 
-        // Set placeholder text for auto-detected path
-        val autoDetectedInfo = executableManager.getAutoDetectedExecutableInfo()
-        val autoDetectedPath = autoDetectedInfo.path
-        val autoDetectedVersion = autoDetectedInfo.version?.toString()
+        // Set placeholder text for auto-detected path (non-blocking cache lookup to avoid
+        // triggering executable detection under the settings dialog's read lock)
+        val autoDetectedInfo = executableManager.getAutoDetectedExecutableInfoIfCached()
+        val autoDetectedPath = autoDetectedInfo?.path ?: "mise"
+        val autoDetectedVersion = autoDetectedInfo?.version?.toString()
         val autoDetectedLabel = if (autoDetectedVersion != null) {
             "Auto-detected: $autoDetectedPath (version: $autoDetectedVersion)"
         } else {

@@ -34,6 +34,7 @@ object WslPathUtils {
     // WslPath API handles UNC paths, but not command-line format
     // Matches: wsl.exe -d "Ubuntu 20.04" or wsl -d Ubuntu or wsl.exe -d 'Debian'
     private val WSL_COMMAND_PATTERN = Regex("""wsl(?:\.exe)?\s+-d\s+(?:"([^"]+)"|'([^']+)'|(\S+))""")
+    private val WSL_UNC_PATTERN = Regex("""^//(?:wsl\.localhost|wsl\$)/([^/]+)(?:/(.*))?$""", RegexOption.IGNORE_CASE)
 
     /**
      * Detects if the given executable path represents a WSL-based mise installation.
@@ -172,16 +173,31 @@ object WslPathUtils {
      * @return The Unix path, or null if not a valid UNC WSL path
      */
     fun convertWindowsUncToUnixPath(uncPath: String): String? {
-        // Only works on Windows where IntelliJ's WslPath API is available
-        if (!SystemInfo.isWindows) return null
         if (uncPath.isBlank()) return null
 
-        // Use IntelliJ's WslPath API for parsing
-        val wslPath = WslPath.parseWindowsUncPath(uncPath) ?: return null
-        return wslPath.linuxPath
+        if (SystemInfo.isWindows) {
+            // Use IntelliJ's WslPath API for parsing
+            WslPath.parseWindowsUncPath(uncPath)?.let { return it.linuxPath }
+        }
+
+        return parseWslUncPath(uncPath)?.linuxPath
     }
 
     fun maybeConvertWindowsUncToUnixPath(maybeUncPath: String): String = convertWindowsUncToUnixPath(maybeUncPath) ?: maybeUncPath
+
+    private data class ParsedWslUncPath(
+        val distributionId: String,
+        val linuxPath: String,
+    )
+
+    private fun parseWslUncPath(path: String): ParsedWslUncPath? {
+        val normalizedPath = path.replace('\\', '/')
+        val match = WSL_UNC_PATTERN.matchEntire(normalizedPath) ?: return null
+        val relativeLinuxPath = match.groups[2]?.value.orEmpty()
+        val linuxPath = if (relativeLinuxPath.isEmpty()) "/" else "/$relativeLinuxPath"
+
+        return ParsedWslUncPath(match.groupValues[1], linuxPath)
+    }
 
     private data class NormalizedPath(
         val distroId: String?,
@@ -189,9 +205,15 @@ object WslPathUtils {
     )
 
     private fun normalizeForComparison(path: String): NormalizedPath {
-        val wsl = WslPath.parseWindowsUncPath(path)
-        if (wsl != null) {
-            return NormalizedPath(wsl.distributionId.uppercase(Locale.ROOT), FileUtil.toSystemIndependentName(wsl.linuxPath))
+        if (SystemInfo.isWindows) {
+            val wsl = WslPath.parseWindowsUncPath(path)
+            if (wsl != null) {
+                return NormalizedPath(wsl.distributionId.uppercase(Locale.ROOT), FileUtil.toSystemIndependentName(wsl.linuxPath))
+            }
+        }
+
+        parseWslUncPath(path)?.let {
+            return NormalizedPath(it.distributionId.uppercase(Locale.ROOT), FileUtil.toSystemIndependentName(it.linuxPath))
         }
 
         return NormalizedPath(null, FileUtil.toSystemIndependentName(path))

@@ -292,20 +292,56 @@ object MiseCommandLineHelper {
         return miseCommandLine.runRawCommandLine(commandLineArgs)
     }
 
-    // mise config --tracked-configs
+    // mise config ls --json + mise config --tracked-configs
     @RequiresBackgroundThread
-    fun getTrackedConfigs(
+    fun getProjectTrackedConfigs(
         project: Project,
-        configEnvironment: String,
+        configEnvironment: String?,
         workDir: String = project.guessMiseProjectPath(),
     ): Result<List<String>> {
-        val commandLineArgs = mutableListOf("config", "--tracked-configs")
-
         val miseCommandLine = MiseCommandLine(project, workDir, configEnvironment)
-        return miseCommandLine
-            .runRawCommandLine(commandLineArgs)
+
+        // 1. Get active configs from current directory (sorted most specific to most general)
+        val activeConfigs = miseCommandLine.runCommandLine(
+            listOf("config", "ls", "--json"),
+            parser = { output ->
+                if (output.isBlank()) emptyList<MiseConfigLsOutput>()
+                else MiseCommandLineOutputParser.parse<List<MiseConfigLsOutput>>(output)
+            }
+        ).getOrDefault(emptyList()).map { it.path }
+
+        val trackedConfigs = miseCommandLine
+            .runRawCommandLine(listOf("config", "--tracked-configs"))
             .map { it.lines().map { line -> line.trim() }.filter { trimmed -> trimmed.isNotEmpty() } }
+            .getOrElse { emptyList() }
+
+        return Result.success(mergeProjectConfigs(activeConfigs, trackedConfigs, workDir))
     }
+
+    /**
+     * Merges the output of `mise config ls` and `mise config --tracked-configs`
+     * into a single deduplicated list ordered from General (global) to Specific (subdirectory).
+     *
+     * [activeConfigs] is the output of `mise config ls --json` (ordered from specific to general).
+     * [trackedConfigs] is the output of `mise config --tracked-configs` (all configs on the OS).
+     * [workDir] is the project root directory; only tracked configs under this path are included.
+     */
+    internal fun mergeProjectConfigs(
+        activeConfigs: List<String>,
+        trackedConfigs: List<String>,
+        workDir: String,
+    ): List<String> {
+        val normalizedWorkDir = normalizeConfigPathForComparison(workDir)
+        val workDirPrefix = if (normalizedWorkDir.endsWith("/")) normalizedWorkDir else "$normalizedWorkDir/"
+        val projectTrackedConfigs = trackedConfigs.filter {
+            val normalizedPath = normalizeConfigPathForComparison(it)
+            normalizedPath.startsWith(workDirPrefix) || normalizedPath == normalizedWorkDir
+        }
+        return (activeConfigs.reversed() + projectTrackedConfigs).distinct()
+    }
+
+    private fun normalizeConfigPathForComparison(path: String): String =
+        Paths.get(maybeConvertWindowsUncToUnixPath(path)).normalize().toString().replace('\\', '/')
 
     // mise exec
     @RequiresBackgroundThread

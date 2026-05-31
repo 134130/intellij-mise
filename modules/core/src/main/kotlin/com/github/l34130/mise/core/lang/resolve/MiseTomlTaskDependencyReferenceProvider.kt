@@ -51,19 +51,20 @@ class MiseTomlTaskDependencyReferenceProvider : PsiReferenceProvider() {
             val project = element.project
             val resolver = project.service<MiseTaskResolver>()
             val tasks = resolver.getCachedTasksOrEmptyList()
-            val result =
+            val matchedTasks =
                 if (isWildcard) {
                     // FIXME: IDK why this is not working
                     tasks.filter { it.name.startsWith(value.dropLast(1)) }
                 } else {
                     tasks.filter { it.name == value }
-                }.mapNotNull {
-                    when (it) {
-                        is MiseShellScriptTask -> it.file.findPsiFile(project)
-                        is MiseTomlTableTask -> it.keySegment
-                        is MiseUnknownTask -> null
-                    }
+                }.associateBy { it.name }.values
+            val result = matchedTasks.mapNotNull {
+                when (it) {
+                    is MiseShellScriptTask -> it.file.takeIf { f -> f.isValid }?.findPsiFile(project)
+                    is MiseTomlTableTask -> it.keySegment.takeIf { seg -> seg.isValid }
+                    is MiseUnknownTask -> null
                 }
+            }
 
             return PsiElementResolveResult.createResults(result)
         }
