@@ -22,7 +22,6 @@ include(
     "modules/products/database",
     "modules/products/diagram",
     "modules/products/goland",
-    "modules/products/gradle",
     "modules/products/idea",
     "modules/products/nodejs",
     "modules/products/nx",

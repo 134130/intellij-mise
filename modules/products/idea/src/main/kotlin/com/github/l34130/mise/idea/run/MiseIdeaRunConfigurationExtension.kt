@@ -11,14 +11,10 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessListener
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.options.SettingsEditor
-import com.intellij.openapi.project.Project
 import org.jdom.Element
 import java.util.concurrent.ConcurrentHashMap
 
-class MiseIdeaRunConfigurationExtension : RunConfigurationExtension() {
-    // Used for cleanup the configuration after the execution has ended.
-    private val runningProcessEnvs = ConcurrentHashMap<Project, Map<String, String>>()
-
+open class MiseIdeaRunConfigurationExtension : RunConfigurationExtension() {
     override fun getEditorTitle(): String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
 
     override fun <P : RunConfigurationBase<*>> createEditor(configuration: P): SettingsEditor<P> = MiseRunConfigurationSettingsEditor()
@@ -44,14 +40,17 @@ class MiseIdeaRunConfigurationExtension : RunConfigurationExtension() {
         params: JavaParameters,
         runnerSettings: RunnerSettings?,
     ) {
-        val envVars = MiseHelper.getMiseEnvVarsOrNotify(configuration, params.workingDirectory)
+        val envVars = envProvider(configuration, resolveWorkingDirectory(configuration, params))
+        if (envVars.isEmpty()) return
+
         params.env = params.env + envVars
 
-        // Gradle support (and external system configuration)
-        // When user double-clicks the Task in the Gradle tool window.
         if (configuration is ExternalSystemRunConfiguration) {
-            runningProcessEnvs[configuration.project] = configuration.settings.env.toMap()
-            configuration.settings.env = configuration.settings.env + envVars
+            MiseIdeaRunConfigurationEnvironmentStore.snapshot(configuration)
+            configuration.settings.env =
+                HashMap(configuration.settings.env).apply {
+                    putAll(envVars)
+                }
         }
     }
 
@@ -61,15 +60,10 @@ class MiseIdeaRunConfigurationExtension : RunConfigurationExtension() {
         runnerSettings: RunnerSettings?,
     ) {
         if (configuration is ExternalSystemRunConfiguration) {
-            val envsToRestore = runningProcessEnvs.remove(configuration.project) ?: return
-
             handler.addProcessListener(
                 object : ProcessListener {
                     override fun processTerminated(event: ProcessEvent) {
-                        configuration.settings.env.apply {
-                            clear()
-                            putAll(envsToRestore)
-                        }
+                        MiseIdeaRunConfigurationEnvironmentStore.restore(configuration)
                     }
                 },
             )
@@ -82,4 +76,37 @@ class MiseIdeaRunConfigurationExtension : RunConfigurationExtension() {
         applicableConfiguration: RunConfigurationBase<*>,
         runnerSettings: RunnerSettings?,
     ): Boolean = true
+
+    private fun resolveWorkingDirectory(
+        configuration: RunConfigurationBase<*>,
+        params: JavaParameters,
+    ): String? =
+        if (configuration is ExternalSystemRunConfiguration) {
+            params.workingDirectory ?: configuration.settings.externalProjectPath
+        } else {
+            params.workingDirectory
+        }
 }
+
+internal object MiseIdeaRunConfigurationEnvironmentStore {
+    private val runningProcessEnvs = ConcurrentHashMap<RunConfigurationBase<*>, Map<String, String>>()
+
+    fun snapshot(configuration: ExternalSystemRunConfiguration) {
+        runningProcessEnvs.putIfAbsent(configuration, configuration.settings.env.toMap())
+    }
+
+    fun restore(configuration: RunConfigurationBase<*>) {
+        val externalSystemConfiguration = configuration as? ExternalSystemRunConfiguration ?: return
+        val envsToRestore = runningProcessEnvs.remove(configuration) ?: return
+        externalSystemConfiguration.settings.env = HashMap(envsToRestore)
+    }
+
+    fun hasSnapshot(configuration: RunConfigurationBase<*>): Boolean = runningProcessEnvs.containsKey(configuration)
+
+    fun clear() {
+        runningProcessEnvs.clear()
+    }
+}
+
+internal var envProvider: (RunConfigurationBase<*>, String?) -> Map<String, String> =
+    MiseHelper::getMiseEnvVarsOrNotify
