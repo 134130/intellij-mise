@@ -4,6 +4,23 @@
 
 ## [Unreleased]
 
+## [5.19.0] - 2026-05-31
+
+### Refactorings
+
+- Unify IDEA run env injection
+
+### Fixes
+
+- Resolve non-project depends issue while supporting subdirectory configs
+
+### Fixes
+
+- Replace Terminal-like Mise icon with with official chef-style Mise branding
+- Use `WslNodeInterpreter` for WSL-resolved Node.js so IntelliJ can address it as `wsl://<distro>@/...` instead of the broken `\\wsl.localhost\<distro>\...` UNC path
+- Global settings panel is not working correctly since read access violation
+
+
 ## [5.18.1] - 2026-05-17
 
 ### Fixes
@@ -564,7 +581,9 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.18.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.19.0...HEAD
+[5.19.0]: https://github.com/134130/intellij-mise/compare/v5.18.1...v5.19.0
+[5.18.1]: https://github.com/134130/intellij-mise/compare/v5.18.0...v5.18.1
 [5.18.0]: https://github.com/134130/intellij-mise/compare/v5.17.0...v5.18.0
 [5.17.0]: https://github.com/134130/intellij-mise/compare/v5.16.0...v5.17.0
 [5.16.0]: https://github.com/134130/intellij-mise/compare/v5.15.0...v5.16.0
