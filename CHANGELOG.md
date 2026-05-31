@@ -14,13 +14,6 @@
 
 - Resolve non-project depends issue while supporting subdirectory configs
 
-### Fixes
-
-- Replace Terminal-like Mise icon with with official chef-style Mise branding
-- Use `WslNodeInterpreter` for WSL-resolved Node.js so IntelliJ can address it as `wsl://<distro>@/...` instead of the broken `\\wsl.localhost\<distro>\...` UNC path
-- Global settings panel is not working correctly since read access violation
-
-
 ## [5.18.1] - 2026-05-17
 
 ### Fixes
