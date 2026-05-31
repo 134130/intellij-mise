@@ -56,7 +56,6 @@ dependencies {
         pluginComposedModule(implementation(project(":mise-products-database")))
         pluginComposedModule(implementation(project(":mise-products-diagram")))
         pluginComposedModule(implementation(project(":mise-products-goland")))
-        pluginComposedModule(implementation(project(":mise-products-gradle")))
         pluginComposedModule(implementation(project(":mise-products-idea")))
         pluginComposedModule(implementation(project(":mise-products-nodejs")))
         pluginComposedModule(implementation(project(":mise-products-nx")))
@@ -208,7 +207,7 @@ fun IntelliJPlatformPluginsExtension.configureIdeaRunIdePlugins() {
     compatiblePlugin("PythonCore")                  // Python support (mise-pycharm.xml)
     compatiblePlugin("org.jetbrains.plugins.ruby")  // Ruby support (mise-ruby.xml)
     bundledPlugin("com.intellij.database")       // Database support (mise-database.xml)
-    compatiblePlugin("com.intellij.gradle")         // Gradle support (mise-gradle.xml)
+    compatiblePlugin("com.intellij.gradle")         // Gradle tool window scenarios
     compatiblePlugin("com.jetbrains.sh")            // Shell script support (mise-sh.xml)
     // Causes constant errors in WSL projects.
     //compatiblePlugin("dev.nx.console")              // NX Console support (mise-nx.xml)
@@ -225,11 +224,12 @@ intellijPlatformTesting.runIde.register("runPyCharmCommunity") {
 
 intellijPlatformTesting.runIde.register("runIntellijIdeaUltimate") {
     type = IntelliJPlatformType.IntellijIdeaUltimate
-    version = "2025.1"
+    version = "2026.1"
     useInstaller = false
 
     plugins {
-        configureIdeaRunIdePlugins()
+        compatiblePlugin("org.toml.lang")
+        compatiblePlugin("kotest-plugin-intellij")
     }
 }
 

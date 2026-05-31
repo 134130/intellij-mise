@@ -2,6 +2,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.github.l34130.mise.idea.jdk.MiseProjectJdkSetup"/>
         <runConfigurationExtension implementation="com.github.l34130.mise.idea.run.MiseIdeaRunConfigurationExtension"/>
+        <listener class="com.github.l34130.mise.idea.run.MiseIdeaExecutionListener"
+                  topic="com.intellij.execution.ExecutionListener"/>
     </extensions>
 
     <actions>
