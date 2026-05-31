@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/modules/products/goland" />
             <option value="$PROJECT_DIR$/modules/products/gradle" />
             <option value="$PROJECT_DIR$/modules/products/idea" />
+            <option value="$PROJECT_DIR$/modules/products/maven" />
             <option value="$PROJECT_DIR$/modules/products/nodejs" />
             <option value="$PROJECT_DIR$/modules/products/nx" />
             <option value="$PROJECT_DIR$/modules/products/pycharm" />
