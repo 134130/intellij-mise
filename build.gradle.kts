@@ -215,7 +215,7 @@ fun IntelliJPlatformPluginsExtension.configureIdeaRunIdePlugins() {
 
 intellijPlatformTesting.runIde.register("runPyCharmCommunity") {
     type = IntelliJPlatformType.PyCharmCommunity
-    version = "2025.1"
+    version = "2026.1"
     useInstaller = false
     plugins {
         compatiblePlugin("org.toml.lang")
@@ -235,7 +235,7 @@ intellijPlatformTesting.runIde.register("runIntellijIdeaUltimate") {
 
 intellijPlatformTesting.runIde.register("runIntellijIdeaUltimate2025_3") {
     type = IntelliJPlatformType.IntellijIdeaUltimate
-    version = "2025.3"
+    version = "2026.1"
     useInstaller = false
 
     plugins {
