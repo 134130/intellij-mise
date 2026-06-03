@@ -3,8 +3,9 @@ package com.github.l34130.mise.core.setting
 import com.github.l34130.mise.core.cache.MiseProjectEvent
 import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.command.MiseExecutableManager
-import com.intellij.ide.plugins.PluginManager
+import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.components.service
+import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
@@ -169,7 +170,7 @@ class MiseConfigurable(
                             }.enabledIf(myMiseDirEnvCb.selected)
 
                             // Conditional: Only show if Nx plugin is installed
-                            if (PluginManager.getLoadedPlugins().any { it.pluginId.idString == "dev.nx.console" }) {
+                            if (PluginManagerCore.isLoaded(PluginId("dev.nx.console"))) {
                                 row {
                                     cell(myMiseNxCb)
                                         .resizableColumn()
