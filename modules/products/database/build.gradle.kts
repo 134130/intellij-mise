@@ -19,7 +19,7 @@ dependencies {
             properties("platformVersion")
         ) { useInstaller = false }
 
-        compatiblePlugin("com.intellij.database")
+        bundledPlugin("com.intellij.database")
 
         jetbrainsRuntime()
 

@@ -15,7 +15,7 @@ dependencies {
 
     intellijPlatform {
         create(
-            IntelliJPlatformType.IntellijIdeaCommunity,
+            IntelliJPlatformType.IntellijIdea,
             properties("platformVersion")
         ) { useInstaller = false }
 

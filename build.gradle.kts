@@ -46,7 +46,7 @@ dependencies {
 
     intellijPlatform {
         create(
-            type = IntelliJPlatformType.IntellijIdeaCommunity,
+            type = IntelliJPlatformType.IntellijIdea,
             version = providers.gradleProperty("platformVersion")
         ) {
             useInstaller = false
@@ -187,8 +187,7 @@ val runIdePlatformTypes =
     listOf(
 //        IntelliJPlatformType.CLion,
 //        IntelliJPlatformType.GoLand,
-//        IntelliJPlatformType.IntellijIdeaCommunity,
-        IntelliJPlatformType.IntellijIdeaUltimate,
+        IntelliJPlatformType.IntellijIdea,
 //        IntelliJPlatformType.WebStorm,
         IntelliJPlatformType.PyCharmCommunity,
 //        IntelliJPlatformType.PyCharmProfessional,

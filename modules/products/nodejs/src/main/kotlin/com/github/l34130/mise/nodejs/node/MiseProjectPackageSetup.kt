@@ -79,11 +79,11 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
         val fileSystem = LocalFileSystem.getInstance()
 
         val pnpmLockFile = Path(basePath, NpmUtil.PNPM_LOCK_FILENAME)
-        val yarnLockFile = Path(basePath, NpmUtil.YARN_LOCK_FILENAME)
+//        val yarnLockFile = Path(basePath, NpmUtil.YARN_LOCK_FILENAME)
 
         return when {
             fileSystem.findFileByNioFile(pnpmLockFile)?.exists() == true -> "pnpm"
-            fileSystem.findFileByNioFile(yarnLockFile)?.exists() == true -> "yarn"
+//            fileSystem.findFileByNioFile(yarnLockFile)?.exists() == true -> "yarn"
             else -> "npm"
         }
     }
