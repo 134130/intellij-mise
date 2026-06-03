@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [6.0.0] - 2026-06-03
+
+### BREAKING CHANGE
+
+- Change minimum support version from `2025.1` to `2026.1`
+
 ## [5.19.0] - 2026-05-31
 
 ### Refactorings
@@ -574,7 +580,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v5.19.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v6.0.0...HEAD
+[6.0.0]: https://github.com/134130/intellij-mise/compare/v5.19.0...v6.0.0
 [5.19.0]: https://github.com/134130/intellij-mise/compare/v5.18.1...v5.19.0
 [5.18.1]: https://github.com/134130/intellij-mise/compare/v5.18.0...v5.18.1
 [5.18.0]: https://github.com/134130/intellij-mise/compare/v5.17.0...v5.18.0
