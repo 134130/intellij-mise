@@ -19,7 +19,8 @@ dependencies {
             properties("platformVersion")
         ) { useInstaller = false }
 
-        bundledPlugins("com.intellij.clion",  "com.intellij.nativeDebug")
+        bundledPlugins("com.intellij.clion", "com.intellij.nativeDebug")
+        compatiblePlugin("com.intellij.cidr.base")
 
         jetbrainsRuntime()
 
