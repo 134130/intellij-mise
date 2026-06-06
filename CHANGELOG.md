@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [6.0.1] - 2026-06-06
+
+- Use explicit CLion bundled modules in CLion module Gradle config by @134130 in https://github.com/134130/intellij-mise/pull/503
+- Bump plugin version from 6.0.0 to 6.0.1 by @134130 in https://github.com/134130/intellij-mise/pull/504
+
 ## [6.0.0] - 2026-06-03
 
 ### BREAKING CHANGE
@@ -580,7 +585,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v6.0.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v6.0.1...HEAD
+[6.0.1]: https://github.com/134130/intellij-mise/compare/v6.0.0...v6.0.1
 [6.0.0]: https://github.com/134130/intellij-mise/compare/v5.19.0...v6.0.0
 [5.19.0]: https://github.com/134130/intellij-mise/compare/v5.18.1...v5.19.0
 [5.18.1]: https://github.com/134130/intellij-mise/compare/v5.18.0...v5.18.1
