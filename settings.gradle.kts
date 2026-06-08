@@ -23,6 +23,7 @@ include(
     "modules/products/diagram",
     "modules/products/goland",
     "modules/products/idea",
+    "modules/products/maven",
     "modules/products/nodejs",
     "modules/products/nx",
     "modules/products/pycharm",

@@ -76,6 +76,7 @@
     <depends optional="true" config-file="mise-diagram.xml">com.intellij.diagram</depends>
     <depends optional="true" config-file="mise-goland.xml">org.jetbrains.plugins.go</depends>
     <depends optional="true" config-file="mise-idea.xml">com.intellij.java</depends>
+    <depends optional="true" config-file="mise-maven.xml">org.jetbrains.idea.maven</depends>
     <depends optional="true" config-file="mise-nodejs.xml">NodeJS</depends>
     <depends optional="true" config-file="mise-deno.xml">deno</depends>
     <depends optional="true" config-file="mise-nx.xml">dev.nx.console</depends>
