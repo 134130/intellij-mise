@@ -107,11 +107,20 @@ class MiseTomlFile {
             )
 
         /**
+         * Default file-task directories mise scans when no config file defines `task_config.includes`.
+         * Specifying `includes` explicitly overrides these defaults entirely (mise does not union them),
+         * so we only fall back to scanning these when no config file has an explicit `includes` list.
+         */
+        private val DEFAULT_TASK_DIRS =
+            listOf("mise-tasks", ".mise-tasks", ".mise/tasks", ".config/mise/tasks", "mise/tasks")
+
+        /**
          * Whether [file] is a TOML task file explicitly listed in `[task_config].includes`.
          *
          * Mise documents `task_config.includes` as explicit paths (Tera-templated) for TOML task files
-         * and file-task directories. We only treat direct TOML file includes as "task include files"
-         * for the purpose of accepting bare task tables like:
+         * and file-task directories. Both a directly-included `.toml` file and any `.toml` file nested
+         * inside an included (or default) directory are treated as "task include files" for the purpose
+         * of accepting bare task tables like:
          *
          * ```toml
          * [lint]
@@ -119,7 +128,6 @@ class MiseTomlFile {
          * ```
          *
          * We intentionally ignore:
-         * - directory includes (file tasks live there, not TOML)
          * - `git::` includes
          * - any Tera template we can't trivially resolve
          */
@@ -152,23 +160,48 @@ class MiseTomlFile {
                     .mapNotNull { path -> baseDir.findFileOrDirectory(path)?.takeIf { it.isFile } }
 
             val included = LinkedHashSet<String>()
+            var hasExplicitIncludes = false
             for (configVf in configFiles) {
                 val psiFile = configVf.findPsiFile(project) as? TomlFile ?: continue
                 val includes = TaskConfig.resolveOrNull(psiFile)?.includes ?: continue
-                for (rawInclude in includes) {
-                    val include = normalizeIncludePath(rawInclude) ?: continue
-                    if (!include.endsWith(".toml")) continue
+                hasExplicitIncludes = true
+                includes.forEach { addTomlFilesUnder(baseDir, normalizeIncludePath(it), included) }
+            }
 
-                    val target = baseDir.findFileOrDirectory(include)
-                    if (target?.isFile == true) {
-                        VfsUtilCore.getRelativePath(target, baseDir, '/')
-                            ?.replace('\\', '/')
-                            ?.let { included.add(it) }
-                    }
-                }
+            // No config file overrides the default file-task directories, so mise falls back to
+            // scanning them itself.
+            if (!hasExplicitIncludes) {
+                DEFAULT_TASK_DIRS.forEach { addTomlFilesUnder(baseDir, it, included) }
             }
 
             return included
+        }
+
+        /**
+         * Resolves [path] (relative to [baseDir]) and adds every `.toml` file found there to [included] —
+         * the file itself if [path] points at one, or every `.toml` file nested inside it if it's a directory.
+         */
+        private fun addTomlFilesUnder(
+            baseDir: VirtualFile,
+            path: String?,
+            included: MutableSet<String>,
+        ) {
+            val target = path?.let { baseDir.findFileOrDirectory(it) } ?: return
+            if (target.isFile) {
+                if (target.extension == "toml") included.addRelativePath(target, baseDir)
+            } else {
+                VfsUtilCore.iterateChildrenRecursively(target, null) { child ->
+                    if (child.isFile && child.extension == "toml") included.addRelativePath(child, baseDir)
+                    true
+                }
+            }
+        }
+
+        private fun MutableSet<String>.addRelativePath(
+            file: VirtualFile,
+            baseDir: VirtualFile,
+        ) {
+            VfsUtilCore.getRelativePath(file, baseDir, '/')?.replace('\\', '/')?.let { add(it) }
         }
 
         private fun normalizeIncludePath(rawInclude: String): String? {
