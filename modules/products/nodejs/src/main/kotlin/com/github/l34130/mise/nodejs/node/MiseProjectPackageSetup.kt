@@ -9,8 +9,8 @@ import com.intellij.javascript.nodejs.npm.NpmUtil
 import com.intellij.javascript.nodejs.settings.NodeSettingsConfigurable
 import com.intellij.javascript.nodejs.util.NodePackage
 import com.intellij.javascript.nodejs.util.NodePackageRef
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.runReadActionBlocking
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -25,7 +25,7 @@ class MiseProjectPackageSetup : AbstractProjectSdkSetup() {
         project: Project,
     ): SdkStatus {
         val currentPackageManager: NodePackage? =
-            ReadAction.compute<NodePackage, Throwable> {
+            runReadActionBlocking {
                 NpmManager.getInstance(project).`package`
             }
         val newPackageManager = tool.asPackage(project)

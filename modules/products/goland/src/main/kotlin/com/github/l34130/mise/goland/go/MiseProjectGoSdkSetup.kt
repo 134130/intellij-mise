@@ -6,8 +6,8 @@ import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.goide.configuration.GoSdkConfigurable
 import com.goide.sdk.GoSdk
 import com.goide.sdk.GoSdkService
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.runReadActionBlocking
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
@@ -27,7 +27,7 @@ class MiseProjectGoSdkSetup : AbstractProjectSdkSetup() {
         val sdkService = GoSdkService.getInstance(project)
 
         val currentSdk: GoSdk =
-            ReadAction.compute<GoSdk, Throwable> {
+            runReadActionBlocking {
                 sdkService.getSdk(null)
             }
         val newSdk = tool.asGoSdk()

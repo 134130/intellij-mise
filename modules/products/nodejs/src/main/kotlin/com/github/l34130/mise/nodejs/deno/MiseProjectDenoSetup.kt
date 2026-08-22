@@ -5,8 +5,8 @@ import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.intellij.deno.DenoConfigurable
 import com.intellij.deno.DenoSettings
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.runReadActionBlocking
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import kotlin.reflect.KClass
@@ -21,7 +21,7 @@ class MiseProjectDenoSetup : AbstractProjectSdkSetup() {
         val settings = DenoSettings.getService(project)
 
         val currentDenoPath: String? =
-            ReadAction.compute<String?, Throwable> {
+            runReadActionBlocking {
                 settings.getDenoPath()
             }
         val newDenoPath = tool.asDenoPath(project)
