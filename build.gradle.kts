@@ -57,6 +57,7 @@ dependencies {
         pluginComposedModule(implementation(project(":mise-products-diagram")))
         pluginComposedModule(implementation(project(":mise-products-goland")))
         pluginComposedModule(implementation(project(":mise-products-idea")))
+        pluginComposedModule(implementation(project(":mise-products-maven")))
         pluginComposedModule(implementation(project(":mise-products-nodejs")))
         pluginComposedModule(implementation(project(":mise-products-nx")))
         pluginComposedModule(implementation(project(":mise-products-pycharm")))
@@ -207,6 +208,7 @@ fun IntelliJPlatformPluginsExtension.configureIdeaRunIdePlugins() {
     compatiblePlugin("org.jetbrains.plugins.ruby")  // Ruby support (mise-ruby.xml)
     bundledPlugin("com.intellij.database")       // Database support (mise-database.xml)
     compatiblePlugin("com.intellij.gradle")         // Gradle tool window scenarios
+    bundledPlugin("org.jetbrains.idea.maven")    // Maven support (mise-maven.xml)
     compatiblePlugin("com.jetbrains.sh")            // Shell script support (mise-sh.xml)
     // Causes constant errors in WSL projects.
     //compatiblePlugin("dev.nx.console")              // NX Console support (mise-nx.xml)
