@@ -115,6 +115,7 @@ class MiseConfigFileResolver(
             .filter { it.endsWith(".toml", ignoreCase = true) }
             .mapNotNull { fs.refreshAndFindFileByPath(it) }
             .filter { it.isFile }
+            .filterNot { project.isExcludedFromMiseResolution(it) }
             .distinctBy { normalizePath(it.path) }
             .toList()
     }
@@ -154,7 +155,7 @@ class MiseConfigFileResolver(
                 addIfNotNull(baseDirVf.findFileOrDirectory("mise.toml")?.takeIf { it.isFile })
                 addIfNotNull(baseDirVf.findFileOrDirectory(".mise.local.toml")?.takeIf { it.isFile })
                 addIfNotNull(baseDirVf.findFileOrDirectory(".mise.toml")?.takeIf { it.isFile })
-            }
+            }.filterNot { project.isExcludedFromMiseResolution(it) }
         }
     }
 
@@ -185,6 +186,7 @@ class MiseConfigFileResolver(
         return mergedFiles
             .asSequence()
             .filter { it.isFile }
+            .filterNot { project.isExcludedFromMiseResolution(it) }
             .distinctBy { normalizePath(it.path) }
             .toList()
     }
