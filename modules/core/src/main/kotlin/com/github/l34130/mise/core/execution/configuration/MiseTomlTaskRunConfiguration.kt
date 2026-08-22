@@ -20,6 +20,7 @@ import com.intellij.openapi.vfs.encoding.EncodingManager
 import com.intellij.util.EnvironmentUtil
 import com.intellij.util.execution.ParametersListUtil
 import org.jdom.Element
+import java.io.File
 
 class MiseTomlTaskRunConfiguration(
     project: Project,
@@ -40,46 +41,49 @@ class MiseTomlTaskRunConfiguration(
     ): RunProfileState {
         return object : CommandLineState(executionEnvironment) {
             override fun startProcess(): ProcessHandler {
-                val projectBasePath = project.guessMiseProjectPath()
-
-                val macroManager = PathMacroManager.getInstance(project)
-                val expandedWorkingDirectory = macroManager.expandPath(workingDirectory)
-                val workDirectory = resolveMiseCdArgument(projectBasePath, expandedWorkingDirectory)
-
-                val params = mutableListOf<String>()
-                params += "-C"
-                params += workDirectory
-                if (miseConfigEnvironment.isNotBlank()) {
-                    params += listOf("--env", miseConfigEnvironment)
-                }
-                params += listOf("run", miseTaskName)
-                if (taskParams.isNotBlank()) {
-                    params += "--"
-                    params += ParametersListUtil.parse(taskParams)
-                }
-
-                val commandLine = PtyCommandLine()
-                if (!SystemInfo.isWindows) {
-                    commandLine.withEnvironment("TERM", "xterm-256color")
-                }
-                commandLine.withConsoleMode(false)
-                commandLine.withInitialColumns(120)
-                commandLine.withCharset(EncodingManager.getInstance().defaultConsoleEncoding)
-                commandLine.withEnvironment(EnvironmentUtil.getEnvironmentMap() + envVars.envs)
-                commandLine.withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-                commandLine.withWorkDirectory(projectBasePath)
-                commandLine.withParameters(params)
-
-                val executableManager = project.service<MiseExecutableManager>()
-                val miseExecutablePath = executableManager.getExecutablePath()
-                commandLine.withExePath(miseExecutablePath)
-
-                return ColoredProcessHandler(commandLine).apply {
+                return ColoredProcessHandler(createCommandLine()).apply {
                     setShouldKillProcessSoftly(true)
                     ProcessTerminatedListener.attach(this)
                 }
             }
         }
+    }
+
+    internal fun createCommandLine(): PtyCommandLine {
+        val projectBasePath = project.guessMiseProjectPath()
+
+        val macroManager = PathMacroManager.getInstance(project)
+        val expandedWorkingDirectory = macroManager.expandPath(workingDirectory)
+        val miseCd = resolveMiseCd(projectBasePath, expandedWorkingDirectory)
+
+        val params = mutableListOf<String>()
+        if (miseConfigEnvironment.isNotBlank()) {
+            params += listOf("--env", miseConfigEnvironment)
+        }
+        params += listOf("run", miseTaskName)
+        if (taskParams.isNotBlank()) {
+            params += "--"
+            params += ParametersListUtil.parse(taskParams)
+        }
+
+        val commandLine = PtyCommandLine()
+        if (!SystemInfo.isWindows) {
+            commandLine.withEnvironment("TERM", "xterm-256color")
+        }
+        commandLine.withConsoleMode(false)
+        commandLine.withInitialColumns(120)
+        commandLine.withCharset(EncodingManager.getInstance().defaultConsoleEncoding)
+        commandLine.withEnvironment(EnvironmentUtil.getEnvironmentMap() + envVars.envs)
+        commandLine.withEnvironment(MISE_CD_ENV, miseCd)
+        commandLine.withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+        commandLine.withWorkDirectory(projectBasePath)
+        commandLine.withParameters(params)
+
+        val executableManager = project.service<MiseExecutableManager>()
+        val miseExecutablePath = executableManager.getExecutablePath()
+        commandLine.withExePath(miseExecutablePath)
+
+        return commandLine
     }
 
     override fun getConfigurationEditor(): SettingsEditor<out RunConfiguration> = MiseTomlTaskRunConfigurationEditor(project)
@@ -103,13 +107,25 @@ class MiseTomlTaskRunConfiguration(
         taskParams = child.getAttributeValue("taskParams") ?: ""
         envVars = EnvironmentVariablesData.readExternal(child)
     }
+
+    private companion object {
+        const val MISE_CD_ENV = "MISE_CD"
+    }
 }
 
-internal fun resolveMiseCdArgument(
+internal fun resolveMiseCd(
     projectBasePath: String,
     expandedWorkingDirectory: String,
 ): String {
     val normalizedProjectBasePath = FileUtil.toSystemIndependentName(projectBasePath)
-    val normalizedWorkingDirectory = FileUtil.toSystemIndependentName(expandedWorkingDirectory)
-    return FileUtil.getRelativePath(normalizedProjectBasePath, normalizedWorkingDirectory, '/') ?: normalizedWorkingDirectory
+    val normalizedWorkingDirectory =
+        FileUtil.toSystemIndependentName(expandedWorkingDirectory).ifBlank { normalizedProjectBasePath }
+    return if (normalizedWorkingDirectory.isAbsolutePath()) {
+        normalizedWorkingDirectory
+    } else {
+        FileUtil.toSystemIndependentName(File(normalizedProjectBasePath, normalizedWorkingDirectory).path)
+    }
 }
+
+private fun String.isAbsolutePath(): Boolean =
+    startsWith("/") || startsWith("//") || matches(Regex("^[A-Za-z]:/.*"))
