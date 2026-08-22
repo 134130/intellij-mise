@@ -1,0 +1,16 @@
+[tools]
+python = "3.13"
+uv = "latest"
+
+[env]
+DJANGO_SETTINGS_MODULE = "issue514.settings"
+DJANGO_SECRET_KEY = "issue-514-local-secret"
+ISSUE514_DJANGO_MISE_ENV = "loaded-from-mise-for-issue-514"
+ISSUE514_DJANGO_DEBUG_MARKER = "debug-should-see-this"
+
+[settings.python]
+uv_venv_auto = true
+
+[tasks]
+check-env = "python manage.py check_mise_env"
+server = "python manage.py runserver 127.0.0.1:8000"
