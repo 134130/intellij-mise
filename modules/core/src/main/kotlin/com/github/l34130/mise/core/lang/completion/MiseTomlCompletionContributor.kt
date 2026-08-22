@@ -15,5 +15,17 @@ class MiseTomlCompletionContributor : CompletionContributor() {
                 MiseTomlPsiPatterns.inTaskWaitForString,
             MiseTomlTaskCompletionProvider(),
         )
+
+        extend(
+            CompletionType.BASIC,
+            MiseTomlPsiPatterns.inToolsVersionValue,
+            MiseTomlToolVersionCompletionProvider(),
+        )
+
+        extend(
+            CompletionType.BASIC,
+            MiseTomlPsiPatterns.inToolsTableKey,
+            MiseTomlToolNameCompletionProvider(),
+        )
     }
 }
