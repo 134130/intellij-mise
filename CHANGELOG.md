@@ -4,6 +4,21 @@
 
 ## [Unreleased]
 
+## [6.2.0] - 2026-08-22
+
+### Added
+
+- Maven home auto-sync from mise configuration by @Ky0koe in https://github.com/134130/intellij-mise/pull/499
+- Task detection on include configs by @thespags in https://github.com/134130/intellij-mise/pull/513
+- Skip mise configs in excluded folders by @134130 in https://github.com/134130/intellij-mise/pull/520
+
+### Fixed
+
+- Windows mise task -C path by @134130 in https://github.com/134130/intellij-mise/pull/517
+- mise task run directory handling by @134130 in https://github.com/134130/intellij-mise/pull/519
+- SDK refresh after mise config changes by @134130 in https://github.com/134130/intellij-mise/pull/521
+- Read action for project file index access by @134130 in https://github.com/134130/intellij-mise/pull/522
+
 ## [6.0.2] - 2026-06-06
 
 - Changelog update - `v6.0.1` by @github-actions[bot] in https://github.com/134130/intellij-mise/pull/505
@@ -589,7 +604,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v6.0.2...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v6.2.0...HEAD
+[6.2.0]: https://github.com/134130/intellij-mise/compare/v6.0.2...v6.2.0
 [6.0.2]: https://github.com/134130/intellij-mise/compare/v6.0.1...v6.0.2
 [6.0.1]: https://github.com/134130/intellij-mise/compare/v6.0.0...v6.0.1
 [6.0.0]: https://github.com/134130/intellij-mise/compare/v5.19.0...v6.0.0

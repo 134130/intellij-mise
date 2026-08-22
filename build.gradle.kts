@@ -193,7 +193,7 @@ val runIdeForUnitTests by intellijPlatformTesting.runIde.registering {
 val runIdePlatformTypes =
     listOf(
 //        IntelliJPlatformType.CLion,
-//        IntelliJPlatformType.GoLand,
+        IntelliJPlatformType.GoLand,
         IntelliJPlatformType.IntellijIdea,
 //        IntelliJPlatformType.WebStorm,
         IntelliJPlatformType.PyCharmCommunity,
@@ -235,17 +235,16 @@ intellijPlatformTesting.runIde.register("runIntellijIdeaUltimate") {
     useInstaller = false
 
     plugins {
-        compatiblePlugin("org.toml.lang")
-        compatiblePlugin("kotest-plugin-intellij")
+        configureIdeaRunIdePlugins()
     }
 }
 
-intellijPlatformTesting.runIde.register("runIntellijIdeaUltimate2025_3") {
-    type = IntelliJPlatformType.IntellijIdeaUltimate
+intellijPlatformTesting.runIde.register("runGoLand") {
+    type = IntelliJPlatformType.GoLand
     version = "2026.1"
     useInstaller = false
 
     plugins {
-        configureIdeaRunIdePlugins()
+        compatiblePlugin("org.toml.lang")
     }
 }
