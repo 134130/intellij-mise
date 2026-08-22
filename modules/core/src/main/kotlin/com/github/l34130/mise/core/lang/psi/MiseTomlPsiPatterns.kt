@@ -1,5 +1,6 @@
 package com.github.l34130.mise.core.lang.psi
 
+import com.github.l34130.mise.core.model.MiseTomlFile
 import com.intellij.patterns.ElementPattern
 import com.intellij.patterns.ObjectPattern
 import com.intellij.patterns.PatternCondition
@@ -49,6 +50,23 @@ object MiseTomlPsiPatterns {
                 headerKeySegments?.singleOrNull()?.name == "tasks"
             }
 
+    private val RESERVED_TOP_LEVEL_TABLE_NAMES = setOf("tasks", "task_config", "env", "vars", "tools", "settings")
+
+    // Bare task table in a `[task_config].includes` file, e.g.
+    // [task4]
+    // run = "echo task4"
+    // See https://mise.jdx.dev/tasks/task-configuration.html
+    private val onBareTaskTable =
+        tomlPsiElement<TomlTable>()
+            .with("bareTaskTableShape") { table, _ ->
+                val segments = table.header.key?.segments
+                segments?.size == 1 && segments.first().name !in RESERVED_TOP_LEVEL_TABLE_NAMES
+            }
+            .with("isTaskIncludeFile") { table, _ ->
+                val virtualFile = table.containingFile?.originalFile?.virtualFile ?: return@with false
+                MiseTomlFile.isTaskIncludeFile(table.project, virtualFile)
+            }
+
     /**
      * ```toml
      * [tasks.foo]
@@ -58,6 +76,11 @@ object MiseTomlPsiPatterns {
      * [tasks]
      * foo = { $name = [] }
      *         #^
+     *
+     * # task_config.includes file
+     * [foo]
+     * $name = []
+     * #^
      * ```
      */
     fun onTaskProperty(name: String) =
@@ -66,7 +89,10 @@ object MiseTomlPsiPatterns {
             .withParent(onTaskSpecificTable) or
             psiElement<TomlKeyValue>()
                 .with("name") { e, _ -> e.key.name == name }
-                .withParent(psiElement<TomlInlineTable>().withSuperParent(2, onTaskTable))
+                .withParent(psiElement<TomlInlineTable>().withSuperParent(2, onTaskTable)) or
+            psiElement<TomlKeyValue>()
+                .with("name") { e, _ -> e.key.name == name }
+                .withParent(onBareTaskTable)
 
     /**
      * ```
