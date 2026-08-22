@@ -73,14 +73,15 @@ class MiseConfigFileResolver(
             snapshotByContext[cacheKey]?.let { return it }
         }
 
-        val trackedTomlFiles =
-            resolveTrackedTomlFiles(baseDirVf, configEnvironment).ifEmpty {
-                resolveFallbackTomlFiles(baseDirVf, configEnvironment)
+        val trackedConfigInputs =
+            resolveTrackedConfigInputs(configEnvironment).ifEmpty {
+                resolveFallbackTrackedConfigInputs(baseDirVf, configEnvironment)
             }
+        val trackedTomlFiles = trackedConfigInputs.filter { it.isTomlFile() }
 
         val configRoot = computeConfigRoot(trackedTomlFiles.firstOrNull(), baseDirVf)
         val externalTrackedFiles = resolveExternalTrackedFiles(trackedTomlFiles, configRoot, baseDirVf)
-        val allTrackedFiles = (trackedTomlFiles + externalTrackedFiles).distinctBy { normalizePath(it.path) }
+        val allTrackedFiles = (trackedConfigInputs + externalTrackedFiles).distinctBy { normalizePath(it.path) }
         val snapshot =
             TrackedConfigSnapshot(
                 configTomlFiles = trackedTomlFiles,
@@ -102,8 +103,7 @@ class MiseConfigFileResolver(
 
     override fun dispose() { }
 
-    private fun resolveTrackedTomlFiles(
-        baseDirVf: VirtualFile,
+    private fun resolveTrackedConfigInputs(
         configEnvironment: String?,
     ): List<VirtualFile> {
         val activeConfigs =
@@ -112,15 +112,14 @@ class MiseConfigFileResolver(
         val fs = LocalFileSystem.getInstance()
         return activeConfigs
             .asSequence()
-            .filter { it.endsWith(".toml", ignoreCase = true) }
-            .mapNotNull { fs.refreshAndFindFileByPath(it) }
+            .mapNotNull { fs.refreshAndFindFileByPath(normalizePath(it)) }
             .filter { it.isFile }
             .filterNot { project.isExcludedFromMiseResolution(it) }
             .distinctBy { normalizePath(it.path) }
             .toList()
     }
 
-    private suspend fun resolveFallbackTomlFiles(
+    private suspend fun resolveFallbackTrackedConfigInputs(
         baseDirVf: VirtualFile,
         configEnvironment: String?,
     ): List<VirtualFile> {
@@ -155,6 +154,8 @@ class MiseConfigFileResolver(
                 addIfNotNull(baseDirVf.findFileOrDirectory("mise.toml")?.takeIf { it.isFile })
                 addIfNotNull(baseDirVf.findFileOrDirectory(".mise.local.toml")?.takeIf { it.isFile })
                 addIfNotNull(baseDirVf.findFileOrDirectory(".mise.toml")?.takeIf { it.isFile })
+                addIfNotNull(baseDirVf.findFileOrDirectory(".tool-versions")?.takeIf { it.isFile })
+                addIfNotNull(baseDirVf.findFileOrDirectory(".tool-versions.local")?.takeIf { it.isFile })
             }.filterNot { project.isExcludedFromMiseResolution(it) }
         }
     }
@@ -277,6 +278,8 @@ class MiseConfigFileResolver(
             globalTrackedPathIndex.addAll(snapshot.normalizedTrackedPaths)
         }
     }
+
+    private fun VirtualFile.isTomlFile(): Boolean = name.endsWith(".toml", ignoreCase = true)
 
     private fun normalizePath(path: String): String {
         val normalized =

@@ -155,6 +155,53 @@ class MiseConfigFileResolverTest : BasePlatformTestCase() {
         assertTrue(configPaths.contains(childToml.toString().replace('\\', '/')))
     }
 
+    fun `test resolveTrackedFiles indexes non toml tracked config inputs`() {
+        seedExecutableInfo()
+        val rootDir = Files.createTempDirectory("mise-non-toml-config-test")
+        val miseToml = rootDir.resolve("mise.toml").also { it.writeText("[tools]\ngo = '1.25'\n") }
+        val toolVersions = rootDir.resolve(".tool-versions").also { it.writeText("go 1.24\n") }
+
+        val baseDirVf =
+            LocalFileSystem.getInstance().refreshAndFindFileByPath(rootDir.toString().replace('\\', '/'))
+                ?: error("Failed to resolve project dir in VFS")
+        val resolver = project.service<MiseConfigFileResolver>()
+
+        val snapshot =
+            withCommandLineExecutor(
+                executor = { commandLine, _ ->
+                    val cmdStr = commandLine.commandLineString
+                    when {
+                        cmdStr.contains("config ls --json") -> {
+                            val json = """
+                                [
+                                  {"path": "${miseToml.toString().replace('\\', '/')}"}
+                                ]
+                            """.trimIndent()
+                            processOutput(stdout = json)
+                        }
+                        cmdStr.contains("config --tracked-configs") -> {
+                            processOutput(
+                                stdout =
+                                    listOf(miseToml, toolVersions)
+                                        .joinToString("\n") { it.toString().replace('\\', '/') } + "\n",
+                            )
+                        }
+                        else -> processOutput()
+                    }
+                },
+            ) {
+                runBlocking {
+                    resolver.resolveTrackedFiles(baseDirVf, refresh = true, configEnvironment = "test")
+                }
+            }
+
+        val toolVersionsPath = toolVersions.toString().replace('\\', '/')
+
+        assertEquals(listOf(miseToml.toString().replace('\\', '/')), snapshot.configTomlFiles.map { it.path })
+        assertTrue(snapshot.trackedInputs.map { it.path }.contains(toolVersionsPath))
+        assertTrue(snapshot.normalizedTrackedPaths.contains(toolVersionsPath))
+    }
+
     fun `test resolveConfigFiles ignores CLI configs in excluded folders`() {
         seedExecutableInfo()
         val rootDir = Files.createTempDirectory("mise-excluded-config-test")

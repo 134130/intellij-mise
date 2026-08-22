@@ -1,6 +1,11 @@
 package com.github.l34130.mise.core.setup
 
+import com.github.l34130.mise.core.MiseCoroutineService
 import com.github.l34130.mise.core.MiseConfigFileResolver
+import com.github.l34130.mise.core.MiseTomlFileListener
+import com.github.l34130.mise.core.cache.MiseCacheService
+import com.github.l34130.mise.core.cache.MiseProjectEvent
+import com.github.l34130.mise.core.cache.MiseProjectEventListener
 import com.github.l34130.mise.core.command.MiseCommandLineHelper
 import com.github.l34130.mise.core.command.MiseCommandLineNotFoundException
 import com.github.l34130.mise.core.command.MiseDevTool
@@ -20,10 +25,12 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
+import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 abstract class AbstractProjectSdkSetup :
@@ -35,12 +42,13 @@ abstract class AbstractProjectSdkSetup :
         // Stable since 2025.2 https://github.com/JetBrains/intellij-community/commit/a498525e60e27a92d67c803569037e33cdfc2ce1
         @Suppress("UnstableApiUsage")
         currentThreadCoroutineScope().launch {
-            configureSdk(project, true)
+            runSdkConfigurationCheck(project, isUserInteraction = true, forceRefresh = false)
         }
     }
 
     override suspend fun execute(project: Project) {
-        configureSdk(project, false)
+        registerAutomaticRefresh(project)
+        runSdkConfigurationCheck(project, isUserInteraction = false, forceRefresh = false)
     }
 
     abstract fun getDevToolName(project: Project): MiseDevToolName
@@ -57,11 +65,40 @@ abstract class AbstractProjectSdkSetup :
 
     abstract fun <T : Configurable> getConfigurableClass(): KClass<out T>?
 
+    protected open suspend fun runSdkConfigurationCheck(
+        project: Project,
+        isUserInteraction: Boolean,
+        forceRefresh: Boolean,
+    ) {
+        configureSdk(project, isUserInteraction, forceRefresh)
+    }
+
+    private fun registerAutomaticRefresh(project: Project) {
+        project.service<MiseTomlFileListener>()
+
+        val registrationKey = refreshRegistrationKey()
+        if (project.getUserData(registrationKey) == true) return
+        project.putUserData(registrationKey, true)
+
+        MiseProjectEventListener.subscribe(project, project) { event ->
+            if (event.kind in AUTOMATIC_REFRESH_EVENTS) {
+                project.service<MiseCoroutineService>().scope.launch(Dispatchers.IO) {
+                    if (project.isDisposed) return@launch
+                    runSdkConfigurationCheck(project, isUserInteraction = false, forceRefresh = true)
+                }
+            }
+        }
+    }
+
     @Suppress("ktlint:max-line-length")
     private suspend fun configureSdk(
         project: Project,
         isUserInteraction: Boolean,
+        forceRefresh: Boolean,
     ) = withContext(Dispatchers.IO) {
+            if (forceRefresh) {
+                project.service<MiseCacheService>().invalidateAllCommands()
+            }
             val devToolName = getDevToolName(project)
             val miseNotificationService = project.service<MiseNotificationService>()
 
@@ -69,7 +106,7 @@ abstract class AbstractProjectSdkSetup :
 
             // Skip automatic SDK configuration if the project doesn't have mise config files
             // or if the specific tool is not configured in mise
-            if (!isUserInteraction && !hasToolConfigured(project, configEnvironment, devToolName)) {
+            if (!isUserInteraction && !hasToolConfigured(project, configEnvironment, devToolName, forceRefresh)) {
                 return@withContext
             }
             val toolsResult =
@@ -198,15 +235,16 @@ abstract class AbstractProjectSdkSetup :
         project: Project,
         configEnvironment: String?,
         devToolName: MiseDevToolName,
+        forceRefresh: Boolean,
     ): Boolean {
         val basePath = project.guessMiseProjectPath()
         val baseDir = LocalFileSystem.getInstance().findFileByPath(basePath)
             ?: return false
 
-        // First check if any mise config files exist
-        val configFiles = project.service<MiseConfigFileResolver>()
-            .resolveConfigFiles(baseDir, refresh = false, configEnvironment = configEnvironment)
-        if (configFiles.isEmpty()) return false
+        // First check if any mise-tracked config inputs exist
+        val trackedFiles = project.service<MiseConfigFileResolver>()
+            .resolveTrackedFiles(baseDir, refresh = forceRefresh, configEnvironment = configEnvironment)
+        if (trackedFiles.trackedInputs.isEmpty()) return false
 
         // Then check if the specific tool is configured in mise
         val toolsResult = MiseCommandLineHelper.getDevTools(
@@ -241,4 +279,19 @@ abstract class AbstractProjectSdkSetup :
         val sdkVersion: String,
         val sdkPath: String,
     )
+
+    private fun refreshRegistrationKey(): Key<Boolean> =
+        automaticRefreshRegistrationKeys.computeIfAbsent(javaClass.name) { className ->
+            Key.create("mise.sdk.setup.refresh.registered.$className")
+        }
+
+    private companion object {
+        val AUTOMATIC_REFRESH_EVENTS =
+            setOf(
+                MiseProjectEvent.Kind.TOML_CHANGED,
+                MiseProjectEvent.Kind.SETTINGS_CHANGED,
+                MiseProjectEvent.Kind.EXECUTABLE_CHANGED,
+            )
+        val automaticRefreshRegistrationKeys = ConcurrentHashMap<String, Key<Boolean>>()
+    }
 }
