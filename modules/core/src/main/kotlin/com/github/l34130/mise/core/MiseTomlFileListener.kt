@@ -19,6 +19,16 @@ import com.intellij.util.messages.MessageBusConnection
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
+internal fun isLikelyMiseRelatedFileName(name: String): Boolean {
+    if (name == "config.toml" || name == "mise.toml" || name == ".mise.toml") return true
+    if (name == "mise.local.toml" || name == ".mise.local.toml") return true
+    if (name == ".tool-versions" || name == ".tool-versions.local") return true
+    if (name.startsWith(".env")) return true
+    if (name.matches("^mise\\.[^/]+\\.toml$".toRegex())) return true
+    if (name.matches("^\\.mise\\.[^/]+\\.toml$".toRegex())) return true
+    return false
+}
+
 /**
  * Project-level service that manages the VFS listener for Mise TOML files.
  * This ensures that the listener is only registered once per project,
@@ -106,13 +116,7 @@ class MiseTomlFileListener(
             }
 
             private fun isLikelyMiseRelatedFile(file: VirtualFile): Boolean {
-                val name = file.name
-                if (name == "config.toml" || name == "mise.toml" || name == ".mise.toml") return true
-                if (name == "mise.local.toml" || name == ".mise.local.toml") return true
-                if (name.startsWith(".env")) return true
-                if (name.matches("^mise\\.[^/]+\\.toml$".toRegex())) return true
-                if (name.matches("^\\.mise\\.[^/]+\\.toml$".toRegex())) return true
-                return false
+                return isLikelyMiseRelatedFileName(file.name)
             }
         }
     }
