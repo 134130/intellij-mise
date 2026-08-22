@@ -3,10 +3,10 @@ package com.github.l34130.mise.core.wsl
 import com.intellij.execution.wsl.WSLDistribution
 import com.intellij.execution.wsl.WslDistributionManager
 import com.intellij.openapi.util.SystemInfo
-import com.intellij.testFramework.LightPlatformTestCase
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import org.junit.Assume.assumeTrue
 
-class WslPathUtilsTest : LightPlatformTestCase() {
+class WslPathUtilsTest : BasePlatformTestCase() {
     // ========================
     // detectWslMode() Tests
     // ========================

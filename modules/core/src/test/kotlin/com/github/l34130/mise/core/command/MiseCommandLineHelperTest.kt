@@ -1,8 +1,8 @@
 package com.github.l34130.mise.core.command
 
-import com.intellij.testFramework.LightPlatformTestCase
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
-class MiseCommandLineHelperTest : LightPlatformTestCase() {
+class MiseCommandLineHelperTest : BasePlatformTestCase() {
 
     fun `test needsCustomization true for fresh env`() {
         val env = mutableMapOf("PATH" to "x")

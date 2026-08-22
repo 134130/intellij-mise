@@ -1,12 +1,12 @@
 package com.github.l34130.mise.core.command
 
-import com.intellij.testFramework.LightPlatformTestCase
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
 @RunWith(JUnit4::class)
-class MiseCacheKeyTest : LightPlatformTestCase() {
+class MiseCacheKeyTest : BasePlatformTestCase() {
 
     @Test
     fun `DevTools key includes scope segment`() {
