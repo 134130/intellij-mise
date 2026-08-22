@@ -3,8 +3,8 @@ package com.github.l34130.mise.ruby.sdk
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.runReadActionBlocking
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
@@ -22,7 +22,7 @@ class MiseRubyProjectSdkSetup : AbstractProjectSdkSetup() {
         project: Project,
     ): SdkStatus {
         val currentSdk: Sdk? =
-            ReadAction.compute<Sdk?, Throwable> {
+            runReadActionBlocking {
                 ProjectRootManager.getInstance(project).projectSdk
             }
         val newSdk = tool.asRubySdk(project)

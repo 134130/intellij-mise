@@ -20,6 +20,8 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
 class MiseConfigFileResolverTest : BasePlatformTestCase() {
+    override fun runInDispatchThread(): Boolean = false
+
     private fun processOutput(stdout: String = "", stderr: String = "", exitCode: Int = 0): ProcessOutput {
         val output = ProcessOutput()
         output.appendStdout(stdout)
@@ -55,12 +57,14 @@ class MiseConfigFileResolverTest : BasePlatformTestCase() {
         contentRoot: VirtualFile,
         excludedFolder: VirtualFile,
     ) {
-        ModuleRootModificationUtil.updateExcludedFolders(
-            module,
-            contentRoot,
-            listOf(excludedFolder.url),
-            emptyList(),
-        )
+        ModuleRootModificationUtil.updateModel(module) { model ->
+            val contentEntry =
+                model.contentEntries.firstOrNull { it.url == contentRoot.url }
+                    ?: model.addContentEntry(contentRoot)
+            if (contentEntry.excludeFolders.none { it.url == excludedFolder.url }) {
+                contentEntry.addExcludeFolder(excludedFolder)
+            }
+        }
     }
 
     fun `test resolveTrackedFiles falls back to manual scan and tracks external env files`() {
@@ -258,8 +262,8 @@ class MiseConfigFileResolverTest : BasePlatformTestCase() {
             env_file = "secrets/.env"
             """.trimIndent(),
         )
-        val externalEnvFile = myFixture.configureByText("secrets/.env", "FOO=BAR").virtualFile
-        val excludedConfigFile = myFixture.configureByText(".config/mise.toml", "[tools]\nnode = '20'\n").virtualFile
+        val externalEnvFile = myFixture.addFileToProject("secrets/.env", "FOO=BAR").virtualFile
+        val excludedConfigFile = myFixture.addFileToProject(".config/mise.toml", "[tools]\nnode = '20'\n").virtualFile
         val baseDirVf = VirtualFileManager.getInstance().findFileByUrl("temp:///src") ?: error("Base directory not found")
         excludeFolder(baseDirVf, excludedConfigFile.parent)
         excludeFolder(baseDirVf, externalEnvFile.parent)

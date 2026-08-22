@@ -9,10 +9,13 @@ import com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfig
 import com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationFactory
 import com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationProducer
 import com.github.l34130.mise.core.execution.configuration.MiseTomlTaskRunConfigurationType
+import com.github.l34130.mise.core.util.guessMiseProjectPath
 import com.intellij.execution.PsiLocation
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.configuration.EnvironmentVariablesData
+import com.intellij.openapi.components.PathMacroManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.psi.PsiElement
 import org.intellij.lang.annotations.Language
 import org.toml.lang.psi.TomlFile
@@ -67,9 +70,14 @@ class MiseTomlTaskRunConfigurationProducerTest : FileTestBase() {
         }
 
         val commandLine = configuration.createCommandLine()
+        val projectPath = project.guessMiseProjectPath()
+        val expandedWorkingDirectory =
+            FileUtil.toSystemIndependentName(
+                PathMacroManager.getInstance(project).expandPath(configuration.workingDirectory),
+            )
 
-        assertEquals(project.basePath, commandLine.workDirectory?.path)
-        assertEquals(project.basePath + "/subdir", commandLine.environment["MISE_CD"])
+        assertEquals(projectPath, commandLine.workDirectory?.path)
+        assertEquals(expandedWorkingDirectory, commandLine.environment["MISE_CD"])
         assertFalse(commandLine.parametersList.parameters.contains("-C"))
         assertEquals(
             listOf("--env", "development", "run", "show", "--", "--flag", "value"),
@@ -80,13 +88,15 @@ class MiseTomlTaskRunConfigurationProducerTest : FileTestBase() {
     fun `test task command line converts relative MISE_CD to absolute path`() {
         seedExecutableInfo()
         val configuration = createRunConfiguration().apply {
+            miseConfigEnvironment = ""
             miseTaskName = "show"
             workingDirectory = "subdir"
         }
 
         val commandLine = configuration.createCommandLine()
+        val projectPath = project.guessMiseProjectPath()
 
-        assertEquals(project.basePath + "/subdir", commandLine.environment["MISE_CD"])
+        assertEquals("$projectPath/subdir", commandLine.environment["MISE_CD"])
         assertEquals(listOf("run", "show"), commandLine.parametersList.parameters)
     }
 

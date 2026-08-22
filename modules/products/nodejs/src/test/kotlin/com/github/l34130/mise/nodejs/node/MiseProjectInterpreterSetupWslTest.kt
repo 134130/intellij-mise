@@ -1,7 +1,7 @@
 package com.github.l34130.mise.nodejs.node
 
 import com.intellij.javascript.nodejs.interpreter.wsl.WslNodeInterpreter
-import com.intellij.testFramework.LightPlatformTestCase
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
 /**
  * WSL-only tests for [MiseProjectInterpreterSetup].
@@ -9,7 +9,7 @@ import com.intellij.testFramework.LightPlatformTestCase
  * Excluded on non-Windows hosts via the module's `build.gradle.kts`, because
  * IntelliJ's WSL services are only wired up on Windows.
  */
-class MiseProjectInterpreterSetupWslTest : LightPlatformTestCase() {
+class MiseProjectInterpreterSetupWslTest : BasePlatformTestCase() {
     fun `test creates WslNodeInterpreter with unix path when distribution is set`() {
         val uncPath = "\\\\wsl.localhost\\Ubuntu\\home\\user\\.local\\share\\mise\\installs\\node\\22.0.0\\bin\\node"
         val interpreter = MiseProjectInterpreterSetup.createNodeJsInterpreter(

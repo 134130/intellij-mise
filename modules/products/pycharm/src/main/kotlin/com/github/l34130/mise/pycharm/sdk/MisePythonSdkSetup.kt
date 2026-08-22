@@ -6,8 +6,8 @@ import com.github.l34130.mise.core.command.MiseDevToolName
 import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.github.l34130.mise.core.util.guessMiseProjectPath
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.runReadActionBlocking
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
@@ -28,7 +28,7 @@ class MisePythonSdkSetup : AbstractProjectSdkSetup() {
         checkUvEnabled(project)
 
         val currentSdk: Sdk? =
-            ReadAction.compute<Sdk?, Throwable> {
+            runReadActionBlocking {
                 ProjectRootManager.getInstance(project).projectSdk
             }
         val newSdk = tool.asUvSdk(project)

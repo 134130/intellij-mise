@@ -69,7 +69,7 @@ class MiseTomlPsiPatternsTest : FileTestBase() {
         }
     }
 
-    fun `test inTaskRunStringOrArray on bare task table in include file with trailing slash dir include`() {
+    fun `test inTaskRunStringOrArray on bare task table in trailing slash dir include`() {
         myFixture.addFileToProject("mise.toml", """
             [task_config]
             includes = ["tasks/"]
@@ -86,8 +86,8 @@ class MiseTomlPsiPatternsTest : FileTestBase() {
         myFixture.configureFromExistingVirtualFile(bufToml.virtualFile)
 
         val element = findElementInEditor<PsiElement>()
-        assert(!MiseTomlPsiPatterns.inTaskRunStringOrArray.accepts(element)) {
-            "Pattern unexpectedly accepts element at caret (directory include should not mark TOML as included):\n${myFixture.file.text}"
+        assert(MiseTomlPsiPatterns.inTaskRunStringOrArray.accepts(element)) {
+            "Pattern does not accept element at caret (directory include should mark nested TOML as included):\n${myFixture.file.text}"
         }
     }
 
