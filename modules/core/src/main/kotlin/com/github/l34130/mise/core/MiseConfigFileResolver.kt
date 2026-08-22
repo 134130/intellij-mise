@@ -74,7 +74,7 @@ class MiseConfigFileResolver(
         }
 
         val trackedConfigInputs =
-            resolveTrackedConfigInputs(configEnvironment).ifEmpty {
+            resolveTrackedConfigInputs(baseDirVf, configEnvironment).ifEmpty {
                 resolveFallbackTrackedConfigInputs(baseDirVf, configEnvironment)
             }
         val trackedTomlFiles = trackedConfigInputs.filter { it.isTomlFile() }
@@ -104,10 +104,11 @@ class MiseConfigFileResolver(
     override fun dispose() { }
 
     private fun resolveTrackedConfigInputs(
+        baseDirVf: VirtualFile,
         configEnvironment: String?,
     ): List<VirtualFile> {
         val activeConfigs =
-            MiseCommandLineHelper.getProjectTrackedConfigs(project, configEnvironment)
+            MiseCommandLineHelper.getProjectTrackedConfigs(project, configEnvironment, workDir = baseDirVf.path)
                 .getOrElse { return emptyList() }
         val fs = LocalFileSystem.getInstance()
         return activeConfigs

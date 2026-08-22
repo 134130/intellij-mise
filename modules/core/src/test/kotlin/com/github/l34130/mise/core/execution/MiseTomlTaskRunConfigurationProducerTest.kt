@@ -88,6 +88,7 @@ class MiseTomlTaskRunConfigurationProducerTest : FileTestBase() {
     fun `test task command line converts relative MISE_CD to absolute path`() {
         seedExecutableInfo()
         val configuration = createRunConfiguration().apply {
+            miseConfigEnvironment = ""
             miseTaskName = "show"
             workingDirectory = "subdir"
         }

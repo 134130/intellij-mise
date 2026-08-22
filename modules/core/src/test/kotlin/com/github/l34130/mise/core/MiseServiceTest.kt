@@ -29,26 +29,31 @@ class MiseServiceTest(
         myFixture.configureByFiles(*allTestFiles())
 
         val settings = project.service<MiseProjectSettings>()
+        val previousEnvironment = settings.state.miseConfigEnvironment
         settings.state.miseConfigEnvironment = environment ?: ""
 
-        val service = project.service<MiseTaskResolver>()
+        try {
+            val service = project.service<MiseTaskResolver>()
 
-        VirtualFileManager.getInstance().findFileByUrl("temp:///src") ?: error("Base directory not found")
-        val tasks =
-            withMiseCommandLineExecutor {
-                runBlocking { service.computeTasksFromSource() }
+            VirtualFileManager.getInstance().findFileByUrl("temp:///src") ?: error("Base directory not found")
+            val tasks =
+                withMiseCommandLineExecutor {
+                    runBlocking { service.computeTasksFromSource() }
+                }
+            val task = tasks.find { it.name == taskName }
+
+            if (taskEnv == null || taskEnv == environment) {
+                // Task should be present
+                assertNotNull("Task '$taskName' not found for environment '$environment' ${tasks.joinToString(", ") { it.name }}", task)
+                val nonNullTask = task ?: error("Task '$taskName' not found")
+                assertEquals("Task '$taskName' has wrong source", taskSource, nonNullTask.source)
+                assertEquals("Task '$taskName' has wrong type", taskType, nonNullTask::class)
+            } else {
+                // Task should NOT be present
+                assertNull("Task '$taskName' should not be present for environment '$environment'", task)
             }
-        val task = tasks.find { it.name == taskName }
-
-        if (taskEnv == null || taskEnv == environment) {
-            // Task should be present
-            assertNotNull("Task '$taskName' not found for environment '$environment' ${tasks.joinToString(", ") { it.name }}", task)
-            val nonNullTask = task ?: error("Task '$taskName' not found")
-            assertEquals("Task '$taskName' has wrong source", taskSource, nonNullTask.source)
-            assertEquals("Task '$taskName' has wrong type", taskType, nonNullTask::class)
-        } else {
-            // Task should NOT be present
-            assertNull("Task '$taskName' should not be present for environment '$environment'", task)
+        } finally {
+            settings.state.miseConfigEnvironment = previousEnvironment
         }
     }
 
