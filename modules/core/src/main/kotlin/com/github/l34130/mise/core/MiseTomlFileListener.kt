@@ -99,6 +99,7 @@ class MiseTomlFileListener(
             }
 
             private fun isTrackedMiseInput(file: VirtualFile): Boolean {
+                if (project.isExcludedFromMiseResolution(file)) return false
                 if (project.service<MiseConfigFileResolver>().isTrackedPath(file)) return true
                 if (MiseTomlFile.isMiseTomlFile(project, file)) return true
                 return isLikelyMiseRelatedFile(file)
