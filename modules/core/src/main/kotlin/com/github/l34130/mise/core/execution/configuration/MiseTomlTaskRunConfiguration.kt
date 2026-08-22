@@ -20,7 +20,6 @@ import com.intellij.openapi.vfs.encoding.EncodingManager
 import com.intellij.util.EnvironmentUtil
 import com.intellij.util.execution.ParametersListUtil
 import org.jdom.Element
-import java.io.File
 
 class MiseTomlTaskRunConfiguration(
     project: Project,
@@ -45,8 +44,7 @@ class MiseTomlTaskRunConfiguration(
 
                 val macroManager = PathMacroManager.getInstance(project)
                 val expandedWorkingDirectory = macroManager.expandPath(workingDirectory)
-                val workDirectory =
-                    FileUtil.getRelativePath(projectBasePath, expandedWorkingDirectory, File.separatorChar) ?: expandedWorkingDirectory
+                val workDirectory = resolveMiseCdArgument(projectBasePath, expandedWorkingDirectory)
 
                 val params = mutableListOf<String>()
                 params += "-C"
@@ -105,4 +103,13 @@ class MiseTomlTaskRunConfiguration(
         taskParams = child.getAttributeValue("taskParams") ?: ""
         envVars = EnvironmentVariablesData.readExternal(child)
     }
+}
+
+internal fun resolveMiseCdArgument(
+    projectBasePath: String,
+    expandedWorkingDirectory: String,
+): String {
+    val normalizedProjectBasePath = FileUtil.toSystemIndependentName(projectBasePath)
+    val normalizedWorkingDirectory = FileUtil.toSystemIndependentName(expandedWorkingDirectory)
+    return FileUtil.getRelativePath(normalizedProjectBasePath, normalizedWorkingDirectory, '/') ?: normalizedWorkingDirectory
 }
