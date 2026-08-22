@@ -1,9 +1,9 @@
 package com.github.l34130.mise.nodejs.node
 
 import com.intellij.javascript.nodejs.interpreter.local.NodeJsLocalInterpreter
-import com.intellij.testFramework.LightPlatformTestCase
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
-class MiseProjectInterpreterSetupTest : LightPlatformTestCase() {
+class MiseProjectInterpreterSetupTest : BasePlatformTestCase() {
     fun `test creates NodeJsLocalInterpreter when no WSL distribution`() {
         val interpreter = MiseProjectInterpreterSetup.createNodeJsInterpreter(
             binPath = "/usr/local/bin/node",
