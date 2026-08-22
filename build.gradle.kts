@@ -25,19 +25,25 @@ kotlin {
     jvmToolchain(21)
 }
 
-// The IntelliJ Platform bundles kotlin-stdlib; bundling another copy in the plugin ZIP
-// causes LinkageError / loader constraint violations when sharing the classloader
-// with other plugins (see PR #475).
-listOf(
-    configurations.runtimeClasspath,
-    configurations.testRuntimeClasspath,
-).forEach { cfg ->
-    cfg.configure {
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
-    }
+// The IntelliJ Platform bundles kotlin-stdlib; bundling another copy in plugin ZIPs
+// or test sandboxes causes classloader/runtime mismatches (see PR #475).
+val kotlinRuntimeClasspathConfigurations = setOf("runtimeClasspath", "testRuntimeClasspath")
+val intellijBundledKotlinRuntimeModules =
+    listOf(
+        "kotlin-stdlib",
+        "kotlin-stdlib-jdk7",
+        "kotlin-stdlib-jdk8",
+        "kotlin-stdlib-common",
+    )
+
+allprojects {
+    configurations
+        .matching { it.name in kotlinRuntimeClasspathConfigurations }
+        .configureEach {
+            intellijBundledKotlinRuntimeModules.forEach { module ->
+                exclude(group = "org.jetbrains.kotlin", module = module)
+            }
+        }
 }
 
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
