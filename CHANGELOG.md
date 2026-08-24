@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [6.2.1] - 2026-08-24
+
+### Fixed
+
+- Fix binary compatibility with IntelliJ IDEA 2026.2.2 Preview (`IU-262.10315.19`) for database authentication.
+
 ## [6.2.0] - 2026-08-22
 
 ### Added
@@ -604,7 +610,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v6.2.0...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v6.2.1...HEAD
+[6.2.1]: https://github.com/134130/intellij-mise/compare/v6.2.0...v6.2.1
 [6.2.0]: https://github.com/134130/intellij-mise/compare/v6.0.2...v6.2.0
 [6.0.2]: https://github.com/134130/intellij-mise/compare/v6.0.1...v6.0.2
 [6.0.1]: https://github.com/134130/intellij-mise/compare/v6.0.0...v6.0.1
