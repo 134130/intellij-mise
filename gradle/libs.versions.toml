@@ -7,7 +7,7 @@ kotlinxSerialization = "1.9.0"
 changelog = "2.5.0"
 gradleIdeaExt = "1.4.1"
 kotlin = "2.2.21"
-kover = "0.9.7"
+kover = "0.9.9"
 qodana = "2025.3.2"
 detekt = "1.23.7"
 
