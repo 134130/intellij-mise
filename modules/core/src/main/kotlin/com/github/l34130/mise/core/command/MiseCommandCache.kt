@@ -9,12 +9,14 @@ import com.github.l34130.mise.core.util.waitForProjectCache
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.diagnostic.trace
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.util.application
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -111,6 +113,7 @@ class MiseCommandCache(
 
                 logger.debug("Command cache warmed successfully")
             } catch (e: Exception) {
+                if (e is CancellationException || e is ControlFlowException) throw e
                 logger.warn("Failed to warm command cache after invalidation", e)
             }
         }

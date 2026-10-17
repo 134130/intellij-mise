@@ -207,25 +207,22 @@ object MiseCommandLineHelper {
      * merged: locally-pinned tools take precedence over global ones, so if a tool is defined in
      * both places the project's version is used.
      *
-     * Results are cached; call [getDevTools] with an explicit [MiseDevToolsScope] if you need only
-     * local or only global tools.
+     * Local and global results are cached separately; call [getDevTools] with an explicit
+     * [MiseDevToolsScope] if you need only local or only global tools.
      */
     fun getDevTools(
         project: Project,
         workDir: String = project.guessMiseProjectPath(),
         configEnvironment: String? = null,
     ): Result<Map<MiseDevToolName, List<MiseDevTool>>> {
-        val cache = project.service<MiseCommandCache>()
-        val cacheKey = MiseCacheKey.DevTools(workDir, configEnvironment)
-        return cache.getCachedWithProgress(cacheKey) {
-            val localResult = getDevTools(project, workDir, configEnvironment, MiseDevToolsScope.LOCAL)
-            val globalResult = getDevTools(project, workDir, configEnvironment, MiseDevToolsScope.GLOBAL)
+        // Nested cache loads can deadlock when their keys share a Caffeine hash bucket.
+        val localResult = getDevTools(project, workDir, configEnvironment, MiseDevToolsScope.LOCAL)
+        val globalResult = getDevTools(project, workDir, configEnvironment, MiseDevToolsScope.GLOBAL)
 
-            val local = localResult.getOrElse { return@getCachedWithProgress Result.failure(it) }
-            val global = globalResult.getOrElse { return@getCachedWithProgress Result.failure(it) }
+        val local = localResult.getOrElse { return Result.failure(it) }
+        val global = globalResult.getOrElse { return Result.failure(it) }
 
-            Result.success(mergeDevTools(local, global))
-        }
+        return Result.success(mergeDevTools(local, global))
     }
 
     fun getDevTools(
