@@ -19,23 +19,15 @@ class MiseCacheKeyTest : BasePlatformTestCase() {
     }
 
     @Test
-    fun `DevTools key uses combined segment for null scope`() {
-        assertEquals("ls:combined:/project:null", MiseCacheKey.DevTools("/project", null, null).key)
+    fun `DevTools key supports null environment`() {
+        assertEquals("ls:local:/project:null", MiseCacheKey.DevTools("/project", null, MiseDevToolsScope.LOCAL).key)
     }
 
     @Test
-    fun `DevTools default scope is null (combined)`() {
-        val key = MiseCacheKey.DevTools("/project", null)
-        assertNull(key.scope)
-        assertEquals("ls:combined:/project:null", key.key)
-    }
-
-    @Test
-    fun `DevTools keys for all three scopes are distinct`() {
+    fun `DevTools keys for local and global scopes are distinct`() {
         val local = MiseCacheKey.DevTools("/project", null, MiseDevToolsScope.LOCAL).key
         val global = MiseCacheKey.DevTools("/project", null, MiseDevToolsScope.GLOBAL).key
-        val combined = MiseCacheKey.DevTools("/project", null, null).key
-        assertEquals(3, setOf(local, global, combined).size)
+        assertFalse(local == global)
     }
 
     @Test

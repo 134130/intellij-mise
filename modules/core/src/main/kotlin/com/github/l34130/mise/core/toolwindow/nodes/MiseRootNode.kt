@@ -13,10 +13,12 @@ import com.github.l34130.mise.core.toolwindow.NonProjectPathDisplay
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.PathUtil
+import kotlinx.coroutines.CancellationException
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -37,6 +39,7 @@ class MiseRootNode(
             runCatching { getToolNodes(groupByConfigPath, nonProjectPathDisplay, context) }.fold(
                 onSuccess = { tools -> MiseToolServiceNode(project, tools) },
                 onFailure = { e ->
+                    if (e is CancellationException || e is ControlFlowException) throw e
                     logger.warn("Failed to get tool nodes", e)
                     MiseNotificationServiceUtils.notifyException("Failed to get tool nodes", e, project)
                     MiseErrorNode(project, e)
@@ -45,6 +48,7 @@ class MiseRootNode(
             runCatching { getTaskNodes(groupByConfigPath, nonProjectPathDisplay, context) }.fold(
                 onSuccess = { tasks -> MiseTaskServiceNode(project, tasks) },
                 onFailure = { e ->
+                    if (e is CancellationException || e is ControlFlowException) throw e
                     logger.warn("Failed to get task nodes", e)
                     MiseNotificationServiceUtils.notifyException("Failed to get task nodes", e, project)
                     MiseErrorNode(project, e)
@@ -53,6 +57,7 @@ class MiseRootNode(
             runCatching { getEnvironmentNodes(groupByConfigPath, nonProjectPathDisplay, context) }.fold(
                 onSuccess = { envs -> MiseEnvironmentServiceNode(project, envs) },
                 onFailure = { e ->
+                    if (e is CancellationException || e is ControlFlowException) throw e
                     logger.warn("Failed to get settings nodes", e)
                     MiseNotificationServiceUtils.notifyException("Failed to get environment nodes", e, project)
                     MiseErrorNode(project, e)
