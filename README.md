@@ -85,39 +85,6 @@
   Download the [latest release](https://github.com/134130/intellij-mise/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
-## Node.js versions from package.json
-
-The plugin uses mise's resolved tools for `devEngines` and `packageManager` declarations.
-Enable the relevant [idiomatic version files](https://mise.jdx.dev/lang/node.html#version-files) in mise first, for example:
-
-```sh
-mise settings add idiomatic_version_file_enable_tools node
-mise settings add idiomatic_version_file_enable_tools pnpm
-mise install
-```
-
-Run **Reload NodeJS Interpreter** and **Reload JS Package Manager** in the IDE to sync installed tools.
-If multiple package managers are configured locally, the plugin keeps a matching IDE selection,
-uses a matching pnpm lockfile, or asks you to choose in IDE settings.
-Run configurations that use the project defaults follow those settings; explicit interpreter and package manager paths are preserved.
-Existing IDE settings that differ from mise are updated through the Sync notification or a manual Reload.
-
-## Maven user settings
-
-Set `MAVEN_ARGS` in your mise configuration to select a project-specific Maven settings file:
-
-```toml
-[env]
-MAVEN_ARGS = '--settings "{{ env.HOME }}/.m2/settings_one.xml"'
-```
-
-The plugin automatically updates IntelliJ's Maven **User settings file** on project startup and when
-the mise configuration or selected environment changes. **Reload Maven** also syncs it manually.
-This works with bundled Maven and Maven Wrapper, without requiring Maven in `[tools]`.
-Both `--settings` and `-s` are supported, including `--settings=path` and quoted paths with spaces.
-Relative paths resolve from the project directory. The file must exist; missing files are reported
-without changing the current selection. Removing the option leaves the current IDE setting in place.
-
 ## Acknowledgements
 
 - [mirrord-intellij](https://github.com/metalbear-co/mirrord-intellij)

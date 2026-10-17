@@ -4,10 +4,14 @@
 
 ## [Unreleased]
 
+## [6.3.0] - 2026-10-17
+
 ### Fixed
 
-- Select JS package managers from local mise tools, including `package.json` declarations without a lockfile (#539).
-- Refresh cached tools on manual Reload and package manager file changes, and resolve npm script environments from their package directory.
+- Fix UI freezes during file sync in large multi-module projects by @astral303 in https://github.com/134130/intellij-mise/pull/537
+- Fix nested dev tool cache loads timing out on refresh by @134130 in https://github.com/134130/intellij-mise/pull/540
+- Fix JS package manager selection for package.json devEngines by @134130 in https://github.com/134130/intellij-mise/pull/541
+- Sync Maven user settings from mise MAVEN_ARGS by @134130 in https://github.com/134130/intellij-mise/pull/542
 
 ## [6.2.1] - 2026-08-24
 
@@ -615,7 +619,8 @@
 
 - Support JDK integration from mise tools.
 
-[Unreleased]: https://github.com/134130/intellij-mise/compare/v6.2.1...HEAD
+[Unreleased]: https://github.com/134130/intellij-mise/compare/v6.3.0...HEAD
+[6.2.1]: https://github.com/134130/intellij-mise/compare/v6.2.1...v6.3.0
 [6.2.1]: https://github.com/134130/intellij-mise/compare/v6.2.0...v6.2.1
 [6.2.0]: https://github.com/134130/intellij-mise/compare/v6.0.2...v6.2.0
 [6.0.2]: https://github.com/134130/intellij-mise/compare/v6.0.1...v6.0.2
