@@ -19,14 +19,14 @@ import com.intellij.util.messages.MessageBusConnection
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
+private val MISE_ENVIRONMENT_CONFIG_NAME_PATTERN = Regex("""^\.?mise\.[^/]+\.toml$""")
+
 internal fun isLikelyMiseRelatedFileName(name: String): Boolean {
     if (name == "config.toml" || name == "mise.toml" || name == ".mise.toml") return true
     if (name == "mise.local.toml" || name == ".mise.local.toml") return true
     if (name == ".tool-versions" || name == ".tool-versions.local") return true
     if (name.startsWith(".env")) return true
-    if (name.matches("^mise\\.[^/]+\\.toml$".toRegex())) return true
-    if (name.matches("^\\.mise\\.[^/]+\\.toml$".toRegex())) return true
-    return false
+    return MISE_ENVIRONMENT_CONFIG_NAME_PATTERN.matches(name)
 }
 
 /**
@@ -108,16 +108,13 @@ class MiseTomlFileListener(
                 }
             }
 
-            private fun isTrackedMiseInput(file: VirtualFile): Boolean {
-                if (project.isExcludedFromMiseResolution(file)) return false
-                if (project.service<MiseConfigFileResolver>().isTrackedPath(file)) return true
-                if (MiseTomlFile.isMiseTomlFile(project, file)) return true
-                return isLikelyMiseRelatedFile(file)
-            }
+            private fun isTrackedMiseInput(file: VirtualFile): Boolean =
+                isMiseInputCandidate(file) && !project.isExcludedFromMiseResolution(file)
 
-            private fun isLikelyMiseRelatedFile(file: VirtualFile): Boolean {
-                return isLikelyMiseRelatedFileName(file.name)
-            }
+            private fun isMiseInputCandidate(file: VirtualFile): Boolean =
+                isLikelyMiseRelatedFileName(file.name) ||
+                    project.service<MiseConfigFileResolver>().isTrackedPath(file) ||
+                    MiseTomlFile.isMiseTomlFile(project, file)
         }
     }
 }
