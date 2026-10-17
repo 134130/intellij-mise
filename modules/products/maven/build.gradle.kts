@@ -20,6 +20,7 @@ dependencies {
         ) { useInstaller = false }
 
         bundledPlugin("org.jetbrains.idea.maven")
+        bundledPlugin("org.jetbrains.idea.reposearch")
 
         jetbrainsRuntime()
 

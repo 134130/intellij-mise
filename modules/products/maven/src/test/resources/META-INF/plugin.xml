@@ -1,0 +1,7 @@
+<idea-plugin>
+    <id>com.github.l34130.mise</id>
+    <name>Mise</name>
+    <vendor>134130</vendor>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.idea.maven</depends>
+</idea-plugin>
