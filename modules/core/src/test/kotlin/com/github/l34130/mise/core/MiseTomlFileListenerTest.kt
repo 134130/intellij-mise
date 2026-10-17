@@ -3,6 +3,13 @@ package com.github.l34130.mise.core
 import junit.framework.TestCase
 
 class MiseTomlFileListenerTest : TestCase() {
+    fun `test package manager inputs invalidate mise commands`() {
+        assertTrue(isLikelyMiseRelatedFileName("package.json"))
+        assertTrue(isLikelyMiseRelatedFileName("pnpm-lock.yaml"))
+        assertFalse(isLikelyMiseRelatedFileName("package-lock.json"))
+        assertFalse(isLikelyMiseRelatedFileName("package.json.bak"))
+    }
+
     fun `test likely mise-related file names accept tool-versions files and reject near misses`() {
         assertTrue(isLikelyMiseRelatedFileName(".tool-versions"))
         assertTrue(isLikelyMiseRelatedFileName(".tool-versions.local"))

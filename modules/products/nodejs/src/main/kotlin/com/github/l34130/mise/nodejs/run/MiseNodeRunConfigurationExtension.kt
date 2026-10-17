@@ -7,9 +7,11 @@ import com.intellij.javascript.nodejs.execution.AbstractNodeTargetRunProfile
 import com.intellij.javascript.nodejs.execution.NodeTargetRun
 import com.intellij.javascript.nodejs.execution.runConfiguration.AbstractNodeRunConfigurationExtension
 import com.intellij.javascript.nodejs.execution.runConfiguration.NodeRunConfigurationLaunchSession
+import com.intellij.lang.javascript.buildTools.npm.rc.NpmRunConfiguration
 import com.intellij.openapi.options.SettingsEditor
 import com.jetbrains.nodejs.run.NodeJsRunConfiguration
 import org.jdom.Element
+import java.io.File
 
 class MiseNodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension() {
     override fun getEditorTitle(): String = MiseRunConfigurationSettingsEditor.EDITOR_TITLE
@@ -39,11 +41,7 @@ class MiseNodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension(
         val envVars =
             MiseHelper.getMiseEnvVarsOrNotify(
                 configuration = configuration,
-                workingDirectory =
-                    when (configuration) {
-                        is NodeJsRunConfiguration -> configuration.workingDirectory
-                        else -> null
-                    },
+                workingDirectory = getWorkingDirectory(configuration),
             )
 
         return object : NodeRunConfigurationLaunchSession() {
@@ -56,4 +54,12 @@ class MiseNodeRunConfigurationExtension : AbstractNodeRunConfigurationExtension(
     }
 
     override fun isApplicableFor(configuration: AbstractNodeTargetRunProfile): Boolean = true
+
+    internal fun getWorkingDirectory(configuration: AbstractNodeTargetRunProfile): String? =
+        when (configuration) {
+            is NodeJsRunConfiguration -> configuration.workingDirectory
+            is NpmRunConfiguration -> configuration.runSettings.packageJsonSystemDependentPath
+                .takeIf { it.isNotBlank() }?.let { File(it).parent }
+            else -> null
+        }
 }

@@ -42,7 +42,7 @@ abstract class AbstractProjectSdkSetup :
         // Stable since 2025.2 https://github.com/JetBrains/intellij-community/commit/a498525e60e27a92d67c803569037e33cdfc2ce1
         @Suppress("UnstableApiUsage")
         currentThreadCoroutineScope().launch {
-            runSdkConfigurationCheck(project, isUserInteraction = true, forceRefresh = false)
+            runSdkConfigurationCheck(project, isUserInteraction = true, forceRefresh = true)
         }
     }
 
@@ -51,7 +51,7 @@ abstract class AbstractProjectSdkSetup :
         runSdkConfigurationCheck(project, isUserInteraction = false, forceRefresh = false)
     }
 
-    abstract fun getDevToolName(project: Project): MiseDevToolName
+    abstract fun getDevToolName(project: Project): MiseDevToolName?
 
     protected abstract fun checkSdkStatus(
         tool: MiseDevTool,
@@ -101,6 +101,15 @@ abstract class AbstractProjectSdkSetup :
             }
             val devToolName = getDevToolName(project)
             val miseNotificationService = project.service<MiseNotificationService>()
+            if (devToolName == null) {
+                if (isUserInteraction) {
+                    miseNotificationService.warn(
+                        "Cannot select a dev tool unambiguously",
+                        "Select a project tool in IDE settings or keep a single matching tool in your Mise configuration",
+                    )
+                }
+                return@withContext
+            }
 
             val configEnvironment = project.service<MiseProjectSettings>().state.miseConfigEnvironment
 
@@ -259,7 +268,8 @@ abstract class AbstractProjectSdkSetup :
         )
     }
 
-    protected fun getToolBinPath(project: Project, devToolName: String = getDevToolName(project).value): Result<String> {
+    protected fun getToolBinPath(project: Project, devToolName: String? = getDevToolName(project)?.value): Result<String> {
+        if (devToolName == null) return Result.failure(IllegalStateException("Cannot select a dev tool unambiguously"))
         val settings = project.service<MiseProjectSettings>().state
         val configEnvironment = settings.miseConfigEnvironment
         return MiseCommandLineHelper.getBinPath(devToolName, project, project.guessMiseProjectPath(), configEnvironment)
