@@ -164,6 +164,9 @@ class MiseConfigFileResolverTest : BasePlatformTestCase() {
         val rootDir = Files.createTempDirectory("mise-non-toml-config-test")
         val miseToml = rootDir.resolve("mise.toml").also { it.writeText("[tools]\ngo = '1.25'\n") }
         val toolVersions = rootDir.resolve(".tool-versions").also { it.writeText("go 1.24\n") }
+        val packageJson = rootDir.resolve("package.json").also {
+            it.writeText("""{"devEngines":{"packageManager":{"name":"pnpm","version":"12.8.1"}}}""")
+        }
 
         val baseDirVf =
             LocalFileSystem.getInstance().refreshAndFindFileByPath(rootDir.toString().replace('\\', '/'))
@@ -186,7 +189,7 @@ class MiseConfigFileResolverTest : BasePlatformTestCase() {
                         cmdStr.contains("config --tracked-configs") -> {
                             processOutput(
                                 stdout =
-                                    listOf(miseToml, toolVersions)
+                                    listOf(miseToml, toolVersions, packageJson)
                                         .joinToString("\n") { it.toString().replace('\\', '/') } + "\n",
                             )
                         }
@@ -204,6 +207,7 @@ class MiseConfigFileResolverTest : BasePlatformTestCase() {
         assertEquals(listOf(miseToml.toString().replace('\\', '/')), snapshot.configTomlFiles.map { it.path })
         assertTrue(snapshot.trackedInputs.map { it.path }.contains(toolVersionsPath))
         assertTrue(snapshot.normalizedTrackedPaths.contains(toolVersionsPath))
+        assertTrue(snapshot.trackedInputs.map { it.path }.contains(packageJson.toString().replace('\\', '/')))
     }
 
     fun `test resolveConfigFiles ignores CLI configs in excluded folders`() {

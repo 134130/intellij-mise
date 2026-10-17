@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Select JS package managers from local mise tools, including `package.json` declarations without a lockfile (#539).
+- Refresh cached tools on manual Reload and package manager file changes, and resolve npm script environments from their package directory.
+
 ## [6.2.1] - 2026-08-24
 
 ### Fixed
