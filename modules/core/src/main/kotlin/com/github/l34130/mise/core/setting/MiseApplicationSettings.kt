@@ -34,10 +34,12 @@ class MiseApplicationSettings : PersistentStateComponent<MiseApplicationSettings
 
     class MyState : Cloneable {
         var executablePath: String = ""
+        var langLevelSdkDefault: Boolean = false
 
         public override fun clone(): MyState =
             MyState().also {
                 it.executablePath = executablePath
+                it.langLevelSdkDefault = langLevelSdkDefault
             }
     }
 }

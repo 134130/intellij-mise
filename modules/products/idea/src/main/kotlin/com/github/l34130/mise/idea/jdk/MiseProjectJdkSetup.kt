@@ -2,15 +2,20 @@ package com.github.l34130.mise.idea.jdk
 
 import com.github.l34130.mise.core.command.MiseDevTool
 import com.github.l34130.mise.core.command.MiseDevToolName
+import com.github.l34130.mise.core.setting.MiseApplicationSettings
+import com.github.l34130.mise.core.setting.MiseProjectSettings
 import com.github.l34130.mise.core.setup.AbstractProjectSdkSetup
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.Sdk
+import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.util.application
 import java.io.File
 import kotlin.reflect.KClass
 
@@ -83,7 +88,10 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
                     }
                 }
 
-            ProjectRootManager.getInstance(project).projectSdk = sdk
+            if (isLangLevelSdkDefault(project)) {
+                LanguageLevelProjectExtension.getInstance(project)?.default = true
+            }
+
             ApplySdkResult(
                 sdkName = sdk.name,
                 sdkVersion = sdk.versionString ?: tool.displayVersion,
@@ -94,6 +102,12 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
     private fun isSamePath(path1: String?, path2: String?): Boolean {
         if (path1 == null || path2 == null) return false
         return FileUtil.filesEqual(File(path1), File(path2))
+    }
+
+    private fun isLangLevelSdkDefault(project: Project): Boolean {
+        val appSettings = application.service<MiseApplicationSettings>().state
+        val projectSettings = project.service<MiseProjectSettings>().state
+        return projectSettings.langLevelSdkDefault ?: appSettings.langLevelSdkDefault
     }
 
     override fun <T : Configurable> getConfigurableClass(): KClass<out T>? = null

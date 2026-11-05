@@ -38,6 +38,7 @@ class MiseProjectSettings : PersistentStateComponent<MiseProjectSettings.MyState
                 it.useMiseInDatabaseAuthentication = myState.useMiseInDatabaseAuthentication
                 it.useMiseInNxCommands = myState.useMiseInNxCommands
                 it.useMiseInAllCommandLines = myState.useMiseInAllCommandLines
+                it.langLevelSdkDefault = myState.langLevelSdkDefault
             }
     }
 
@@ -46,6 +47,7 @@ class MiseProjectSettings : PersistentStateComponent<MiseProjectSettings.MyState
         var miseConfigEnvironment: String = ""
         var useMiseVcsIntegration: Boolean = true
         var executablePath: String = ""
+        var langLevelSdkDefault: Boolean? = null
 
         // Granular injection controls
         var useMiseInRunConfigurations: Boolean = true
@@ -70,6 +72,7 @@ class MiseProjectSettings : PersistentStateComponent<MiseProjectSettings.MyState
                 it.useMiseInDatabaseAuthentication = useMiseInDatabaseAuthentication
                 it.useMiseInNxCommands = useMiseInNxCommands
                 it.useMiseInAllCommandLines = useMiseInAllCommandLines
+                it.langLevelSdkDefault = langLevelSdkDefault
             }
     }
 }

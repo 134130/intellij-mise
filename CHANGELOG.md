@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Support setting the project `Language Level` to `SDK default` by @pwoodworth
+
 ## [6.3.0] - 2026-10-17
 
 ### Fixed

@@ -34,6 +34,12 @@ class MiseConfigurable(
     // Checkbox to determine if path is saved project-only
     private val myProjectOnlyCb = JBCheckBox("Set this path only for the current project")
 
+    // Checkbox to set the project language level to 'SDK default'
+    private val myLangLevelSdkDefaultCb = JBCheckBox("Set language level to SDK default")
+
+    // Checkbox to determine if setting the project language level is saved project-only
+    private val myLangLevelProjectOnlyCb = JBCheckBox("Set for current project only")
+
     // Other project settings
     private val myMiseDirEnvCb = JBCheckBox("Use environment variables from mise")
     private val myMiseConfigEnvironmentTf = JBTextField()
@@ -51,6 +57,8 @@ class MiseConfigurable(
         val applicationSettings = application.service<MiseApplicationSettings>()
         val projectSettings = project.service<MiseProjectSettings>()
         val executableManager = project.service<MiseExecutableManager>()
+        val projectState = projectSettings.state
+        val appState = applicationSettings.state
 
         // Determine which setting to load: project or app
         val projectPath = projectSettings.state.executablePath
@@ -70,6 +78,9 @@ class MiseConfigurable(
             myMiseExecutableTf.text = ""
             myProjectOnlyCb.isSelected = false
         }
+
+        myLangLevelSdkDefaultCb.isSelected = projectState.langLevelSdkDefault ?: appState.langLevelSdkDefault
+        myLangLevelProjectOnlyCb.isSelected = projectState.langLevelSdkDefault != null
 
         myMiseDirEnvCb.isSelected = projectSettings.state.useMiseDirEnv
         myMiseConfigEnvironmentTf.text = projectSettings.state.miseConfigEnvironment
@@ -127,6 +138,13 @@ class MiseConfigurable(
                 row {
                     cell(myProjectOnlyCb)
                         .comment("When checked, the path is saved for this project only. Otherwise, it applies to all projects.")
+                }
+            }
+            group("Language Level", indent = false) {
+                row {
+                    cell(myLangLevelSdkDefaultCb)
+                        .comment("When checked, the project language level is set to 'SDK default'.")
+                    cell(myLangLevelProjectOnlyCb)
                 }
             }
 
@@ -207,7 +225,13 @@ class MiseConfigurable(
             currentPath != appPath || projectPath.isNotBlank()
         }
 
-        return pathChanged ||
+        val langLevelChanged = if (myLangLevelProjectOnlyCb.isSelected) {
+            projectSettings.state.langLevelSdkDefault != myLangLevelSdkDefaultCb.isSelected
+        } else {
+            applicationSettings.state.langLevelSdkDefault != myLangLevelSdkDefaultCb.isSelected
+        }
+
+        return pathChanged || langLevelChanged ||
             myMiseDirEnvCb.isSelected != projectSettings.state.useMiseDirEnv ||
             myMiseConfigEnvironmentTf.text != projectSettings.state.miseConfigEnvironment ||
             myMiseRunConfigsCb.isSelected != projectSettings.state.useMiseInRunConfigurations ||
@@ -234,6 +258,12 @@ class MiseConfigurable(
                 applicationSettings.state.executablePath = pathValue
                 // Clear project setting
                 projectSettings.state.executablePath = ""
+            }
+
+            if (myLangLevelProjectOnlyCb.isSelected) {
+                projectSettings.state.langLevelSdkDefault = myLangLevelSdkDefaultCb.isSelected
+            } else {
+                applicationSettings.state.langLevelSdkDefault = myLangLevelSdkDefaultCb.isSelected
             }
 
             projectSettings.state.useMiseDirEnv = myMiseDirEnvCb.isSelected
