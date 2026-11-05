@@ -6,7 +6,7 @@
 
 ### Added
 
-- Support setting the project `Language Level` to `SDK default` by @pwoodworth
+- Support setting the project `Language Level` to `SDK default` by @pwoodworth in https://github.com/134130/intellij-mise/pull/545
 
 ## [6.3.0] - 2026-10-17
 
