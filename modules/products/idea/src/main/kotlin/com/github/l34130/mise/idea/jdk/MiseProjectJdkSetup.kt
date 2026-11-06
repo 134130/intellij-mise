@@ -58,11 +58,9 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
 
     private fun sanitizeVersion(version: String?): String? {
         if (version == null) return null
+        val removables = listOf("Azul Zulu", "Eclipse Temurin", "Oracle OpenJDK", "java version", "[\"]")
         return version
-            .replace("Oracle OpenJDK", "", ignoreCase = true)
-            .replace("Azul Zulu", "", ignoreCase = true)
-            .replace("java version", "", ignoreCase = true)
-            .replace("\"", "")
+            .replace(Regex(removables.joinToString("|"), RegexOption.IGNORE_CASE), "")
             .replace(Regex("\\s*-?\\s*(aarch64|x86_64|x64|amd64)"), "")
             .trim()
     }
