@@ -6,7 +6,7 @@
 
 ### Added
 
-- Add default Javadoc root for new SDKs by @pwoodworth
+- Add default Javadoc root for new SDKs by @pwoodworth in https://github.com/134130/intellij-mise/pull/547
 
 ## [6.3.0] - 2026-10-17
 
