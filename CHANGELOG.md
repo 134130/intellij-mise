@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add default Javadoc root for new SDKs by @pwoodworth
+
 ## [6.3.0] - 2026-10-17
 
 ### Fixed
