@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.Sdk
+import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.io.FileUtil
 import java.io.File
@@ -57,11 +58,9 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
 
     private fun sanitizeVersion(version: String?): String? {
         if (version == null) return null
+        val removables = listOf("Azul Zulu", "Eclipse Temurin", "Oracle OpenJDK", "java version", "[\"]")
         return version
-            .replace("Oracle OpenJDK", "", ignoreCase = true)
-            .replace("Azul Zulu", "", ignoreCase = true)
-            .replace("java version", "", ignoreCase = true)
-            .replace("\"", "")
+            .replace(Regex(removables.joinToString("|"), RegexOption.IGNORE_CASE), "")
             .replace(Regex("\\s*-?\\s*(aarch64|x86_64|x64|amd64)"), "")
             .trim()
     }
@@ -84,6 +83,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
                 }
 
             ProjectRootManager.getInstance(project).projectSdk = sdk
+            LanguageLevelProjectExtension.getInstance(project)?.default = true
             ApplySdkResult(
                 sdkName = sdk.name,
                 sdkVersion = sdk.versionString ?: tool.displayVersion,
