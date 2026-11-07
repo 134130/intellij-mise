@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.Sdk
+import com.intellij.openapi.roots.JavadocOrderRootType
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.io.FileUtil
@@ -74,6 +75,7 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
 
             val sdk =
                 tool.asJavaSdk().also { sdk ->
+                    configureJavadoc(sdk)
                     val oldJdk = projectJdkTable.findJdk(tool.jdkName())
                     if (oldJdk != null) {
                         projectJdkTable.updateJdk(oldJdk, sdk)
@@ -82,14 +84,29 @@ class MiseProjectJdkSetup : AbstractProjectSdkSetup() {
                     }
                 }
 
-            ProjectRootManager.getInstance(project).projectSdk = sdk
             LanguageLevelProjectExtension.getInstance(project)?.default = true
+            ProjectRootManager.getInstance(project).projectSdk = sdk
             ApplySdkResult(
                 sdkName = sdk.name,
                 sdkVersion = sdk.versionString ?: tool.displayVersion,
                 sdkPath = sdk.homePath ?: tool.resolvedInstallPath,
             )
         }
+
+    /**
+     * Adds the default Javadoc root to the SDK if available.
+     * A write-lock is required so this must be called from [applySdkConfiguration] not [asJavaSdk]
+     */
+    private fun configureJavadoc(sdk: Sdk) {
+        val sdkModificator = sdk.sdkModificator
+        val javadocRootType = JavadocOrderRootType.getInstance()
+        if (sdkModificator.getRoots(javadocRootType).isEmpty()) {
+            JavaSdk.getInstance().getDefaultDocumentationUrl(sdk)?.also {
+                sdkModificator.addRoot(it, javadocRootType)
+                sdkModificator.commitChanges()
+            }
+        }
+    }
 
     private fun isSamePath(path1: String?, path2: String?): Boolean {
         if (path1 == null || path2 == null) return false
